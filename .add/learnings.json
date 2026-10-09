@@ -8,7 +8,10 @@
       "title": "The mod is an overlay on --ax-screen-reader, not a replacement",
       "body": "The screen reader mode already renders static spinners, a flat labelled transcript, numbered menus and a terminal bell. Replacing the Spinner was dropped from scope as redundant. Before adding any feature, check what the mode already does with the screen reader actually running; the open issues do not always say whether the reporter had the mode on (AskUserQuestion, #88839, is the first case to verify).",
       "scope": "project",
-      "stack": ["typescript", "claude-code-mod-api"],
+      "stack": [
+        "typescript",
+        "claude-code-mod-api"
+      ],
       "category": "architecture",
       "severity": "high",
       "source": "claude-code-a11y",
@@ -21,7 +24,9 @@
       "title": "Screen reader mode cannot be switched on inside a running session",
       "body": "The mode is decided once at startup (flag, then CLAUDE_AX_SCREEN_READER, then the axScreenReader setting) and mods load after that decision. There is no /config row, so $.config.set cannot change it. A mod can only write axScreenReader: true to ~/.claude/settings.json for the next session and announce the restart by speech and bell. Verified in the 2.1.295 binary; source: docs/research/rozpoznanie-2026-10-09.md section 5.",
       "scope": "project",
-      "stack": ["claude-code-mod-api"],
+      "stack": [
+        "claude-code-mod-api"
+      ],
       "category": "technical",
       "severity": "high",
       "source": "claude-code-a11y",
@@ -34,13 +39,32 @@
       "title": "Install instructions must avoid in-session pickers",
       "body": "/plugin install opens a picker that does not work with NVDA. Documentation must give the shell path: claude plugin install <name>@<marketplace> --scope user, then start claude normally. The same applies to any onboarding step the mod designs.",
       "scope": "project",
-      "stack": ["claude-code-mod-api"],
+      "stack": [
+        "claude-code-mod-api"
+      ],
       "category": "technical",
       "severity": "medium",
       "source": "claude-code-a11y",
       "date": "2026-10-09",
       "classified_by": "agent",
       "checkpoint_type": "init"
+    },
+    {
+      "id": "L-004",
+      "title": "Keep mod API behind a thin adapter so logic is testable without Claude Code",
+      "body": "Detection, mode-state resolution, settings writing and the consent state machine take injected run/fs/env/store/clock interfaces and return actions; src/adapter.ts is the only module that calls $.process, $.fs, $.store, $.audio and $.ui. Vitest then covers the decisions without launching Claude Code, and manual sessions with VoiceOver and NVDA only verify the adapter and the ear. Decided in docs/plans/screen-reader-detection-plan.md.",
+      "scope": "project",
+      "stack": [
+        "typescript",
+        "claude-code-mod-api",
+        "vitest"
+      ],
+      "category": "architecture",
+      "severity": "medium",
+      "source": "claude-code-a11y",
+      "date": "2026-10-09",
+      "classified_by": "agent",
+      "checkpoint_type": "plan"
     }
   ]
 }

@@ -1,10 +1,12 @@
-# Active Learnings (3 of 3)
+# Active Learnings (4 of 4)
 
 > Pre-filtered by severity and date. Full data: `.add/learnings.json`
 
 ### architecture
 - **[high]** The mod is an overlay on --ax-screen-reader, not a replacement (L-001, 2026-10-09)
   The screen reader mode already renders static spinners, a flat labelled transcript, numbered menus and a terminal bell. Replacing the Spinner was dropped from scope as redundant. Before adding any feature, check what the mode already does with the screen reader actually running; the open issues do not always say whether the reporter had the mode on (AskUserQuestion, #88839, is the first case to ve… [truncated — full entry in learnings.json]
+- **[medium]** Keep mod API behind a thin adapter so logic is testable without Claude Code (L-004, 2026-10-09)
+  Detection, mode-state resolution, settings writing and the consent state machine take injected run/fs/env/store/clock interfaces and return actions; src/adapter.ts is the only module that calls $.process, $.fs, $.store, $.audio and $.ui. Vitest then covers the decisions without launching Claude Code, and manual sessions with VoiceOver and NVDA only verify the adapter and the ear. Decided in docs/p… [truncated — full entry in learnings.json]
 ### technical
 - **[high]** Screen reader mode cannot be switched on inside a running session (L-002, 2026-10-09)
   The mode is decided once at startup (flag, then CLAUDE_AX_SCREEN_READER, then the axScreenReader setting) and mods load after that decision. There is no /config row, so $.config.set cannot change it. A mod can only write axScreenReader: true to ~/.claude/settings.json for the next session and announce the restart by speech and bell. Verified in the 2.1.295 binary; source: docs/research/rozpoznanie… [truncated — full entry in learnings.json]
