@@ -88,10 +88,10 @@ test('stays silent when CLAUDE_AX_SCREEN_READER is 0 and lets prompts through (A
   expect(log.written).toHaveLength(0)
 })
 
-test('registers the three commands and /a11y-off removes the key (AC-009, AC-010)', async ($, on) => {
+test('registers the commands and /a11y-off removes the key (AC-009, AC-010)', async ($, on) => {
   const log = host(on, { voiceover: false, env: { HOME: '/Users/t' }, settings: '{"axScreenReader": true, "model": "opus"}' })
   await $.session.start(start)
-  expect(log.commands).toEqual(['a11y-on', 'a11y-off', 'a11y-status'])
+  expect(log.commands).toEqual(['a11y-on', 'a11y-off', 'a11y-status', 'a11y-stream'])
   const result = await $.command.run(command('a11y-off'))
   expect(result.text).toBe('Screen reader mode disabled from the next start.')
   const settingsWrite = log.written.find((w) => w.path === '/Users/t/.claude/settings.json')

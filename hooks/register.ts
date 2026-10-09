@@ -1,4 +1,4 @@
-import type { CommandSpec, EngineInterface, Register, Timer } from 'claude-code'
+import type { CommandSpec, EngineInterface, Register, Timer, TurnStepChunk, TurnStepResult } from 'claude-code'
 import { ANSWER_TIMEOUT_MS, consentReducer, IDLE } from './lib/consent'
 import type { ConsentEffect, ConsentEvent, ConsentState } from './lib/consent'
 import { detect, platformFromEnv } from './lib/detect'
@@ -6,7 +6,9 @@ import { messages } from './lib/messages'
 import { decide, isStoredConsent, resolveModeState } from './lib/mode-state'
 import { applyAxSetting, settingsPath } from './lib/settings-file'
 import type { ApplyResult } from './lib/settings-file'
-import type { DetectionResult, ModeState, Platform, SettingsLike, StoredConsent } from './lib/types'
+import { createHold, parseStreamArg, resolveDelivery } from './lib/stream-delivery'
+import type { Delivery } from './lib/stream-delivery'
+import type { DeliveryMode, DetectionResult, ModeState, Platform, SettingsLike, StoredConsent } from './lib/types'
 
 // The only module that touches the mod API. Decisions live in ./lib and take
 // plain values, so Vitest covers them; this file turns them into $ calls.
@@ -15,11 +17,13 @@ import type { DetectionResult, ModeState, Platform, SettingsLike, StoredConsent 
 // one module-level record (reset on every reload, like the rest of the module).
 
 const CONSENT_KEY = 'screenReaderConsent'
+const STREAM_KEY = 'streamDelivery'
 
 const COMMANDS: readonly CommandSpec[] = [
   { name: 'a11y-on', description: 'Enable Claude Code screen reader mode from the next start' },
   { name: 'a11y-off', description: 'Disable Claude Code screen reader mode from the next start' },
   { name: 'a11y-status', description: 'Report the detected screen reader and the screen reader mode state' },
+  { name: 'a11y-stream', description: 'Whole answer delivery: show each answer at once instead of streaming it', argumentHint: '[on|off|auto]' },
 ]
 
 type Facts = {
@@ -29,6 +33,7 @@ type Facts = {
   modVersion: string
   settingsPath?: string
   backedUp: boolean
+  delivery: Delivery
 }
 
 type ChangeOutcome = { ok: true; applied: Extract<ApplyResult, { ok: true }> } | { ok: false; text: string }
@@ -36,7 +41,7 @@ type ChangeOutcome = { ok: true; applied: Extract<ApplyResult, { ok: true }> } |
 const session: { consent: ConsentState; timer: Timer | undefined; facts: Facts } = {
   consent: IDLE,
   timer: undefined,
-  facts: { modVersion: '0.0.0', backedUp: false },
+  facts: { modVersion: '0.0.0', backedUp: false, delivery: { mode: 'live', source: 'mode' } },
 }
 
 // Speech and transcript always carry the same line (AC-012). Speech is not
@@ -172,6 +177,7 @@ async function startSession($: EngineInterface): Promise<void> {
   facts.platform = await platformOf($)
   facts.settingsPath = settingsPath(facts.platform, { HOME: await $.env.get('HOME'), USERPROFILE: await $.env.get('USERPROFILE') })
   facts.mode = await loadMode($)
+  facts.delivery = resolveDelivery({ modeOn: facts.mode.on, override: await $.store.get(STREAM_KEY) })
   facts.detection = await detect({ platform: facts.platform, run: (argv, init) => $.process.run(argv, init), now: () => Date.now() })
   const decision = decide({ mode: facts.mode, detection: facts.detection, consent: await $.store.get(CONSENT_KEY), modVersion: facts.modVersion })
   if (decision.action !== 'ask') return
@@ -202,6 +208,26 @@ async function offCommand($: EngineInterface): Promise<{ text: string }> {
   return speak($, await disable($))
 }
 
+async function setDelivery($: EngineInterface, mode: DeliveryMode): Promise<{ text: string }> {
+  const setAt = new Date(await $.clock.now()).toISOString()
+  await $.store.set(STREAM_KEY, { mode, setAt })
+  session.facts.delivery = { mode, source: 'override' }
+  return speak($, messages.streamSet(mode))
+}
+
+async function streamCommand($: EngineInterface, args: string): Promise<{ text: string }> {
+  const arg = parseStreamArg(args)
+  if (arg === 'invalid') return speak($, messages.streamInvalid())
+  if (arg === 'on') return setDelivery($, 'buffered')
+  if (arg === 'off') return setDelivery($, 'live')
+  if (arg === 'auto') {
+    await $.store.delete(STREAM_KEY)
+    session.facts.delivery = resolveDelivery({ modeOn: session.facts.mode?.on === true, override: undefined })
+    return speak($, `${messages.streamAuto()} ${messages.streamReport(session.facts.delivery)}`)
+  }
+  return speak($, messages.streamReport(session.facts.delivery))
+}
+
 async function statusCommand($: EngineInterface): Promise<{ text: string }> {
   const { detection, mode } = session.facts
   return speak($, messages.status({ detection, mode, consent: await storedConsent($) }))
@@ -230,4 +256,40 @@ export const register: Register = (on) => {
   on('command.run', { command: 'a11y-on' }, ($) => onCommand($))
   on('command.run', { command: 'a11y-off' }, ($) => offCommand($))
   on('command.run', { command: 'a11y-status' }, ($) => statusCommand($))
+  on('command.run', { command: 'a11y-stream' }, ($, e) => streamCommand($, e.args))
+
+  // Whole answer delivery: in buffered mode the step's chunks are held until
+  // the stream beneath ends, then yielded at once, so the screen reader reads
+  // the answer as one block. Thinking is dropped from the display; the engine
+  // keeps its own signed thinking block. Subagent steps stream live.
+  on('turn.step', async function* ($, e, next) {
+    if (session.facts.delivery.mode !== 'buffered' || e.agentId !== undefined) return yield* next(e)
+    const hold = createHold<TurnStepChunk>()
+    // Iterated by hand: the stream's return value is the step's result, which
+    // a for-await loop would discard.
+    const iterator = next(e)[Symbol.asyncIterator]()
+    let result: TurnStepResult | undefined
+    let failure: unknown
+    let failed = false
+    try {
+      for (;;) {
+        const item = await iterator.next()
+        if (item.done) {
+          result = item.value
+          break
+        }
+        hold.take(item.value)
+      }
+    } catch (caught) {
+      failure = caught
+      failed = true
+    }
+    const held = hold.release()
+    for (const chunk of held.chunks) yield chunk
+    if (failed) throw failure
+    if (held.hasText && !next.signal.aborted) ring($, 'Answer ready.')
+    return result
+  }).catch(async function* ($, e, next) {
+    return yield* next(e)
+  })
 }

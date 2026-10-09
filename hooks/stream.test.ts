@@ -72,29 +72,36 @@ const SCRIPT: TurnStepChunk[] = [
   { kind: 'stop', stopReason: 'tool_use', usage: null },
 ]
 
-async function collect(stream: AsyncIterable<TurnStepChunk>, log: Log): Promise<{ kinds: string[]; firstSeenAfter: number; text: string }> {
+// Reads the stream by hand: the iterator's return value is the step's result
+// (the kit's `.result` promise settles undefined on the engine side).
+async function collect(stream: AsyncIterable<TurnStepChunk>, log: Log): Promise<{ kinds: string[]; firstSeenAfter: number; text: string; result: TurnStepResult | undefined }> {
   const kinds: string[] = []
   let firstSeenAfter = -1
   let text = ''
-  for await (const chunk of stream) {
+  let result: TurnStepResult | undefined
+  const iterator = stream[Symbol.asyncIterator]()
+  for (;;) {
+    const item = await iterator.next()
+    if (item.done) {
+      result = item.value as TurnStepResult | undefined
+      break
+    }
     if (firstSeenAfter < 0) firstSeenAfter = log.yielded
-    kinds.push(chunk.kind)
-    if (chunk.kind === 'text') text += chunk.text
+    kinds.push(item.value.kind)
+    if (item.value.kind === 'text') text += item.value.text
   }
-  return { kinds, firstSeenAfter, text }
+  return { kinds, firstSeenAfter, text, result }
 }
 
 test('holds the whole step, drops thinking, keeps order and rings once (AC-001 to AC-005)', async ($, on) => {
   const log = host(on, { modeOn: true, script: SCRIPT, answer: 'First paragraph.\n\nSecond paragraph.' })
   await $.session.start(start)
-  const stream = $.turn.step(step())
-  const seen = await collect(stream, log)
+  const seen = await collect($.turn.step(step()), log)
   expect(seen.firstSeenAfter).toBe(SCRIPT.length)
   expect(seen.kinds).toEqual(['text', 'text', 'tool', 'input', 'stop'])
   expect(seen.text).toBe('First paragraph.\n\nSecond paragraph.')
   expect(log.notified).toBe(1)
-  const result = await stream.result
-  expect(result.answer).toBe('First paragraph.\n\nSecond paragraph.')
+  expect(seen.result?.answer).toBe('First paragraph.\n\nSecond paragraph.')
 })
 
 test('streams live outside screen reader mode, thinking included, no bell (AC-006)', async ($, on) => {

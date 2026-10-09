@@ -70,17 +70,21 @@ export const messages = {
     else parts.push(`Refusal stored on ${consent.declinedAt.slice(0, 10)}, mod version ${consent.modVersion}.`)
     return parts.join(' ')
   },
-  streamReport(_args: { mode: DeliveryMode; source: DeliverySource }): string {
-    throw new Error('not implemented')
+  streamReport(args: { mode: DeliveryMode; source: DeliverySource }): string {
+    const state = args.mode === 'buffered' ? 'on' : 'off'
+    const why = args.source === 'override' ? 'forced' : args.mode === 'buffered' ? 'screen reader mode' : 'screen reader mode is off'
+    return `Whole answer delivery ${state} (${why}).`
   },
-  streamSet(_mode: DeliveryMode): string {
-    throw new Error('not implemented')
+  streamSet(mode: DeliveryMode): string {
+    return mode === 'buffered'
+      ? 'Whole answer delivery on (forced). Answers appear whole; thinking is hidden.'
+      : 'Whole answer delivery off (forced). Answers stream live.'
   },
   streamAuto(): string {
-    throw new Error('not implemented')
+    return 'Override removed.'
   },
   streamInvalid(): string {
-    throw new Error('not implemented')
+    return 'Usage: /a11y-stream, /a11y-stream on, /a11y-stream off, or /a11y-stream auto.'
   },
   error(kind: 'no-home' | 'invalid-json' | 'not-an-object' | 'write-failed' | 'verify-mismatch', path: string | undefined): string {
     switch (kind) {

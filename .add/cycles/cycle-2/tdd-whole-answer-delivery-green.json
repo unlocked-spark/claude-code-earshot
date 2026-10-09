@@ -1,0 +1,19 @@
+{
+  "phase": "green",
+  "cycle_id": 2,
+  "spec_slug": "whole-answer-delivery",
+  "base_sha": "85e913a",
+  "red_sha": "cd4f673",
+  "captured": "2026-10-09T19:18:28Z",
+  "harnesses": {
+    "vitest": { "files": ["tests/unit/stream-delivery.spec.ts"], "new_functions": 16, "total_functions": 81, "passing": 81, "failing": 0 },
+    "claude-plugin-test": { "files": ["hooks/stream.test.ts", "hooks/register.test.ts"], "new_functions": 6, "total_functions": 10, "passing": 10, "failing": 0 }
+  },
+  "total_functions": 91,
+  "removed_tests": [],
+  "rewritten_tests": [
+    "hooks/register.test.ts::registers the commands and /a11y-off removes the key (AC-009, AC-010)",
+    "hooks/stream.test.ts::holds the whole step, drops thinking, keeps order and rings once (AC-001 to AC-005)"
+  ],
+  "notes": "Two rewrites recorded in overrides.json: the cycle-1 command list grew by /a11y-stream, and the stream test reads the step result from the iterator's return value because the kit's .result promise settles undefined. No assertion weakened."
+}
