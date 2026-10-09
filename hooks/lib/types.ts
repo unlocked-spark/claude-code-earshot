@@ -31,3 +31,15 @@ export type ModeState = {
 export type StoredConsent = { declined: true; declinedAt: string; modVersion: string }
 
 export type SettingsLike = Readonly<Record<string, unknown>>
+
+// Whole answer delivery
+
+export type DeliveryMode = 'buffered' | 'live'
+
+export type DeliverySource = 'override' | 'mode'
+
+export type StreamOverride = { mode: DeliveryMode; setAt: string }
+
+// The part of a turn.step chunk the hold looks at. The real chunks carry more
+// fields; the hold passes them through untouched.
+export type StepChunk = { readonly kind: string; readonly text?: string; readonly [key: string]: unknown }

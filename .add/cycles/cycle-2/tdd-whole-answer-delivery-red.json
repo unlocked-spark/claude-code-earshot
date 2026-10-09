@@ -1,0 +1,14 @@
+{
+  "phase": "red",
+  "cycle_id": 2,
+  "spec_slug": "whole-answer-delivery",
+  "base_sha": "85e913a",
+  "captured": "2026-10-09T19:16:02Z",
+  "harnesses": {
+    "vitest": { "files": ["tests/unit/stream-delivery.spec.ts"], "new_functions": 16, "total_functions": 81, "passing": 65, "failing": 16 },
+    "claude-plugin-test": { "files": ["hooks/stream.test.ts"], "new_functions": 6, "total_functions": 10, "passing": 6, "failing": 4 }
+  },
+  "total_functions": 91,
+  "new_functions": 22,
+  "notes": "Hand-written snapshot. Two of the six new kit tests pass in RED by design: live streaming is today's behaviour. A test's bottom turn.step hook cannot fabricate engine chunks, so the kit script has none; the hold's treatment of engine chunks is covered in Vitest."
+}

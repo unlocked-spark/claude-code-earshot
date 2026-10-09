@@ -1,4 +1,4 @@
-import type { DetectionResult, ModeState, Reader, StoredConsent } from './types'
+import type { DeliveryMode, DeliverySource, DetectionResult, ModeState, Reader, StoredConsent } from './types'
 
 // Every line here is spoken and printed verbatim (AC-012), so each one is a
 // short sentence that stands on its own when heard once.
@@ -69,6 +69,18 @@ export const messages = {
     if (consent === undefined) parts.push('No refusal stored.')
     else parts.push(`Refusal stored on ${consent.declinedAt.slice(0, 10)}, mod version ${consent.modVersion}.`)
     return parts.join(' ')
+  },
+  streamReport(_args: { mode: DeliveryMode; source: DeliverySource }): string {
+    throw new Error('not implemented')
+  },
+  streamSet(_mode: DeliveryMode): string {
+    throw new Error('not implemented')
+  },
+  streamAuto(): string {
+    throw new Error('not implemented')
+  },
+  streamInvalid(): string {
+    throw new Error('not implemented')
   },
   error(kind: 'no-home' | 'invalid-json' | 'not-an-object' | 'write-failed' | 'verify-mismatch', path: string | undefined): string {
     switch (kind) {
