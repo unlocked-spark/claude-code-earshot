@@ -1,0 +1,16 @@
+{
+  "phase": "green",
+  "cycle_id": 1,
+  "spec_slug": "screen-reader-detection",
+  "base_sha": "22e3320",
+  "red_sha": "0b0132a",
+  "captured": "2026-10-09T17:46:07Z",
+  "harnesses": {
+    "vitest": { "files": ["tests/unit/detect.spec.ts", "tests/unit/mode-state.spec.ts", "tests/unit/settings-file.spec.ts", "tests/unit/consent.spec.ts"], "total_functions": 65, "passing": 65, "failing": 0 },
+    "claude-plugin-test": { "files": ["hooks/register.test.ts"], "total_functions": 4, "passing": 4, "failing": 0 }
+  },
+  "total_functions": 69,
+  "removed_tests": [],
+  "rewritten_tests": [],
+  "notes": "No test removed or renamed. hooks/register.test.ts changed only in its host() helper (stubs answer { value }, chain bottoms for session.start and prompt.submit, registered commands tracked through the command.register stub instead of $.command.list) and in the typed inputs of $.prompt.submit and $.command.run; every assertion is the RED one. Plugin renamed from claude-code-a11y to a11y-companion because names starting with claude- are reserved by the validator."
+}

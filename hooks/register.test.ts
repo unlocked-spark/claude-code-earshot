@@ -1,50 +1,61 @@
 import { expect, mock, test } from 'claude-code/testing'
 import type { On } from 'claude-code'
 
-type Log = { spoken: string[]; logged: string[]; written: { path: string; text: string }[]; notified: number }
+type Log = { spoken: string[]; logged: string[]; written: { path: string; text: string }[]; notified: number; commands: string[] }
 
-// Stubs the world beneath the mod: a macOS host with VoiceOver running, an
-// empty settings file, the mod's own manifest, and silent audio and transcript
-// sinks that record what the mod said.
+// Stubs the world beneath the mod: a macOS host with or without VoiceOver, a
+// settings file, the mod's own manifest, and silent audio and transcript sinks
+// that record what the mod said. Each stub answers its event with { value }.
 function host(on: On, world: { voiceover: boolean; env: Record<string, string>; settings: string | undefined }): Log {
-  const log: Log = { spoken: [], logged: [], written: [], notified: 0 }
+  const log: Log = { spoken: [], logged: [], written: [], notified: 0, commands: [] }
   let settings = world.settings
   mock.env(on, world.env)
   mock.store(on)
   mock.clock(on)
   on('process.run', (_$, e) => {
     const cmd = e.argv[0]
-    if (cmd === 'uname') return { exitCode: 0, stdout: 'Darwin\n', stderr: '' }
-    if (cmd === 'pgrep') return world.voiceover ? { exitCode: 0, stdout: '123\n', stderr: '' } : { exitCode: 1, stdout: '', stderr: '' }
+    const reply = (exitCode: number, stdout: string) => ({ value: { exitCode, stdout, stderr: '', isStdoutTruncated: false, isStderrTruncated: false } })
+    if (cmd === 'uname') return reply(0, 'Darwin\n')
+    if (cmd === 'pgrep') return world.voiceover ? reply(0, '123\n') : reply(1, '')
     throw new Error(`unexpected command ${e.argv.join(' ')}`)
   })
-  on('settings.read', () => (settings === undefined ? {} : (JSON.parse(settings) as Record<string, unknown>)))
-  on('fs.exists', (_$, e) => (e.path.endsWith('settings.json') ? settings !== undefined : false))
+  on('settings.read', () => ({ value: settings === undefined ? {} : (JSON.parse(settings) as Record<string, unknown>) }))
+  on('fs.exists', (_$, e) => ({ value: e.path.endsWith('settings.json') ? settings !== undefined : false }))
   on('fs.read', (_$, e) => {
-    if (e.path.endsWith('plugin.json')) return '{ "name": "claude-code-a11y", "version": "0.1.0" }'
-    if (e.path.endsWith('settings.json') && settings !== undefined) return settings
+    if (e.path.endsWith('plugin.json')) return { value: '{ "name": "a11y-companion", "version": "0.1.0" }' }
+    if (e.path.endsWith('settings.json') && settings !== undefined) return { value: settings }
     throw new Error(`no such file ${e.path}`)
   })
   on('fs.write', (_$, e) => {
     log.written.push({ path: e.path, text: e.text })
     if (e.path.endsWith('settings.json')) settings = e.text
+    return { value: undefined }
   })
   on('audio.speak', (_$, e) => {
     log.spoken.push(e.text)
-    return { via: 'system' as const }
+    return { value: { via: 'system' as const } }
   })
   on('ui.log', (_$, e) => {
     log.logged.push(e.text)
+    return { value: undefined }
   })
   on('ui.notify', () => {
     log.notified += 1
-    return { isSent: true as const, channel: 'terminal_bell' as const }
+    return { value: { isSent: true as const, channel: 'terminal_bell' as const } }
   })
-  on('command.register', (_$, e) => ({ command: e.name }))
+  on('command.register', (_$, e) => {
+    log.commands.push(e.name)
+    return { value: { command: e.name } }
+  })
+  // The bottom of the chain, standing for the engine's own behaviour.
+  on('session.start', (_$, e) => ({ cwd: e.cwd }))
+  on('prompt.submit', (_$, e) => ({ text: e.text }))
   return log
 }
 
 const start = { cwd: '/work', surface: 'terminal' as const, isInteractive: true }
+const typed = (text: string) => ({ text, wait: false, origin: { kind: 'composer' as const } })
+const command = (name: string) => ({ command: name, args: '', origin: { kind: 'composer' as const }, presentation: { isFullscreen: false, columns: 80 } })
 
 test('asks by voice and in the transcript when VoiceOver runs and the mode is off (AC-005, AC-012)', async ($, on) => {
   const log = host(on, { voiceover: true, env: { HOME: '/Users/t' }, settings: '{\n  "model": "opus"\n}\n' })
@@ -58,7 +69,7 @@ test('asks by voice and in the transcript when VoiceOver runs and the mode is of
 test('writes axScreenReader on y, keeps other keys, and consumes the answer (AC-006)', async ($, on) => {
   const log = host(on, { voiceover: true, env: { HOME: '/Users/t' }, settings: '{\n  "model": "opus"\n}\n' })
   await $.session.start(start)
-  const result = await $.prompt.submit({ text: 'y' })
+  const result = await $.prompt.submit(typed('y'))
   expect(result.drop).toBeDefined()
   const settingsWrite = log.written.find((w) => w.path === '/Users/t/.claude/settings.json')
   expect(settingsWrite).toBeDefined()
@@ -72,7 +83,7 @@ test('stays silent when CLAUDE_AX_SCREEN_READER is 0 and lets prompts through (A
   await $.session.start(start)
   expect(log.spoken).toHaveLength(0)
   expect(log.logged).toHaveLength(0)
-  const result = await $.prompt.submit({ text: 'y' })
+  const result = await $.prompt.submit(typed('y'))
   expect(result.drop).toBeUndefined()
   expect(log.written).toHaveLength(0)
 })
@@ -80,9 +91,8 @@ test('stays silent when CLAUDE_AX_SCREEN_READER is 0 and lets prompts through (A
 test('registers the three commands and /a11y-off removes the key (AC-009, AC-010)', async ($, on) => {
   const log = host(on, { voiceover: false, env: { HOME: '/Users/t' }, settings: '{"axScreenReader": true, "model": "opus"}' })
   await $.session.start(start)
-  const commands = (await $.command.list()).map((c) => c.name)
-  expect(commands).toEqual(expect.arrayContaining(['a11y-on', 'a11y-off', 'a11y-status']))
-  const result = await $.command.run({ command: 'a11y-off', args: '' })
+  expect(log.commands).toEqual(['a11y-on', 'a11y-off', 'a11y-status'])
+  const result = await $.command.run(command('a11y-off'))
   expect(result.text).toBe('Screen reader mode disabled from the next start.')
   const settingsWrite = log.written.find((w) => w.path === '/Users/t/.claude/settings.json')
   expect(JSON.parse(settingsWrite?.text ?? '{}')).toEqual({ model: 'opus' })
