@@ -113,6 +113,22 @@
       "date": "2026-10-09",
       "classified_by": "agent",
       "checkpoint_type": "post-tdd-cycle"
+    },
+    {
+      "id": "L-008",
+      "title": "claude plugin test can be blocked by a stale mods rollout flag",
+      "body": "claude plugin test . answered \"hooks modules are turned off in this process: the rollout switch was saved off by an earlier session\" although the same suite had passed minutes before. The switch is tengu_plugin_hooks_modules in ~/.claude.json; a headless run (claude -p \"Reply with the single word ok.\" --max-turns 1) with network access refreshed it to true and the suite ran again. Treat this message as an environment flake, not a test failure, and refresh before retrying.",
+      "scope": "workstation",
+      "stack": [
+        "claude-code-mod-api",
+        "claude-plugin-test"
+      ],
+      "category": "technical",
+      "severity": "medium",
+      "source": "claude-code-a11y",
+      "date": "2026-10-09",
+      "classified_by": "agent",
+      "checkpoint_type": "post-verify"
     }
   ]
 }

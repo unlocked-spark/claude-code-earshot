@@ -1,4 +1,4 @@
-# Active Learnings (7 of 7)
+# Active Learnings (8 of 8)
 
 > Pre-filtered by severity and date. Full data: `.add/learnings.json`
 
@@ -12,6 +12,8 @@
   A hooks module fails to load (and claude plugin validate reports it) when $ is passed to a function defined inside the register closure or to a function parameter. Keep every helper that takes $ as a top-level function declaration and keep session facts in a module-level record; a higher-order helper such as runCommand($, action) is refused. Found with claude plugin test on 2026-10-09.
 - **[high]** Screen reader mode cannot be switched on inside a running session (L-002, 2026-10-09)
   The mode is decided once at startup (flag, then CLAUDE_AX_SCREEN_READER, then the axScreenReader setting) and mods load after that decision. There is no /config row, so $.config.set cannot change it. A mod can only write axScreenReader: true to ~/.claude/settings.json for the next session and announce the restart by speech and bell. Verified in the 2.1.295 binary; source: docs/research/rozpoznanie… [truncated — full entry in learnings.json]
+- **[medium]** claude plugin test can be blocked by a stale mods rollout flag (L-008, 2026-10-09)
+  claude plugin test . answered "hooks modules are turned off in this process: the rollout switch was saved off by an earlier session" although the same suite had passed minutes before. The switch is tengu_plugin_hooks_modules in ~/.claude.json; a headless run (claude -p "Reply with the single word ok." --max-turns 1) with network access refreshed it to true and the suite ran again. Treat this messa… [truncated — full entry in learnings.json]
 - **[medium]** Two test harnesses: Vitest for hooks/lib, claude plugin test for the mod (L-007, 2026-10-09)
   claude plugin test . runs hooks/*.test.ts with the claude-code/testing kit and does not descend into node_modules; Vitest is configured to run only tests/unit/*.spec.ts so neither harness picks up the other. In a kit test, stubs beneath the mod answer each $ call event with { value }, mock.env/store/clock cover those nouns, and the test must answer session.start and prompt.submit at the bottom of … [truncated — full entry in learnings.json]
 - **[medium]** Plugin names starting with claude- are reserved; command names take no colon (L-006, 2026-10-09)
