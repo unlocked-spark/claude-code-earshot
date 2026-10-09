@@ -1,0 +1,177 @@
+{
+  "$schema": "https://github.com/MountainUnicorn/add/config.schema.json",
+  "version": "0.5.0",
+  "project": {
+    "name": "claude-code-a11y",
+    "description": "Accessibility mod for Claude Code aimed at blind developers. An overlay on the built-in screen reader mode (--ax-screen-reader) that adds what the mode lacks: spoken end-of-turn summaries, earcons for tool and permission events, a screen-reader-usable AskUserQuestion dialog, significance-filtered tool narration, speech on Windows, and automatic enabling of the mode when a screen reader is detected. Project of the Unlocked Spark Foundation.",
+    "created": "2026-10-09",
+    "author": "Łukasz Majewski",
+    "adopted": false,
+    "adoption_notes": "Repository existed as notes only (README and a Polish research note dated 2026-10-09, one commit). No code before ADD. Repository content is English; research notes under docs/research/ stay Polish. Repository private until first usable release."
+  },
+  "maturity": {
+    "level": "poc",
+    "promoted_from": null,
+    "promoted_date": null,
+    "assessed": "2026-10-09",
+    "evidence_score": "0/12",
+    "next_promotion_criteria": "Alpha: specs for the critical paths (screen reader detection and mode enabling, end-of-turn signal, AskUserQuestion dialog) in specs/; unit tests for the tool-call classifier and speech formatters in tests/unit; lint and typecheck in a pre-commit hook; manual test protocol with NVDA and VoiceOver written down in docs/; commit convention applied consistently."
+  },
+  "architecture": {
+    "languages": [
+      { "name": "typescript", "version": "5.x (strict), ES modules", "role": "plugin" },
+      { "name": "javascript", "version": "Node 22 for tooling only (npm, Vitest, ESLint); the mod itself runs inside the Claude Code process", "role": "scripting" }
+    ],
+    "backend": {
+      "framework": null,
+      "version": null,
+      "runtime": "Claude Code mod runtime (>= 2.1.287, type definitions checked for 2.1.295): hooks/hooks.json points at a TypeScript module exporting register(on, options)"
+    },
+    "frontend": {
+      "framework": "Claude Code mod surfaces (Spinner, ToolProgress, AskUserQuestion, ToolUse, ToolResult, AbovePrompt, Pane) plus $.audio, $.ui, $.process, $.fs APIs",
+      "version": null,
+      "bundler": "none"
+    },
+    "database": {
+      "type": "none ($.store up to 4 MiB for mod state; ~/.claude/settings.json for axScreenReader)",
+      "version": null
+    },
+    "plugin": {
+      "manifest": ".claude-plugin/plugin.json",
+      "hooks": "hooks/hooks.json",
+      "entry": "src/mod.ts",
+      "validate": "claude plugin validate .",
+      "install_from_shell": "claude plugin install claude-code-a11y@<marketplace> --scope user",
+      "not_supported_by_mod_api": ["claude -p", "SDK", "cloud", "VS Code panel", "WSL", "permission prompt", "input field", "slash command menu"]
+    },
+    "containerized": false,
+    "container_strategy": "none",
+    "suggested_by_claude": false
+  },
+  "infrastructure": {
+    "git_host": "github",
+    "git_remote": null,
+    "git_remote_planned": "https://github.com/unlocked-spark/claude-code-a11y (private until first release)",
+    "cloud_provider": "none",
+    "cloud_services": [],
+    "cicd": {
+      "platform": "none",
+      "scaffolded_by_add": false,
+      "pipeline_file": null,
+      "notes": "Manual: npm test, npm run lint, claude plugin validate . before each commit. GitHub Actions planned at Alpha."
+    },
+    "infrastructure_as_code": "none"
+  },
+  "environments": {
+    "tier": 1,
+    "local": {
+      "run": "claude --plugin-dir . --ax-screen-reader",
+      "test": "npm test",
+      "e2e": null,
+      "lint": "npm run lint",
+      "typecheck": "npm run typecheck",
+      "validate": "claude plugin validate .",
+      "url": null,
+      "manual_test": "Full session with VoiceOver (macOS) and NVDA (Windows): install from shell, restart, prompt, answer an AskUserQuestion, approve a permission, hear end of turn."
+    },
+    "dev": null,
+    "staging": null,
+    "production": {
+      "deploy_trigger": "manual: publish to a plugin marketplace (own marketplace repo or an existing mod marketplace)",
+      "verify": ["claude plugin validate .", "manual session with NVDA and VoiceOver"],
+      "url": null,
+      "requires_approval": true
+    }
+  },
+  "quality": {
+    "mode": "spike",
+    "coverage_threshold": 0,
+    "coverage_notes": "No coverage gate at POC. Target 50% of src/classify and src/speech at Alpha. Screen reader behaviour is verified manually; every sound must have a text equivalent that the screen reader can read.",
+    "type_check_blocking": false,
+    "e2e_required": false,
+    "screenshot_protocol": false,
+    "lint": {
+      "backend": "npm run lint",
+      "frontend": null
+    },
+    "typecheck": {
+      "backend": "npm run typecheck",
+      "frontend": null
+    },
+    "test": {
+      "unit": "npm test",
+      "integration": "claude plugin validate .",
+      "e2e": null
+    }
+  },
+  "collaboration": {
+    "autonomy_level": "balanced",
+    "team_size": "solo",
+    "commit_review_gate": false,
+    "pr_review_gate": false,
+    "deploy_approval_required": true,
+    "language": {
+      "conversation": "pl",
+      "docs": "en",
+      "research_notes": "pl (docs/research/)",
+      "code_and_commits": "en"
+    }
+  },
+  "source_control": {
+    "branching": "trunk (commits straight to main)",
+    "default_branch": "main",
+    "commit_convention": "imperative-sentence",
+    "commit_convention_notes": "Imperative English sentence describing the effect, no type prefix, no AI attribution. Deliberate departure from conventional commits.",
+    "pr_template": false,
+    "protected_branches": []
+  },
+  "specs_directory": "specs/",
+  "specs_format": "markdown",
+  "plans_directory": "docs/plans/",
+  "design_docs": ["docs/research/rozpoznanie-2026-10-09.md"],
+  "branding": {
+    "accentColor": "#174a92",
+    "presetName": "unlocked-spark",
+    "source": "Foundation brand shared with ../flint (accent oklch(0.42 0.13 258)); chrome in ../unlocked-spark-landingpage/src/",
+    "palette": {
+      "accent": "#174a92",
+      "accentLight": "#498de5",
+      "accentDark": "#003379",
+      "accentMuted": "#5399d1",
+      "accentGlow": "rgba(23,74,146,0.4)",
+      "gradientStart": "#174a92",
+      "gradientMid": "#498de5",
+      "gradientEnd": "#5399d1",
+      "success": "#22c55e",
+      "warning": "#eab308",
+      "info": "#0ea5e9"
+    },
+    "fonts": { "heading": "Atkinson Hyperlegible", "body": "Atkinson Hyperlegible", "code": null },
+    "tone": "Confident and factual. No quoting of regulations, no emphasis on the foundation being young or small, no double dashes in public text. Invitations to contact phrased positively (rules in ../CLAUDE.md).",
+    "logoPath": null,
+    "styleGuideSource": null
+  },
+  "imageGeneration": {
+    "enabled": false,
+    "tool": null,
+    "plugin": null,
+    "nudged": false,
+    "lastDetected": null
+  },
+  "changelog": {
+    "lastProcessedCommit": "57ecf88",
+    "lastVersionTag": null
+  },
+  "learnings": {
+    "active_cap": 15,
+    "archival_days": 90,
+    "archival_max_severity": "medium"
+  },
+  "planning": {
+    "current_milestone": "M1-heard-turn",
+    "current_cycle": null,
+    "wip_limit": 2,
+    "parallel_agents": 1,
+    "cycle_history": []
+  }
+}

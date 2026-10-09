@@ -1,0 +1,11 @@
+# Node
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.DS_Store
+
+# ADD: ephemeral artifacts (do not commit)
+.add/away-logs/
+tests/screenshots/errors/
+# ADD: .add/config.json, .add/learnings.json, .add/retros/, specs/, docs/plans/ are committed
