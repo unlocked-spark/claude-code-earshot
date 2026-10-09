@@ -4,7 +4,7 @@
 **Created:** 2026-10-09
 **PRD Reference:** docs/prd.md (Feature 1, milestone M1)
 **Research:** docs/research/rozpoznanie-2026-10-09.md, section 5 (Polish)
-**Status:** Draft
+**Status:** Implementing (code and automated tests done; manual test cases pending)
 
 ## 1. Overview
 
@@ -28,9 +28,9 @@ As a blind developer who has just installed the mod from the shell, I want Claud
 | AC-006 | A `y` answer writes `"axScreenReader": true` to `~/.claude/settings.json` (Windows: `%USERPROFILE%\.claude\settings.json`), preserving every other key and 2-space indentation. The file is written atomically (temp file, then rename). The mod then speaks and prints: mode enabled from the next start, restart Claude Code now. | Must |
 | AC-007 | An `n` answer stores `{ declined: true, declinedAt, modVersion }` under the `screenReaderConsent` key in `$.store`. Later sessions with the same mod version do not ask again. | Must |
 | AC-008 | No answer within 30 s counts as a refusal for this session only. Nothing is stored; the next session asks again. | Should |
-| AC-009 | `/a11y:on` writes `axScreenReader: true` without asking, clears the stored refusal, and gives the restart message. | Must |
-| AC-010 | `/a11y:off` removes the `axScreenReader` key from the user settings file (restoring the default), speaks and prints confirmation. If the key was not there, it says so. | Must |
-| AC-011 | `/a11y:status` speaks and prints: detected reader (or none), mode state and its source (flag, env, settings, off), whether a refusal is stored. | Should |
+| AC-009 | `/a11y-on` writes `axScreenReader: true` without asking, clears the stored refusal, and gives the restart message. | Must |
+| AC-010 | `/a11y-off` removes the `axScreenReader` key from the user settings file (restoring the default), speaks and prints confirmation. If the key was not there, it says so. | Must |
+| AC-011 | `/a11y-status` speaks and prints: detected reader (or none), mode state and its source (flag, env, settings, off), whether a refusal is stored. | Should |
 | AC-012 | Every spoken message has an identical text line in the transcript. Nothing is conveyed by sound or speech alone. | Must |
 | AC-013 | When the settings file cannot be written (missing directory, permission error) or cannot be parsed, the mod leaves the file untouched, speaks and prints the error and the manual fallback: add `"axScreenReader": true` to the settings file, or set `CLAUDE_AX_SCREEN_READER=1` in the shell profile. The session continues. | Must |
 | AC-014 | A new mod version re-asks once after a stored refusal from an older version (the `modVersion` in the stored refusal differs). | Should |
@@ -51,7 +51,7 @@ Manual, with a screen reader running. Captures are transcript text saved under `
 4. Quit Claude Code and run `claude` again.
 **Expected Result:** Step 2: bell, then speech "VoiceOver detected. Enable Claude Code screen reader mode from the next start? Press y or n." and the same line in the transcript. Step 3: speech and text "Screen reader mode enabled from the next start. Restart Claude Code now." `~/.claude/settings.json` contains `"axScreenReader": true` and all previous keys. Step 4: the first line of the session is `[Screen Reader Mode: on via settings]` and the mod is silent.
 **Screenshot Checkpoint:** tests/screenshots/screen-reader-detection/tc-001-question.txt, tc-001-restart.txt
-**Maps to:** tests/unit/settings-writer.test.ts → "writes axScreenReader true preserving other keys" (file logic); manual for the rest
+**Maps to:** tests/unit/settings-file.spec.ts → "adds the key and preserves other keys and indentation"; hooks/register.test.ts → "writes axScreenReader on y, keeps other keys, and consumes the answer (AC-006)"; manual for speech and the restart
 
 ### TC-002: NVDA user enables the mode
 
@@ -59,7 +59,7 @@ Manual, with a screen reader running. Captures are transcript text saved under `
 **Steps:** as TC-001.
 **Expected Result:** as TC-001 with "NVDA detected" and the settings file under `%USERPROFILE%\.claude\settings.json`. The spoken question is heard through NVDA or the system voice (which one is recorded in the test log; see Open Questions).
 **Screenshot Checkpoint:** tests/screenshots/screen-reader-detection/tc-002-question.txt
-**Maps to:** tests/unit/detect-windows.test.ts → "parses Get-Process output with nvda.exe"; manual for the rest
+**Maps to:** tests/unit/detect.spec.ts → "reports NVDA on Windows from the process list"; manual for the rest
 
 ### TC-003: Mode already on
 
@@ -68,17 +68,17 @@ Manual, with a screen reader running. Captures are transcript text saved under `
 1. Run `claude`.
 **Expected Result:** Session starts with `[Screen Reader Mode: on via settings]`. No bell from the mod, no speech, no transcript line, settings file unchanged (same mtime).
 **Screenshot Checkpoint:** tests/screenshots/screen-reader-detection/tc-003-silent.txt
-**Maps to:** tests/unit/mode-state.test.ts → "reports on via settings and suppresses prompt"
+**Maps to:** tests/unit/mode-state.spec.ts → "stays silent when the mode is already on"
 
 ### TC-004: Environment variable set to 0
 
 **Precondition:** `CLAUDE_AX_SCREEN_READER=0` exported, VoiceOver running, no settings key.
 **Steps:**
 1. Run `claude`.
-2. Run `/a11y:status`.
+2. Run `/a11y-status`.
 **Expected Result:** Step 1: silent. Step 2: "VoiceOver detected. Screen reader mode off, set by the CLAUDE_AX_SCREEN_READER variable. The mod will not change settings while the variable is set."
 **Screenshot Checkpoint:** tests/screenshots/screen-reader-detection/tc-004-status.txt
-**Maps to:** tests/unit/mode-state.test.ts → "env var 0 blocks writes and prompt"
+**Maps to:** tests/unit/mode-state.spec.ts → "stays silent when the environment variable is set, even to 0"; hooks/register.test.ts → "stays silent when CLAUDE_AX_SCREEN_READER is 0 and lets prompts through (AC-003)"
 
 ### TC-005: Refusal is remembered
 
@@ -86,22 +86,22 @@ Manual, with a screen reader running. Captures are transcript text saved under `
 **Steps:**
 1. Run `claude`, answer `n` to the question.
 2. Quit and run `claude` again.
-3. Run `/a11y:status`.
-**Expected Result:** Step 1: "Understood. Screen reader mode stays off. Say /a11y:on at any time to enable it." Step 2: silent. Step 3 reports "refusal stored on <date>, mod version <v>".
+3. Run `/a11y-status`.
+**Expected Result:** Step 1: "Understood. Screen reader mode stays off. Say /a11y-on at any time to enable it." Step 2: silent. Step 3 reports "refusal stored on <date>, mod version <v>".
 **Screenshot Checkpoint:** tests/screenshots/screen-reader-detection/tc-005-declined.txt
-**Maps to:** tests/unit/consent.test.ts → "stored refusal suppresses the question for the same version"
+**Maps to:** tests/unit/consent.spec.ts → "declines on no"; tests/unit/mode-state.spec.ts → "honours a stored refusal from the same version"
 
 ### TC-006: Enabling after refusal, then disabling
 
 **Precondition:** state after TC-005.
 **Steps:**
-1. Run `/a11y:on`.
+1. Run `/a11y-on`.
 2. Quit, run `claude`, confirm mode is on.
-3. Run `/a11y:off`.
+3. Run `/a11y-off`.
 4. Quit, run `claude`.
 **Expected Result:** Step 1: restart message, settings key written, stored refusal cleared. Step 2: `[Screen Reader Mode: on via settings]`. Step 3: "Screen reader mode disabled from the next start." Key removed, other keys intact. Step 4: graphical session; the mod asks the question again (no refusal stored).
 **Screenshot Checkpoint:** tests/screenshots/screen-reader-detection/tc-006-on.txt, tc-006-off.txt
-**Maps to:** tests/unit/settings-writer.test.ts → "removes the key and leaves other keys untouched"
+**Maps to:** tests/unit/settings-file.spec.ts → "removes the key and keeps the rest"; hooks/register.test.ts → "registers the three commands and /a11y-off removes the key (AC-009, AC-010)"
 
 ### TC-007: Settings file is not valid JSON
 
@@ -110,7 +110,7 @@ Manual, with a screen reader running. Captures are transcript text saved under `
 1. Run `claude`, answer `y`.
 **Expected Result:** "Could not update the settings file: it is not valid JSON. The file was left unchanged. Add "axScreenReader": true by hand, or set CLAUDE_AX_SCREEN_READER=1 in your shell profile." File byte-identical to before. Session continues.
 **Screenshot Checkpoint:** tests/screenshots/screen-reader-detection/tc-007-error.txt
-**Maps to:** tests/unit/settings-writer.test.ts → "refuses to write when the file does not parse"
+**Maps to:** tests/unit/settings-file.spec.ts → "refuses invalid JSON without touching it"
 
 ### TC-008: No answer
 
@@ -121,7 +121,7 @@ Manual, with a screen reader running. Captures are transcript text saved under `
 3. Quit and run `claude` again.
 **Expected Result:** Step 1: after 30 s, "No answer, leaving screen reader mode off for this session." Step 2: the prompt is handled normally, not consumed as an answer. Step 3: the question is asked again.
 **Screenshot Checkpoint:** tests/screenshots/screen-reader-detection/tc-008-timeout.txt
-**Maps to:** tests/unit/consent.test.ts → "timeout does not store a refusal"
+**Maps to:** tests/unit/consent.spec.ts → "withdraws on timeout without storing anything"
 
 ## 4. Data Model
 
@@ -167,9 +167,9 @@ No HTTP endpoints. The contract is the set of slash commands and mod API calls.
 
 | Command | Effect | Output (spoken and printed) |
 |---------|--------|-----------------------------|
-| `/a11y:on` | Write `axScreenReader: true`, clear stored refusal | "Screen reader mode enabled from the next start. Restart Claude Code now." |
-| `/a11y:off` | Remove `axScreenReader` from user settings | "Screen reader mode disabled from the next start." or "Screen reader mode was not set in settings; nothing changed." |
-| `/a11y:status` | Report detection, mode state, stored refusal | One sentence per item |
+| `/a11y-on` | Write `axScreenReader: true`, clear stored refusal | "Screen reader mode enabled from the next start. Restart Claude Code now." |
+| `/a11y-off` | Remove `axScreenReader` from user settings | "Screen reader mode disabled from the next start." or "Screen reader mode was not set in settings; nothing changed." |
+| `/a11y-status` | Report detection, mode state, stored refusal | One sentence per item |
 
 ### Mod API usage
 
@@ -183,7 +183,7 @@ No HTTP endpoints. The contract is the set of slash commands and mod API calls.
 | `$.audio.speak` | All spoken lines | Short, one sentence each |
 | `$.ui.notify` | Restart message as a native notification too | Helps when the terminal is not in front |
 | `on("prompt.submit")` | Capture `y` / `n` while the question is pending | Depends on the API letting the handler consume the submission; see Dependencies |
-| `on("command.run")` | `/a11y:on`, `/a11y:off`, `/a11y:status` | |
+| `on("command.run")` | `/a11y-on`, `/a11y-off`, `/a11y-status` | |
 
 ## 6. UI Behavior
 
@@ -192,9 +192,9 @@ The only UI is transcript text plus speech. The first session is graphical (mode
 ### States
 
 - **Detecting:** nothing shown; detection runs in the background inside `session.start`.
-- **Question pending:** bell, spoken question, transcript line: `a11y: VoiceOver detected. Enable Claude Code screen reader mode from the next start? Press y or n.` A 30 s timer runs.
+- **Question pending:** bell, spoken question, transcript line: `a11y-companion: VoiceOver detected. Enable Claude Code screen reader mode from the next start? Press y or n.` A 30 s timer runs.
 - **Enabled, awaiting restart:** spoken and printed restart message, native notification.
-- **Declined:** spoken and printed acknowledgement with the `/a11y:on` hint.
+- **Declined:** spoken and printed acknowledgement with the `/a11y-on` hint.
 - **Timed out:** spoken and printed "leaving off for this session".
 - **Error:** spoken and printed error with the manual fallback.
 - **Silent:** mode already on, env var set, refusal stored, or no reader detected. No output.
@@ -211,14 +211,14 @@ Transcript captures listed per test case in section 3.
 | Only the Windows system flag reports a reader, no known process | Ask with "A screen reader was detected" instead of a name |
 | Screen reader started after Claude Code | Not detected this session; detected at the next start. No polling. |
 | `CLAUDE_AX_SCREEN_READER=1` but settings `false` | Mode is on (env wins); silent |
-| `axScreenReader: true` in project `.claude/settings.json` only | Mode is on; silent; `/a11y:off` says the setting comes from project settings and does not touch it |
-| Settings file missing | Treat as `{}`; create the directory and the file on `y` or `/a11y:on` |
+| `axScreenReader: true` in project `.claude/settings.json` only | Mode is on; silent; `/a11y-off` says the setting comes from project settings and does not touch it |
+| Settings file missing | Treat as `{}`; create the directory and the file on `y` or `/a11y-on` |
 | Settings file with comments or trailing commas | Invalid JSON: never written (AC-013) |
 | `HOME` / `USERPROFILE` unset | Error path of AC-013 with the env var fallback |
-| `pgrep` or PowerShell missing or failing | Detection result `none`; silent; `/a11y:status` reports "detection failed: <reason>" |
+| `pgrep` or PowerShell missing or failing | Detection result `none`; silent; `/a11y-status` reports "detection failed: <reason>" |
 | PowerShell execution policy blocks scripts | `-Command` with inline code is used, not a script file; if it still fails, treat as detection failure |
 | User types `y` as an ordinary prompt when no question is pending | Passed through untouched; the mod consumes input only while the question is pending |
-| User answers with `/a11y:on` instead of `y` | Accepted; the pending question is cancelled |
+| User answers with `/a11y-on` instead of `y` | Accepted; the pending question is cancelled |
 | Desktop app session | Same flow; the restart message says "restart Claude Code" without naming the terminal |
 | Mod upgraded after a refusal | Asks once more (AC-014) |
 
@@ -226,7 +226,7 @@ Transcript captures listed per test case in section 3.
 
 - Claude Code >= 2.1.287 with mods enabled; type definitions checked against 2.1.295.
 - Mod API: `session.start`, `prompt.submit`, `command.run`; `$.process.run`, `$.fs` with absolute paths, `$.env.get`, `$.store`, `$.audio.speak`, `$.ui.notify`.
-- **To verify before planning:** whether a `prompt.submit` handler can consume the submission so that `y` is not sent to the model. If not, the consent answer falls back to `/a11y:on` and `/a11y:off` only, and AC-005 changes its wording to name the commands.
+- **To verify before planning:** whether a `prompt.submit` handler can consume the submission so that `y` is not sent to the model. If not, the consent answer falls back to `/a11y-on` and `/a11y-off` only, and AC-005 changes its wording to name the commands.
 - **To verify:** whether `$.audio.speak` is audible on Windows and whether it reaches NVDA or only the system voice (PRD open question). The detection and settings logic does not depend on it, but TC-002 does.
 - **To verify:** how the mod obtains its own version (manifest read through `$.fs` relative to the plugin root, or an API field).
 - No third-party libraries. Vitest and ESLint for development only.
@@ -251,3 +251,4 @@ Transcript captures listed per test case in section 3.
 | Date | Version | Author | Changes |
 |------|---------|--------|---------|
 | 2026-10-09 | 0.1.0 | Łukasz Majewski | Initial spec from /add:spec interview: spoken y/n consent, remembered refusal, macOS and Windows only |
+| 2026-10-09 | 0.1.1 | Łukasz Majewski | After the TDD cycle: commands renamed to /a11y-on, /a11y-off, /a11y-status (colons are not allowed in command names); plugin named a11y-companion; the transcript line carries the plugin name as its prefix; the bell goes through the user's notification channel; an ordinary prompt while the question is pending withdraws it and goes through; "Maps to" fields filled |

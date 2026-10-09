@@ -50,7 +50,7 @@ The mod runs in the Claude Code terminal and in the desktop app. It does not run
 
 Numbering follows the recommendation in the research note.
 
-1. **Screen reader detection and mode enabling (item 7).** On first `session.start`, detect a running screen reader (`pgrep -x VoiceOver`; `nvda.exe` / `jfw.exe` or `SPI_GETSCREENREADER` through PowerShell; `gsettings get org.gnome.desktop.a11y.applications screen-reader-enabled`). With user consent (`userConfig` flag in the manifest), write `"axScreenReader": true` to `~/.claude/settings.json`, speak and ring that the mode is on from the next start, and ask for a restart. Never override `CLAUDE_AX_SCREEN_READER=0`. Provide `/a11y:off` to undo. Document shell installation (`claude plugin install ... --scope user`) because the in-session picker is unusable.
+1. **Screen reader detection and mode enabling (item 7).** On first `session.start`, detect a running screen reader (`pgrep -x VoiceOver`; `nvda.exe` / `jfw.exe` or `SPI_GETSCREENREADER` through PowerShell; `gsettings get org.gnome.desktop.a11y.applications screen-reader-enabled`). Ask by voice and in the transcript, answered with `y` or `n`; on `y` write `"axScreenReader": true` to `~/.claude/settings.json`, speak and ring that the mode is on from the next start, and ask for a restart. A refusal is remembered until `/a11y-on` or a mod update. Never override `CLAUDE_AX_SCREEN_READER=0`. Provide `/a11y-on`, `/a11y-off` and `/a11y-status`. Document shell installation (`claude plugin install ... --scope user`) because the in-session picker is unusable.
 2. **End-of-turn and waiting signal (item 1).** On `turn.complete` and when the session waits for input: an earcon plus one short spoken sentence summarising the turn (number of tool calls, errors, pending questions). Distinct sounds for "finished", "waiting for you" and "tool still running".
 3. **Screen-reader-usable `AskUserQuestion` (item 3).** Replace the picker with a numbered list rendered as plain text, speak the option on every selection change, accept a digit as the answer. Subject to verification: if the built-in mode already reads the dialog correctly with NVDA, this item shrinks to a reproduction report.
 4. **Earcons for events (item 4).** Tool start, tool error, permission request, end of turn. One sound language shared with the foundation's audio games. Every earcon has a text equivalent the screen reader can read.
@@ -120,7 +120,7 @@ Manual testing needs two machines or VMs: macOS with VoiceOver and Windows 11 wi
 **Appetite:** Two weeks of part-time work.
 **Target maturity:** poc
 **Features:**
-- Screen reader detection and `axScreenReader` enabling with consent and `/a11y:off`
+- Screen reader detection and `axScreenReader` enabling with consent and `/a11y-off`
 - End-of-turn earcon plus spoken one-sentence summary
 - Earcons for tool start, tool error, permission request
 **Success criteria:**
@@ -159,7 +159,7 @@ Manual testing needs two machines or VMs: macOS with VoiceOver and Windows 11 wi
 ## 7. Key Features
 
 ### Feature 1: Screen reader detection and mode enabling
-Detect a running screen reader at session start, ask for consent through the plugin's `userConfig`, write `axScreenReader: true` to the user settings, announce by speech and bell that a restart is needed. Reversible with `/a11y:off`; respects `CLAUDE_AX_SCREEN_READER=0`. Closes the practical gap behind #89002 until Anthropic adds it to the core.
+Detect a running screen reader at session start, ask for consent by voice with a `y`/`n` answer, write `axScreenReader: true` to the user settings, announce by speech and bell that a restart is needed. Implemented in cycle 1 (spec `specs/screen-reader-detection.md`), manual sessions pending. Reversible with `/a11y-off`; respects `CLAUDE_AX_SCREEN_READER=0`. Closes the practical gap behind #89002 until Anthropic adds it to the core.
 
 ### Feature 2: End-of-turn signal
 On `turn.complete` play a distinct earcon and speak one sentence: "Done, three tool calls, one question for you." Separate sounds for waiting on input and for long-running tools. Replaces the single ambiguous bell (#87978).

@@ -4,7 +4,7 @@
 **Created:** 2026-10-09
 **Team:** solo
 **Estimated Effort:** 26 h of focused work plus two manual test sessions (macOS, Windows); about two weeks part-time, matching the M1 appetite
-**Status:** Draft
+**Status:** In Progress (tasks 1 to 19 and 22 done on 2026-10-09; 4, 20, 21 and 23 need the manual sessions)
 
 ## 1. Overview
 
@@ -170,3 +170,4 @@ Critical path: 1 → 2 → 3 → 6 → 13 → 14 → 15 → 16 → 17 → 18 →
 ## 9. Plan History
 
 - 2026-10-09: Initial plan from /add:plan. Spikes gate the consent design; pure modules behind an adapter; macOS and Windows manual sessions.
+- 2026-10-09: TDD cycle 1. Spikes A and C answered from the type declarations (docs/research/spikes-2026-10.md), so the consent design stayed as specified. Tests run in two harnesses: Vitest for hooks/lib and `claude plugin test` for the mod. Deviations: plugin named a11y-companion (reserved prefix), commands /a11y-on, /a11y-off, /a11y-status, helpers top-level because the loader only lets `$` reach top-level functions. Open: Spike B and the manual sessions (tasks 4, 20, 21), closing task 23.

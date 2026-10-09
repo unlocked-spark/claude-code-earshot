@@ -65,6 +65,54 @@
       "date": "2026-10-09",
       "classified_by": "agent",
       "checkpoint_type": "plan"
+    },
+    {
+      "id": "L-005",
+      "title": "The mod loader only lets $ reach top-level functions",
+      "body": "A hooks module fails to load (and claude plugin validate reports it) when $ is passed to a function defined inside the register closure or to a function parameter. Keep every helper that takes $ as a top-level function declaration and keep session facts in a module-level record; a higher-order helper such as runCommand($, action) is refused. Found with claude plugin test on 2026-10-09.",
+      "scope": "project",
+      "stack": [
+        "typescript",
+        "claude-code-mod-api"
+      ],
+      "category": "technical",
+      "severity": "high",
+      "source": "claude-code-a11y",
+      "date": "2026-10-09",
+      "classified_by": "agent",
+      "checkpoint_type": "post-tdd-cycle"
+    },
+    {
+      "id": "L-006",
+      "title": "Plugin names starting with claude- are reserved; command names take no colon",
+      "body": "claude plugin validate refuses names starting with claude-, anthropic-, anthropics- or cc-plugin-, so the plugin is a11y-companion while the repository stays claude-code-a11y. Command names allow letters, digits, _ and - only, hence /a11y-on, /a11y-off, /a11y-status. Transcript lines from $.ui.log carry the plugin name as prefix, so the name is spoken by the screen reader on every line: keep it short and pronounceable.",
+      "scope": "project",
+      "stack": [
+        "typescript",
+        "claude-code-mod-api"
+      ],
+      "category": "technical",
+      "severity": "medium",
+      "source": "claude-code-a11y",
+      "date": "2026-10-09",
+      "classified_by": "agent",
+      "checkpoint_type": "post-tdd-cycle"
+    },
+    {
+      "id": "L-007",
+      "title": "Two test harnesses: Vitest for hooks/lib, claude plugin test for the mod",
+      "body": "claude plugin test . runs hooks/*.test.ts with the claude-code/testing kit and does not descend into node_modules; Vitest is configured to run only tests/unit/*.spec.ts so neither harness picks up the other. In a kit test, stubs beneath the mod answer each $ call event with { value }, mock.env/store/clock cover those nouns, and the test must answer session.start and prompt.submit at the bottom of the chain. $.prompt.submit and $.command.run called from a test take the full event input (wait, origin, presentation).",
+      "scope": "project",
+      "stack": [
+        "typescript",
+        "claude-code-mod-api"
+      ],
+      "category": "technical",
+      "severity": "medium",
+      "source": "claude-code-a11y",
+      "date": "2026-10-09",
+      "classified_by": "agent",
+      "checkpoint_type": "post-tdd-cycle"
     }
   ]
 }
