@@ -129,6 +129,40 @@
       "date": "2026-10-09",
       "classified_by": "agent",
       "checkpoint_type": "post-verify"
+    },
+    {
+      "id": "L-009",
+      "title": "Streaming hooks: read the iterator by hand, the return value is the result",
+      "body": "A turn.step hook and its .catch handler are async generators. for await discards the generator return value, and the kit stream's .result promise settled undefined in tests, so both the hook and the kit test iterate with next() and take item.value when done is true. Holding chunks in an array and yielding them after the stream ends delays only the display: the engine still records and runs every tool call from the replayed tool and input chunks.",
+      "scope": "project",
+      "stack": [
+        "typescript",
+        "claude-code-mod-api",
+        "claude-plugin-test"
+      ],
+      "category": "technical",
+      "severity": "high",
+      "source": "claude-code-a11y",
+      "date": "2026-10-09",
+      "classified_by": "agent",
+      "checkpoint_type": "post-tdd-cycle"
+    },
+    {
+      "id": "L-010",
+      "title": "Kit limits for turn.step tests",
+      "body": "A test's bottom turn.step hook cannot yield engine chunks (the kit refuses a ref it never pulled), so scripted streams carry text, thinking, tool, input and stop only. A second hook on an event mock.store already answers (store.set, store.delete) needs a matcher such as { key } or the module fails with \"registered twice\". Registered before mock.store, such a hook runs above it and can record writes.",
+      "scope": "project",
+      "stack": [
+        "typescript",
+        "claude-code-mod-api",
+        "claude-plugin-test"
+      ],
+      "category": "technical",
+      "severity": "medium",
+      "source": "claude-code-a11y",
+      "date": "2026-10-09",
+      "classified_by": "agent",
+      "checkpoint_type": "post-tdd-cycle"
     }
   ]
 }

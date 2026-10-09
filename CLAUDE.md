@@ -2,7 +2,7 @@
 
 Accessibility mod for Claude Code aimed at blind developers. It is an overlay on the built-in screen reader mode (`--ax-screen-reader`) and adds only what that mode lacks: spoken end-of-turn summaries, earcons for tool and permission events, a screen-reader-usable `AskUserQuestion` dialog, significance-filtered tool narration, speech on Windows, and automatic enabling of the mode when a screen reader is detected. Project of the Unlocked Spark Foundation.
 
-Stage: first feature (screen reader detection and mode enabling) implemented with unit and mod tests; manual sessions with VoiceOver and NVDA pending. Research (Polish): `docs/research/rozpoznanie-2026-10-09.md`; spike results and loader constraints: `docs/research/spikes-2026-10.md`.
+Stage: screen reader detection (confirmed with VoiceOver) and whole answer delivery (turn.step hold, VoiceOver session pending) implemented with unit and mod tests; NVDA sessions pending. Research (Polish): `docs/research/rozpoznanie-2026-10-09.md`; spike results and loader constraints: `docs/research/spikes-2026-10.md`.
 
 The plugin is named `a11y-companion` (names starting with `claude-` are reserved by the validator); the repository keeps its name.
 
@@ -60,8 +60,10 @@ hooks/lib/detect.ts          # platform and screen reader detection (pgrep, Powe
 hooks/lib/mode-state.ts      # mode resolution (variable over settings) and the ask/silent decision
 hooks/lib/settings-file.ts   # settings path and strict JSON editing of axScreenReader
 hooks/lib/consent.ts         # consent state machine, y/n parsing, 30 s timeout constant
+hooks/lib/stream-delivery.ts # whole answer delivery: mode resolution, /a11y-stream parsing, the chunk hold
 hooks/lib/messages.ts        # every spoken and printed line
-hooks/register.test.ts       # mod-level tests (claude plugin test)
+hooks/register.test.ts       # mod-level tests: detection and commands (claude plugin test)
+hooks/stream.test.ts         # mod-level tests: turn.step hold and /a11y-stream
 tests/unit/*.spec.ts         # Vitest tests of hooks/lib
 docs/research/               # research notes (Polish) and spike results
 docs/testing/                # manual test protocols
@@ -73,6 +75,8 @@ Planned next: `hooks/lib/classify/` (tool call significance), speech backends fo
 - `$.env.get` takes a string literal; `claude plugin validate` lists the names.
 - Command names: letters, digits, `_`, `-`. Plugin names must not start with `claude-`, `anthropic-` or `cc-plugin-`.
 - The module has no Node and no DOM; relative imports within the plugin work.
+- A streaming hook (`turn.step`) is an async generator and so is its `.catch` handler. Read the stream by hand with the iterator: the return value is the step's result, which `for await` discards and the kit's `.result` promise does not carry.
+- In kit tests, the bottom `turn.step` hook cannot fabricate `engine` chunks, and a second hook on an event `mock.store` already answers needs a matcher.
 
 ### Design rules
 - The mod complements `--ax-screen-reader`; it never re-implements what the mode already does (static spinner, flat transcript, numbered menus). Check the mode first, then add.

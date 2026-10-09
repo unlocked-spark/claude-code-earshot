@@ -9,3 +9,4 @@
 2026-10-09 20:40 | add:retro | first retro: 9 directives, 8 project learnings, 4 promoted to workstation; scores collab 8.5 / ADD 7.0 / swarm 5.0; stay at POC until manual VoiceOver session | ~15 min
 2026-10-09 21:05 | add:spec | specs/whole-answer-delivery.md: 13 AC, 6 TC; hold turn.step chunks per step, hide thinking, bell on release, /a11y-stream override; paragraph narration dropped from scope at the human's request | 4 interview questions, ~10 min
 2026-10-09 21:11 | add:plan | docs/plans/whole-answer-delivery-plan.md: 13 tasks in 4 phases, 10 h + 1 VoiceOver session; central assertion is the yield-order counter in the kit test | no questions, ~5 min
+2026-10-09 21:18 | add:tdd-cycle | specs/whole-answer-delivery.md: RED 22 new tests → GREEN 91/91 (81 Vitest + 10 kit); tsc, eslint, validate clean; 2 test rewrites recorded in overrides.json; manual TCs pending | ~90 min, 3 commits

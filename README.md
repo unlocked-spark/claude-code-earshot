@@ -2,7 +2,7 @@
 
 Screen reader companion for Claude Code, built for blind developers. The mod sits on top of the built-in screen reader mode and adds what the mode lacks. First feature: it notices a running screen reader, asks by voice, and switches the next session into screen reader mode.
 
-The plugin is named `a11y-companion`. Stage: first feature implemented and unit tested, manual sessions with VoiceOver and NVDA pending.
+The plugin is named `a11y-companion`. Stage: two features implemented and tested (mode enabling confirmed with VoiceOver; whole answer delivery awaiting its VoiceOver session), NVDA sessions pending.
 
 ## What it does today
 
@@ -10,7 +10,8 @@ The plugin is named `a11y-companion`. Stage: first feature implemented and unit 
 - If the screen reader mode is off and nothing says otherwise, it rings, speaks and prints one question: enable screen reader mode from the next start? You answer `y` or `n`.
 - `y` writes `"axScreenReader": true` to your user settings file (a copy of the previous content is kept beside it as `settings.json.a11y-backup`) and tells you to restart. `n` is remembered and not asked again until you run `/a11y-on` or the mod is updated. No answer within 30 seconds leaves the mode off for this session only.
 - It never writes while `CLAUDE_AX_SCREEN_READER` is set, and never when your settings already say `false`.
-- Commands: `/a11y-on`, `/a11y-off`, `/a11y-status`.
+- In screen reader mode each answer appears whole instead of streaming line by line, so the screen reader reads it in one go. The model's thinking is not shown in this mode, and a bell marks the moment the answer appears. `/a11y-stream on`, `/a11y-stream off` and `/a11y-stream auto` force or release this behaviour; the choice is remembered across sessions.
+- Commands: `/a11y-on`, `/a11y-off`, `/a11y-status`, `/a11y-stream`.
 
 ## Install
 
@@ -45,7 +46,7 @@ The engine writes its type declarations into `.claude-plugin/types/` the first t
 ## Documents
 
 - `docs/prd.md`: product requirements, scope, milestones.
-- `specs/screen-reader-detection.md`: the first feature, acceptance criteria and manual test cases.
-- `docs/testing/screen-reader-detection.md`: manual test protocol for VoiceOver and NVDA.
+- `specs/screen-reader-detection.md` and `specs/whole-answer-delivery.md`: the features, acceptance criteria and manual test cases.
+- `docs/testing/`: manual test protocols for VoiceOver and NVDA.
 - `docs/research/rozpoznanie-2026-10-09.md` (Polish): what Claude Code offers today, open issues, the mod API, existing projects.
 - `docs/research/spikes-2026-10.md`: answers to the spec's open questions and loader constraints.

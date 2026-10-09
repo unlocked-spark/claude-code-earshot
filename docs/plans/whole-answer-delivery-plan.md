@@ -4,7 +4,7 @@
 **Created:** 2026-10-09
 **Team:** solo
 **Estimated Effort:** 10 h of focused work plus one manual VoiceOver session; three to four evenings
-**Status:** Draft
+**Status:** In Progress (tasks 2 to 11 done on 2026-10-09; 1 optional, 12 and 13 need the VoiceOver session)
 
 ## 1. Overview
 
@@ -136,3 +136,4 @@ Critical path: 2/3/4 → 5 → 6 → 8 → 10 → 11 → 12 → 13.
 ## 9. Plan History
 
 - 2026-10-09: Initial plan from /add:plan. One generator hook plus one command on the existing structure; ordering counter in the kit test as the central assertion.
+- 2026-10-09: TDD cycle 2 done in one sitting (about 1.5 h instead of 10 h: the structure from cycle 1 carried most of the work). Findings: the `.catch` handler of a streaming hook is a generator; the kit's `.result` promise settles undefined, so both the hook and the test read the iterator's return value; a test's bottom hook cannot fabricate engine chunks; a second hook on `store.set` needs a matcher beside `mock.store`. Two test rewrites recorded in .add/cycles/cycle-2/overrides.json.

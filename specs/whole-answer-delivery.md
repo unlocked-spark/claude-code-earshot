@@ -4,7 +4,7 @@
 **Created:** 2026-10-09
 **PRD Reference:** docs/prd.md (Feature 2 area: end-of-turn and streamed text, milestone M1; issues #37569 and #35579)
 **Research:** docs/research/spikes-2026-10.md; VoiceOver session of 2026-10-09 (plugin works; line-by-line streaming is the most tiring part)
-**Status:** Draft
+**Status:** Implementing (code and automated tests done; manual test cases pending)
 
 ## 1. Overview
 
@@ -48,7 +48,7 @@ Manual, with a screen reader running. Captures are transcript text under `tests/
 2. Listen.
 **Expected Result:** Silence while the model writes, then one bell, then VoiceOver reads the whole answer from the first line to the last without restarting mid-sentence. No `thinking:` lines. The transcript shows the full answer under `claude:`.
 **Screenshot Checkpoint:** tests/screenshots/whole-answer-delivery/tc-001-whole.txt
-**Maps to:** TBD
+**Maps to:** hooks/stream.test.ts → "holds the whole step, drops thinking, keeps order and rings once (AC-001 to AC-005)"; manual for what is heard
 
 ### TC-002: A turn with tool calls
 
@@ -57,7 +57,7 @@ Manual, with a screen reader running. Captures are transcript text under `tests/
 1. Ask Claude to read a file and summarise it.
 **Expected Result:** The tool call runs as usual (`tool:` line, permission prompt if any). The summary step arrives whole with a bell. Steps that only call tools raise no bell.
 **Screenshot Checkpoint:** tests/screenshots/whole-answer-delivery/tc-002-tools.txt
-**Maps to:** TBD
+**Maps to:** hooks/stream.test.ts → "rings no bell for a step without text (AC-005)"; manual for the tool run
 
 ### TC-003: Live streaming outside screen reader mode
 
@@ -66,7 +66,7 @@ Manual, with a screen reader running. Captures are transcript text under `tests/
 1. Ask a question.
 **Expected Result:** The answer streams as it does without the mod; thinking is shown; no extra bell.
 **Screenshot Checkpoint:** tests/screenshots/whole-answer-delivery/tc-003-live.txt
-**Maps to:** TBD
+**Maps to:** hooks/stream.test.ts → "streams live outside screen reader mode, thinking included, no bell (AC-006)"
 
 ### TC-004: Override on, off, auto
 
@@ -77,7 +77,7 @@ Manual, with a screen reader running. Captures are transcript text under `tests/
 3. Run `/a11y-stream auto`, run `/a11y-stream`.
 **Expected Result:** Step 1: "Whole answer delivery on (forced). Answers appear whole; thinking is hidden." and the next answer arrives whole. Step 2: "Whole answer delivery off (forced). Answers stream live." and the next answer streams. Step 3: "Override removed." then "Whole answer delivery off (screen reader mode is off)."
 **Screenshot Checkpoint:** tests/screenshots/whole-answer-delivery/tc-004-override.txt
-**Maps to:** TBD
+**Maps to:** hooks/stream.test.ts → "/a11y-stream on, off and auto change the mode and the store (AC-007)"; tests/unit/stream-delivery.spec.ts → "stream messages"
 
 ### TC-005: Interrupting a buffered answer
 
@@ -86,7 +86,7 @@ Manual, with a screen reader running. Captures are transcript text under `tests/
 1. Ask for a long answer; press Escape after a few seconds.
 **Expected Result:** The partial answer generated so far appears in the transcript (possibly a few words), the turn ends as an interrupted turn, no bell.
 **Screenshot Checkpoint:** tests/screenshots/whole-answer-delivery/tc-005-interrupt.txt
-**Maps to:** TBD
+**Maps to:** manual only (next.signal abort is not driven by the kit); code path: try/catch around the iterator in hooks/register.ts
 
 ### TC-006: Override survives a restart
 
@@ -95,7 +95,7 @@ Manual, with a screen reader running. Captures are transcript text under `tests/
 1. Start a new session without the mode, run `/a11y-stream`.
 **Expected Result:** "Whole answer delivery on (forced)."
 **Screenshot Checkpoint:** tests/screenshots/whole-answer-delivery/tc-006-persist.txt
-**Maps to:** TBD
+**Maps to:** hooks/stream.test.ts → "a stored override forces buffering outside the mode and survives sessions (AC-007, TC-006)"
 
 ## 4. Data Model
 
@@ -200,3 +200,4 @@ Per test case in section 3.
 | Date | Version | Author | Changes |
 |------|---------|--------|---------|
 | 2026-10-09 | 0.1.0 | Łukasz Majewski | Initial spec from /add:spec interview: hold a whole step, hide thinking, bell on release, active in screen reader mode with /a11y-stream override |
+| 2026-10-09 | 0.1.1 | Łukasz Majewski | After the TDD cycle: "Maps to" filled; the bell text is "Answer ready."; AC-011 verified by the validator listing and review, not by a kit test (a hook cannot be made to throw from the bottom) |

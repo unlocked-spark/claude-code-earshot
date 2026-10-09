@@ -1,8 +1,10 @@
 # Session Handoff
-**Written:** 2026-10-09 20:40
+**Written:** 2026-10-09 21:18
+**Previous:** 2026-10-09 20:40
 
 ## In Progress
-- specs/screen-reader-detection.md is Implementing: hooks/ implemented, 65 unit tests and 4 mod tests green, tsc, eslint and claude plugin validate clean (commit 824dfb3, docs a9aa3be, coverage 20292f7). Manual test cases TC-001 to TC-008 (docs/testing/screen-reader-detection.md) not run yet.
+- specs/screen-reader-detection.md: implemented, confirmed working in a VoiceOver session on 2026-10-09 (formal TC captures not saved yet).
+- specs/whole-answer-delivery.md: implemented (turn.step hold, /a11y-stream), 81 unit and 10 mod tests green; VoiceOver session for TC-001 to TC-006 (docs/testing/whole-answer-delivery.md) not run yet.
 - Milestone M1 (Heard turn) items left: end-of-turn signal, earcons.
 
 ## Decisions Made
@@ -16,6 +18,6 @@
 - Manual sessions need a macOS machine with VoiceOver (available) and Windows 11 with NVDA (not yet available). Spike B ($.audio.speak on Windows) open.
 
 ## Next Steps
-1. Run `claude --plugin-dir .` with VoiceOver on and walk TC-001, TC-003 to TC-008; save captures under tests/screenshots/screen-reader-detection/.
-2. Update the spec status and the plan (tasks 20, 23) from the results; reassess promotion to Alpha with /add:promote.
-3. /add:spec "end of turn signal" for the next M1 item.
+1. VoiceOver session for whole answer delivery: `claude --plugin-dir .`, ask for a long answer, listen for one block and one bell; walk TC-001 to TC-006 and save captures.
+2. If the block is read as one unit, mark both specs Complete and run /add:promote for Alpha.
+3. /add:spec "end of turn signal" (earcons and spoken summary) for the next M1 item.
