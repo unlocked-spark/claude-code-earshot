@@ -1,0 +1,13 @@
+{
+  "phase": "red",
+  "cycle_id": 1,
+  "spec_slug": "screen-reader-detection",
+  "base_sha": "22e3320",
+  "captured": "2026-10-09T17:39:32Z",
+  "harnesses": {
+    "vitest": { "files": ["tests/unit/detect.spec.ts", "tests/unit/mode-state.spec.ts", "tests/unit/settings-file.spec.ts", "tests/unit/consent.spec.ts"], "total_functions": 65, "passing": 1, "failing": 64 },
+    "claude-plugin-test": { "files": ["hooks/register.test.ts"], "total_functions": 4, "passing": 0, "failing": 4 }
+  },
+  "total_functions": 69,
+  "notes": "Snapshot written by hand: check-test-count.py is not shipped with ADD plugin 0.11.0. The one passing Vitest case asserts the ANSWER_TIMEOUT_MS constant."
+}

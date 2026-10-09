@@ -1,0 +1,6 @@
+{
+  "name": "claude-code-a11y",
+  "version": "0.1.0",
+  "description": "Screen reader companion for Claude Code: detects VoiceOver, NVDA or JAWS, enables screen reader mode from the next start, and adds the /a11y-on, /a11y-off and /a11y-status commands.",
+  "author": { "name": "Unlocked Spark Foundation" }
+}
