@@ -1,0 +1,15 @@
+{
+  "$schema": "https://github.com/MountainUnicorn/add/retro-scores.schema.json",
+  "version": "1.0.0",
+  "project": "claude-code-a11y",
+  "entries": [
+    {
+      "date": "2026-10-09",
+      "collab_score": 8.5,
+      "add_effectiveness": 7,
+      "swarm_effectiveness": 5,
+      "retro_file": ".add/retros/retro-2026-10-09.md",
+      "context": "collaborative"
+    }
+  ]
+}
