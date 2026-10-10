@@ -1,0 +1,14 @@
+{
+  "phase": "red",
+  "cycle_id": 3,
+  "spec_slug": "tool-narration",
+  "base_sha": "2d495da",
+  "captured": "2026-10-10T14:24:31Z",
+  "harnesses": {
+    "vitest": { "files": ["tests/unit/tool-narration.spec.ts"], "new_functions": 22, "total_functions": 103, "passing": 81, "failing": 22 },
+    "claude-plugin-test": { "files": ["hooks/narration.test.ts"], "new_functions": 5, "total_functions": 15, "passing": 12, "failing": 3 }
+  },
+  "total_functions": 118,
+  "new_functions": 27,
+  "notes": "Hand-written snapshot. Two of the five new kit tests pass in RED by construction: the test's bottom ui.render hook draws an engine row, and the mod not drawing anything yet matches the expected live and AskUserQuestion behaviour."
+}

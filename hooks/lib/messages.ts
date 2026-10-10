@@ -86,6 +86,18 @@ export const messages = {
   streamInvalid(): string {
     return 'Usage: /a11y-stream, /a11y-stream on, /a11y-stream off, or /a11y-stream auto.'
   },
+  lastHeader(_summary: string): string {
+    throw new Error('not implemented')
+  },
+  lastNone(): string {
+    throw new Error('not implemented')
+  },
+  lastOutOfRange(_kept: number): string {
+    throw new Error('not implemented')
+  },
+  lastInvalid(): string {
+    throw new Error('not implemented')
+  },
   error(kind: 'no-home' | 'invalid-json' | 'not-an-object' | 'write-failed' | 'verify-mismatch', path: string | undefined): string {
     switch (kind) {
       case 'no-home':

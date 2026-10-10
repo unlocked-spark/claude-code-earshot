@@ -43,3 +43,11 @@ export type StreamOverride = { mode: DeliveryMode; setAt: string }
 // The part of a turn.step chunk the hold looks at. The real chunks carry more
 // fields; the hold passes them through untouched.
 export type StepChunk = { readonly kind: string; readonly text?: string; readonly [key: string]: unknown }
+
+// Tool narration
+
+export type ToolFlags = { isRunning: boolean; isErrored: boolean; isInterrupted: boolean }
+
+export type ToolLabel = 'tool' | 'tool error' | 'tool running' | 'tool interrupted'
+
+export type LastResultEntry = { id: string; summary: string; text: string }
