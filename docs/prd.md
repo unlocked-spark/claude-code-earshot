@@ -1,4 +1,4 @@
-# claude-code-a11y: Product Requirements Document
+# claude-code-earshot: Product Requirements Document
 
 **Version:** 0.1.0
 **Created:** 2026-10-09

@@ -1,6 +1,6 @@
 <!-- ADD:MANAGED:START version=0.11.0 maturity=poc generated=2026-10-09T16:54:22Z -->
 
-# claude-code-a11y
+# claude-code-earshot
 
 Accessibility mod for Claude Code aimed at blind developers. An overlay on the built-in screen reader mode (`--ax-screen-reader`) that adds what the mode lacks: spoken end-of-turn summaries, earcons for tool and permission events, a screen-reader-usable `AskUserQuestion` dialog, significance-filtered tool narration, speech on Windows, and automatic enabling of the mode when a screen reader is detected. Project of the Unlocked Spark Foundation.
 

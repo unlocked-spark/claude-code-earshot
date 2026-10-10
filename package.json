@@ -1,5 +1,5 @@
 {
-  "name": "claude-code-a11y",
+  "name": "claude-code-earshot",
   "version": "0.1.0",
   "private": true,
   "description": "Screen reader companion mod for Claude Code",
