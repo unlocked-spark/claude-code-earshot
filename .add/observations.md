@@ -10,3 +10,5 @@
 2026-10-09 21:05 | add:spec | specs/whole-answer-delivery.md: 13 AC, 6 TC; hold turn.step chunks per step, hide thinking, bell on release, /a11y-stream override; paragraph narration dropped from scope at the human's request | 4 interview questions, ~10 min
 2026-10-09 21:11 | add:plan | docs/plans/whole-answer-delivery-plan.md: 13 tasks in 4 phases, 10 h + 1 VoiceOver session; central assertion is the yield-order counter in the kit test | no questions, ~5 min
 2026-10-09 21:18 | add:tdd-cycle | specs/whole-answer-delivery.md: RED 22 new tests → GREEN 91/91 (81 Vitest + 10 kit); tsc, eslint, validate clean; 2 test rewrites recorded in overrides.json; manual TCs pending | ~90 min, 3 commits
+2026-10-09 23:51 | add:spec | specs/tool-narration.md: 11 AC, 5 TC; ui.render on ToolUse and ToolResult in buffered delivery, one-line summaries, count-only results and errors, /a11y-last | 1 interview question, ~10 min
+2026-10-09 23:55 | add:plan | docs/plans/tool-narration-plan.md: 14 tasks, 9 h + VoiceOver session; mandatory spike on whether screen reader mode draws render-hook trees for tool rows | no questions, ~5 min
