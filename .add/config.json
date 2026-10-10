@@ -2,12 +2,12 @@
   "$schema": "https://github.com/MountainUnicorn/add/config.schema.json",
   "version": "0.5.0",
   "project": {
-    "name": "claude-code-a11y",
+    "name": "claude-code-earshot",
     "description": "Accessibility mod for Claude Code aimed at blind developers. An overlay on the built-in screen reader mode (--ax-screen-reader) that adds what the mode lacks: spoken end-of-turn summaries, earcons for tool and permission events, a screen-reader-usable AskUserQuestion dialog, significance-filtered tool narration, speech on Windows, and automatic enabling of the mode when a screen reader is detected. Project of the Unlocked Spark Foundation.",
     "created": "2026-10-09",
     "author": "Łukasz Majewski",
     "adopted": false,
-    "adoption_notes": "Repository existed as notes only (README and a Polish research note dated 2026-10-09, one commit). No code before ADD. Repository content is English; research notes under docs/research/ stay Polish. Repository private until first usable release."
+    "adoption_notes": "Repository existed as notes only (README and a Polish research note dated 2026-10-09, one commit). No code before ADD. Repository content is English; research notes under docs/research/ stay Polish. Repository private until first usable release. Directory and repository renamed from claude-code-a11y to claude-code-earshot on 2026-10-10; the plugin is earshot."
   },
   "maturity": {
     "level": "poc",
