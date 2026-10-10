@@ -192,7 +192,7 @@ The only UI is transcript text plus speech. The first session is graphical (mode
 ### States
 
 - **Detecting:** nothing shown; detection runs in the background inside `session.start`.
-- **Question pending:** bell, spoken question, transcript line: `a11y-companion: VoiceOver detected. Enable Claude Code screen reader mode from the next start? Press y or n.` A 30 s timer runs.
+- **Question pending:** bell, spoken question, transcript line: `earshot: VoiceOver detected. Enable Claude Code screen reader mode from the next start? Press y or n.` A 30 s timer runs.
 - **Enabled, awaiting restart:** spoken and printed restart message, native notification.
 - **Declined:** spoken and printed acknowledgement with the `/a11y-on` hint.
 - **Timed out:** spoken and printed "leaving off for this session".
@@ -251,4 +251,4 @@ Transcript captures listed per test case in section 3.
 | Date | Version | Author | Changes |
 |------|---------|--------|---------|
 | 2026-10-09 | 0.1.0 | Łukasz Majewski | Initial spec from /add:spec interview: spoken y/n consent, remembered refusal, macOS and Windows only |
-| 2026-10-09 | 0.1.1 | Łukasz Majewski | After the TDD cycle: commands renamed to /a11y-on, /a11y-off, /a11y-status (colons are not allowed in command names); plugin named a11y-companion; the transcript line carries the plugin name as its prefix; the bell goes through the user's notification channel; an ordinary prompt while the question is pending withdraws it and goes through; "Maps to" fields filled |
+| 2026-10-09 | 0.1.1 | Łukasz Majewski | After the TDD cycle: commands renamed to /a11y-on, /a11y-off, /a11y-status (colons are not allowed in command names); plugin named earshot; the transcript line carries the plugin name as its prefix; the bell goes through the user's notification channel; an ordinary prompt while the question is pending withdraws it and goes through; "Maps to" fields filled |

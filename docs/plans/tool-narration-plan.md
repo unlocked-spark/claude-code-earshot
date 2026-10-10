@@ -39,7 +39,7 @@ Decision gate: `tool: probe` seen → continue. Not seen, and the debug log show
 
 | # | Task | Spec Ref | Files | Type | Estimate |
 |---|------|----------|-------|------|----------|
-| 8 | Kit tests with `$.ui.mount({ plugin: 'a11y-companion', surface: 'terminal', component: 'ToolUse', props })`: buffered delivery draws `tool: <summary>` (found by `ui.find({ type: 'Text', text: /^tool: / })`), errored and running labels, AskUserQuestion row left to the engine (`find` returns nothing of ours), live delivery left to the engine | AC-001 to AC-003, AC-005, AC-007 | hooks/narration.test.ts | test | 1 h |
+| 8 | Kit tests with `$.ui.mount({ plugin: 'earshot', surface: 'terminal', component: 'ToolUse', props })`: buffered delivery draws `tool: <summary>` (found by `ui.find({ type: 'Text', text: /^tool: / })`), errored and running labels, AskUserQuestion row left to the engine (`find` returns nothing of ours), live delivery left to the engine | AC-001 to AC-003, AC-005, AC-007 | hooks/narration.test.ts | test | 1 h |
 | 9 | Kit tests for `ToolResult`: `result: N lines`, `error: N lines`, and that `/a11y-last` afterwards returns the full text with the `Result of:` line; out of range reply | AC-004, AC-006 | hooks/narration.test.ts | test | 0.75 h |
 | 10 | Implement the two render hooks in `hooks/register.ts` with `h(Text, null, line)` (no JSX, so the file stays `.ts` and the loader's top-level rule is untouched); the `ToolResult` hook also stores the result; register `a11y-last` with argument hint `[n]` and its `command.run` handler | AC-001 to AC-008, AC-010 | hooks/register.ts | impl | 1.25 h |
 

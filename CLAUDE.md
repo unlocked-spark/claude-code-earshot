@@ -4,7 +4,7 @@ Accessibility mod for Claude Code aimed at blind developers. It is an overlay on
 
 Stage: screen reader detection (confirmed with VoiceOver), whole answer delivery (turn.step hold) and tool narration (ui.render on tool rows, mechanism confirmed by a spike in screen reader mode) implemented with unit and mod tests; VoiceOver sessions for the last two and all NVDA sessions pending. Research (Polish): `docs/research/rozpoznanie-2026-10-09.md`; spike results and loader constraints: `docs/research/spikes-2026-10.md`.
 
-The plugin is named `a11y-companion` (names starting with `claude-` are reserved by the validator); the repository keeps its name.
+The plugin is named `earshot` (names starting with `claude-` are reserved by the validator); the repository keeps its name.
 
 ## Methodology
 
@@ -53,7 +53,7 @@ claude plugin validate .                   # Validate manifest, hooks and mod AP
 
 ### Layout
 ```
-.claude-plugin/plugin.json   # plugin manifest (name a11y-companion, version read by the mod)
+.claude-plugin/plugin.json   # plugin manifest (name earshot, version read by the mod)
 hooks/hooks.json             # points at hooks/register.ts
 hooks/register.ts            # the only module that calls the mod API: adapter and event wiring
 hooks/state.ts               # shared session state and $-free transitions (command list, facts, consent steps)

@@ -22,7 +22,7 @@ function host(on: On, world: { voiceover: boolean; env: Record<string, string>; 
   on('settings.read', () => ({ value: settings === undefined ? {} : (JSON.parse(settings) as Record<string, unknown>) }))
   on('fs.exists', (_$, e) => ({ value: e.path.endsWith('settings.json') ? settings !== undefined : false }))
   on('fs.read', (_$, e) => {
-    if (e.path.endsWith('plugin.json')) return { value: '{ "name": "a11y-companion", "version": "0.1.0" }' }
+    if (e.path.endsWith('plugin.json')) return { value: '{ "name": "earshot", "version": "0.1.0" }' }
     if (e.path.endsWith('settings.json') && settings !== undefined) return { value: settings }
     throw new Error(`no such file ${e.path}`)
   })

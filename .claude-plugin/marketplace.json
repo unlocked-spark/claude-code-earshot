@@ -5,7 +5,7 @@
   },
   "plugins": [
     {
-      "name": "a11y-companion",
+      "name": "earshot",
       "source": "./",
       "description": "Screen reader companion for Claude Code: detects VoiceOver, NVDA or JAWS, enables screen reader mode from the next start, delivers whole answers and narrates tool activity."
     }

@@ -29,7 +29,7 @@ function host(on: On, world: { modeOn: boolean; override?: { mode: 'buffered' | 
   on('settings.read', () => ({ value: world.modeOn ? { axScreenReader: true } : {} }))
   on('fs.exists', () => ({ value: false }))
   on('fs.read', (_$, e) => {
-    if (e.path.endsWith('plugin.json')) return { value: '{ "name": "a11y-companion", "version": "0.1.0" }' }
+    if (e.path.endsWith('plugin.json')) return { value: '{ "name": "earshot", "version": "0.1.0" }' }
     throw new Error(`no such file ${e.path}`)
   })
   on('audio.speak', (_$, e) => {

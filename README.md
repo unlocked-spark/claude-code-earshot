@@ -2,7 +2,7 @@
 
 Screen reader companion for Claude Code, built for blind developers. The mod sits on top of the built-in screen reader mode and adds what the mode lacks. First feature: it notices a running screen reader, asks by voice, and switches the next session into screen reader mode.
 
-The plugin is named `a11y-companion`. Stage: three features implemented and tested (mode enabling confirmed with VoiceOver; whole answer delivery and tool narration awaiting their VoiceOver sessions), NVDA sessions pending.
+The plugin is named `earshot` (it was `a11y-companion` until 2026-10-10, before any public install). Stage: three features implemented and tested (mode enabling confirmed with VoiceOver; whole answer delivery and tool narration awaiting their VoiceOver sessions), NVDA sessions pending.
 
 ## What it does today
 
@@ -27,11 +27,11 @@ The repository is its own marketplace. One command fetches and installs the plug
 ```
 gh auth login
 gh auth setup-git
-claude plugin install a11y-companion --marketplace unlocked-spark/claude-code-a11y --scope user
+claude plugin install earshot --marketplace unlocked-spark/claude-code-a11y --scope user
 claude
 ```
 
-On a machine without a GitHub SSH key, set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` before the install command. Updates: `claude plugin update a11y-companion@unlocked-spark` after a new version is pushed.
+On a machine without a GitHub SSH key, set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` before the install command. Updates: `claude plugin update earshot@unlocked-spark` after a new version is pushed.
 
 ### Install from a clone (Windows PowerShell shown; same on macOS)
 
@@ -39,7 +39,7 @@ On a machine without a GitHub SSH key, set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` b
 gh auth login
 gh repo clone unlocked-spark/claude-code-a11y $HOME\claude-code-a11y
 claude plugin marketplace add $HOME\claude-code-a11y
-claude plugin install a11y-companion@unlocked-spark --scope user
+claude plugin install earshot@unlocked-spark --scope user
 claude
 ```
 
@@ -49,7 +49,7 @@ On first start with NVDA or JAWS running and screen reader mode off, the mod ask
 
 Known gaps on Windows: `$.audio.play` has no player there, so the ready earcon is silent, and whether `$.audio.speak` reaches NVDA is still untested.
 
-Once the repository is public, no login is needed, and one line inside a session does the same: `/plugin install a11y-companion --marketplace unlocked-spark/claude-code-a11y`.
+Once the repository is public, no login is needed, and one line inside a session does the same: `/plugin install earshot --marketplace unlocked-spark/claude-code-a11y`.
 
 ## Develop
 

@@ -18,7 +18,7 @@ function host(on: On, world: { modeOn: boolean }): Log {
   on('settings.read', () => ({ value: world.modeOn ? { axScreenReader: true } : {} }))
   on('fs.exists', () => ({ value: false }))
   on('fs.read', (_$, e) => {
-    if (e.path.endsWith('plugin.json')) return { value: '{ "name": "a11y-companion", "version": "0.1.0" }' }
+    if (e.path.endsWith('plugin.json')) return { value: '{ "name": "earshot", "version": "0.1.0" }' }
     throw new Error(`no such file ${e.path}`)
   })
   on('audio.speak', (_$, e) => {
@@ -44,13 +44,13 @@ function host(on: On, world: { modeOn: boolean }): Log {
 const start = { cwd: '/work', surface: 'terminal' as const, isInteractive: true }
 const flags = { isRunning: false, isErrored: false, isInterrupted: false }
 const bashUse = (id: string, extra: Partial<typeof flags> = {}) => ({
-  plugin: 'a11y-companion',
+  plugin: 'earshot',
   surface: 'terminal' as const,
   component: 'ToolUse' as const,
   props: { tool_use_id: id, tool: 'Bash', input: { command: 'ls -la && grep -ril x .', description: 'List files and search for x' }, ...flags, ...extra },
 })
 const bashResult = (id: string, stdout: string, isErrored = false) => ({
-  plugin: 'a11y-companion',
+  plugin: 'earshot',
   surface: 'terminal' as const,
   component: 'ToolResult' as const,
   props: { tool_use_id: id, tool: 'Bash', output: { stdout, stderr: '', interrupted: false }, isErrored },
