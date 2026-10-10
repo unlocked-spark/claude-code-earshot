@@ -83,7 +83,7 @@ Numbering follows the recommendation in the research note.
 
 | Component | Choice | Notes |
 |-----------|--------|-------|
-| Git Host | GitHub | `unlocked-spark/claude-code-a11y`, private until first release; no remote yet |
+| Git Host | GitHub | `unlocked-spark/claude-code-earshot`, private until first release; no remote yet |
 | Cloud Provider | none | |
 | CI/CD | none | Manual `npm test`, `npm run lint`, `claude plugin validate .`; GitHub Actions planned at Alpha |
 | Containers | none | |

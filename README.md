@@ -1,4 +1,4 @@
-# claude-code-a11y
+# claude-code-earshot
 
 Screen reader companion for Claude Code, built for blind developers. The mod sits on top of the built-in screen reader mode and adds what the mode lacks. First feature: it notices a running screen reader, asks by voice, and switches the next session into screen reader mode.
 
@@ -27,7 +27,7 @@ The repository is its own marketplace. One command fetches and installs the plug
 ```
 gh auth login
 gh auth setup-git
-claude plugin install earshot --marketplace unlocked-spark/claude-code-a11y --scope user
+claude plugin install earshot --marketplace unlocked-spark/claude-code-earshot --scope user
 claude
 ```
 
@@ -37,19 +37,19 @@ On a machine without a GitHub SSH key, set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` b
 
 ```
 gh auth login
-gh repo clone unlocked-spark/claude-code-a11y $HOME\claude-code-a11y
-claude plugin marketplace add $HOME\claude-code-a11y
+gh repo clone unlocked-spark/claude-code-earshot $HOME\claude-code-earshot
+claude plugin marketplace add $HOME\claude-code-earshot
 claude plugin install earshot@unlocked-spark --scope user
 claude
 ```
 
-The marketplace points at the cloned folder, so an update is `git pull` in that folder followed by `/reload-plugins` in a session. To try the mod without installing it: `claude --plugin-dir $HOME\claude-code-a11y`.
+The marketplace points at the cloned folder, so an update is `git pull` in that folder followed by `/reload-plugins` in a session. To try the mod without installing it: `claude --plugin-dir $HOME\claude-code-earshot`.
 
 On first start with NVDA or JAWS running and screen reader mode off, the mod asks by voice whether to enable the mode; answer `y`, then restart `claude`. To skip the question, set the variable once in your profile: `$env:CLAUDE_AX_SCREEN_READER = "1"`.
 
 Known gaps on Windows: `$.audio.play` has no player there, so the ready earcon is silent, and whether `$.audio.speak` reaches NVDA is still untested.
 
-Once the repository is public, no login is needed, and one line inside a session does the same: `/plugin install earshot --marketplace unlocked-spark/claude-code-a11y`.
+Once the repository is public, no login is needed, and one line inside a session does the same: `/plugin install earshot --marketplace unlocked-spark/claude-code-earshot`.
 
 ## Develop
 

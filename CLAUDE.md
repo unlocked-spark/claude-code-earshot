@@ -105,7 +105,7 @@ All gates defined in `.add/config.json`. Run `/add:verify` to check.
 
 ## Source Control
 
-- **Git host:** GitHub, `unlocked-spark/claude-code-a11y`, private until first release (no remote yet)
+- **Git host:** GitHub, `unlocked-spark/claude-code-earshot`, private until first release (no remote yet)
 - **Branching:** trunk, commits straight to `main`
 - **Commits:** imperative English sentence describing the effect, no type prefix, no AI attribution
 - **CI/CD:** none; GitHub Actions planned at Alpha

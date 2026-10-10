@@ -67,7 +67,7 @@
   },
   "infrastructure": {
     "git_host": "github",
-    "git_remote": "https://github.com/unlocked-spark/claude-code-a11y.git",
+    "git_remote": "https://github.com/unlocked-spark/claude-code-earshot.git",
     "cloud_provider": "none",
     "cloud_services": [],
     "cicd": {
