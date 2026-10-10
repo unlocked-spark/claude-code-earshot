@@ -64,6 +64,7 @@ describe('labelFor and summaryLine (AC-001, AC-009)', () => {
   it('joins label and summary into one plain line', () => {
     const line = summaryLine({ ...done, isErrored: true }, 'Bash', { command: 'cat x', description: 'Read x' })
     expect(line).toBe('tool error: Read x')
+    // eslint-disable-next-line no-control-regex
     expect(line).not.toMatch(/[\n\r\t\u001b]/)
   })
   it('strips control characters and newlines from a description', () => {

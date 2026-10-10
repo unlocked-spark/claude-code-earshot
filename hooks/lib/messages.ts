@@ -86,17 +86,17 @@ export const messages = {
   streamInvalid(): string {
     return 'Usage: /a11y-stream, /a11y-stream on, /a11y-stream off, or /a11y-stream auto.'
   },
-  lastHeader(_summary: string): string {
-    throw new Error('not implemented')
+  lastHeader(summary: string): string {
+    return `Result of: ${summary}`
   },
   lastNone(): string {
-    throw new Error('not implemented')
+    return 'No tool result stored yet.'
   },
-  lastOutOfRange(_kept: number): string {
-    throw new Error('not implemented')
+  lastOutOfRange(kept: number): string {
+    return kept === 1 ? 'Only 1 result is kept; ask for 1.' : `Only ${kept} results are kept; ask for 1 to ${kept}.`
   },
   lastInvalid(): string {
-    throw new Error('not implemented')
+    return 'Usage: /a11y-last or /a11y-last <n>.'
   },
   error(kind: 'no-home' | 'invalid-json' | 'not-an-object' | 'write-failed' | 'verify-mismatch', path: string | undefined): string {
     switch (kind) {

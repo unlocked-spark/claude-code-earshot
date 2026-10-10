@@ -1,0 +1,9 @@
+[
+  {
+    "kind": "test-rewrite",
+    "approved_by": "agent, pending human review",
+    "timestamp": "2026-10-10T14:26:15Z",
+    "affected_tests": ["hooks/register.test.ts::registers the commands and /a11y-off removes the key (AC-009, AC-010)"],
+    "reason": "The test asserted the exact registered command list; every new command broke it (cycle 2 added /a11y-stream, cycle 3 adds /a11y-last). It now asserts that the three commands of its own feature are present. The /a11y-off assertions are unchanged."
+  }
+]

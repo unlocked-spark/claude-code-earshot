@@ -1,4 +1,4 @@
-import type { CommandSpec, EngineInterface, Register, Timer, TurnStepChunk, TurnStepResult } from 'claude-code'
+import type { CommandSpec, EngineInterface, Register, RenderElement, Timer, TurnStepChunk, TurnStepResult } from 'claude-code'
 import { ANSWER_TIMEOUT_MS, consentReducer, IDLE } from './lib/consent'
 import type { ConsentEffect, ConsentEvent, ConsentState } from './lib/consent'
 import { detect, platformFromEnv } from './lib/detect'
@@ -8,6 +8,8 @@ import { applyAxSetting, settingsPath } from './lib/settings-file'
 import type { ApplyResult } from './lib/settings-file'
 import { createHold, parseStreamArg, resolveDelivery } from './lib/stream-delivery'
 import type { Delivery } from './lib/stream-delivery'
+import { countLines, createLastResults, parseLastArg, resultLine, summaryLine, textOfResult, describeToolUse } from './lib/tool-narration'
+import type { LastResults } from './lib/tool-narration'
 import type { DeliveryMode, DetectionResult, ModeState, Platform, SettingsLike, StoredConsent } from './lib/types'
 
 // The only module that touches the mod API. Decisions live in ./lib and take
@@ -24,7 +26,10 @@ const COMMANDS: readonly CommandSpec[] = [
   { name: 'a11y-off', description: 'Disable Claude Code screen reader mode from the next start' },
   { name: 'a11y-status', description: 'Report the detected screen reader and the screen reader mode state' },
   { name: 'a11y-stream', description: 'Whole answer delivery: show each answer at once instead of streaming it', argumentHint: '[on|off|auto]' },
+  { name: 'a11y-last', description: 'Print the full text of a recent tool result', argumentHint: '[n]' },
 ]
+
+const LAST_RESULTS_KEPT = 5
 
 type Facts = {
   platform?: Platform
@@ -38,9 +43,10 @@ type Facts = {
 
 type ChangeOutcome = { ok: true; applied: Extract<ApplyResult, { ok: true }> } | { ok: false; text: string }
 
-const session: { consent: ConsentState; timer: Timer | undefined; facts: Facts } = {
+const session: { consent: ConsentState; timer: Timer | undefined; facts: Facts; lastResults: LastResults } = {
   consent: IDLE,
   timer: undefined,
+  lastResults: createLastResults(LAST_RESULTS_KEPT),
   facts: { modVersion: '0.0.0', backedUp: false, delivery: { mode: 'live', source: 'mode' } },
 }
 
@@ -228,6 +234,22 @@ async function streamCommand($: EngineInterface, args: string): Promise<{ text: 
   return speak($, messages.streamReport(session.facts.delivery))
 }
 
+function lastCommand($: EngineInterface, args: string): { text: string } {
+  const n = parseLastArg(args)
+  if (n === 'invalid') return speak($, messages.lastInvalid())
+  const kept = session.lastResults.size()
+  if (kept === 0) return speak($, messages.lastNone())
+  const entry = session.lastResults.get(n)
+  if (entry === undefined) return speak($, messages.lastOutOfRange(kept))
+  const header = messages.lastHeader(entry.summary)
+  void $.audio.speak(header).catch(() => undefined)
+  return { text: `${header}\n${entry.text}` }
+}
+
+function narrates(): boolean {
+  return session.facts.delivery.mode === 'buffered'
+}
+
 async function statusCommand($: EngineInterface): Promise<{ text: string }> {
   const { detection, mode } = session.facts
   return speak($, messages.status({ detection, mode, consent: await storedConsent($) }))
@@ -257,6 +279,25 @@ export const register: Register = (on) => {
   on('command.run', { command: 'a11y-off' }, ($) => offCommand($))
   on('command.run', { command: 'a11y-status' }, ($) => statusCommand($))
   on('command.run', { command: 'a11y-stream' }, ($, e) => streamCommand($, e.args))
+  on('command.run', { command: 'a11y-last' }, ($, e) => lastCommand($, e.args))
+
+  // Tool narration: with buffered delivery the terminal's tool rows become one
+  // line each, from the model's own description, and results become a count.
+  // Dialogs and other surfaces are left to the engine.
+  on('ui.render', { component: 'ToolUse' }, ($, e, next) => {
+    if (e.surface !== 'terminal' || !narrates() || e.props.tool === 'AskUserQuestion') return next(e)
+    session.lastResults.note(e.props.tool_use_id, describeToolUse(e.props.tool, e.props.input))
+    const { Text } = $.ui.resolve(e)
+    return h(Text, null, summaryLine(e.props, e.props.tool, e.props.input)) as RenderElement
+  })
+
+  on('ui.render', { component: 'ToolResult' }, ($, e, next) => {
+    if (e.surface !== 'terminal' || !narrates() || e.props.tool === 'AskUserQuestion') return next(e)
+    const text = textOfResult(e.props.tool, e.props.output)
+    session.lastResults.put({ id: e.props.tool_use_id, text, fallbackSummary: e.props.tool })
+    const { Text } = $.ui.resolve(e)
+    return h(Text, null, resultLine(e.props.isErrored, countLines(text))) as RenderElement
+  })
 
   // Whole answer delivery: in buffered mode the step's chunks are held until
   // the stream beneath ends, then yielded at once, so the screen reader reads
