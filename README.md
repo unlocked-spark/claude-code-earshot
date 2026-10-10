@@ -20,7 +20,20 @@ Everything below is typed in a shell, not inside a Claude Code session: the in-s
 
 Requirements: Claude Code 2.1.287 or later as a native build (mods do not run under WSL, `claude -p`, the SDK, the VS Code panel or the cloud), Git, and the GitHub CLI logged in to an account that can read the repository while it is private.
 
-### Windows (PowerShell)
+### Install from the marketplace (no clone)
+
+The repository is its own marketplace. One command fetches and installs the plugin (Claude Code 2.1.292 or later); while the repository is private, log in to GitHub first and let git use that credential:
+
+```
+gh auth login
+gh auth setup-git
+claude plugin install a11y-companion --marketplace unlocked-spark/claude-code-a11y --scope user
+claude
+```
+
+On a machine without a GitHub SSH key, set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` before the install command. Updates: `claude plugin update a11y-companion@unlocked-spark` after a new version is pushed.
+
+### Install from a clone (Windows PowerShell shown; same on macOS)
 
 ```
 gh auth login
@@ -36,17 +49,7 @@ On first start with NVDA or JAWS running and screen reader mode off, the mod ask
 
 Known gaps on Windows: `$.audio.play` has no player there, so the ready earcon is silent, and whether `$.audio.speak` reaches NVDA is still untested.
 
-### macOS
-
-```
-gh auth login
-gh repo clone unlocked-spark/claude-code-a11y ~/claude-code-a11y
-claude plugin marketplace add ~/claude-code-a11y
-claude plugin install a11y-companion@unlocked-spark --scope user
-claude
-```
-
-Once the repository is public, one line inside a session does the same: `/plugin install a11y-companion --marketplace unlocked-spark/claude-code-a11y`.
+Once the repository is public, no login is needed, and one line inside a session does the same: `/plugin install a11y-companion --marketplace unlocked-spark/claude-code-a11y`.
 
 ## Develop
 
