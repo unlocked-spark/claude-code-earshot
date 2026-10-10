@@ -12,3 +12,4 @@
 2026-10-09 21:18 | add:tdd-cycle | specs/whole-answer-delivery.md: RED 22 new tests → GREEN 91/91 (81 Vitest + 10 kit); tsc, eslint, validate clean; 2 test rewrites recorded in overrides.json; manual TCs pending | ~90 min, 3 commits
 2026-10-09 23:51 | add:spec | specs/tool-narration.md: 11 AC, 5 TC; ui.render on ToolUse and ToolResult in buffered delivery, one-line summaries, count-only results and errors, /a11y-last | 1 interview question, ~10 min
 2026-10-09 23:55 | add:plan | docs/plans/tool-narration-plan.md: 14 tasks, 9 h + VoiceOver session; mandatory spike on whether screen reader mode draws render-hook trees for tool rows | no questions, ~5 min
+2026-10-10 16:17 | spike | tool-row render hook confirmed in screen reader mode (Claude Code 2.1.296); probe removed; tool narration plan task 1 done | 5 min of the human's session
