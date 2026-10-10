@@ -1,0 +1,14 @@
+{
+  "name": "unlocked-spark",
+  "owner": {
+    "name": "Unlocked Spark Foundation"
+  },
+  "plugins": [
+    {
+      "name": "a11y-companion",
+      "source": "./",
+      "description": "Screen reader companion for Claude Code: detects VoiceOver, NVDA or JAWS, enables screen reader mode from the next start, delivers whole answers and narrates tool activity."
+    }
+  ],
+  "description": "Accessibility mods for Claude Code by the Unlocked Spark Foundation"
+}

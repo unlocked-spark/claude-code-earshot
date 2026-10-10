@@ -16,20 +16,37 @@ The plugin is named `a11y-companion`. Stage: three features implemented and test
 
 ## Install
 
-From a shell, not from inside a session (the in-session plugin picker is the dialog that does not work with NVDA):
+Everything below is typed in a shell, not inside a Claude Code session: the in-session plugin picker is the dialog that does not work with NVDA.
+
+Requirements: Claude Code 2.1.287 or later as a native build (mods do not run under WSL, `claude -p`, the SDK, the VS Code panel or the cloud), Git, and the GitHub CLI logged in to an account that can read the repository while it is private.
+
+### Windows (PowerShell)
 
 ```
-/plugin install a11y-companion --marketplace unlocked-spark/claude-code-a11y
+gh auth login
+gh repo clone unlocked-spark/claude-code-a11y $HOME\claude-code-a11y
+claude plugin marketplace add $HOME\claude-code-a11y
+claude plugin install a11y-companion@unlocked-spark --scope user
+claude
 ```
 
-The marketplace listing is not published yet. Until then, run the mod from a clone:
+The marketplace points at the cloned folder, so an update is `git pull` in that folder followed by `/reload-plugins` in a session. To try the mod without installing it: `claude --plugin-dir $HOME\claude-code-a11y`.
+
+On first start with NVDA or JAWS running and screen reader mode off, the mod asks by voice whether to enable the mode; answer `y`, then restart `claude`. To skip the question, set the variable once in your profile: `$env:CLAUDE_AX_SCREEN_READER = "1"`.
+
+Known gaps on Windows: `$.audio.play` has no player there, so the ready earcon is silent, and whether `$.audio.speak` reaches NVDA is still untested.
+
+### macOS
 
 ```
-git clone https://github.com/unlocked-spark/claude-code-a11y
-claude --plugin-dir ./claude-code-a11y
+gh auth login
+gh repo clone unlocked-spark/claude-code-a11y ~/claude-code-a11y
+claude plugin marketplace add ~/claude-code-a11y
+claude plugin install a11y-companion@unlocked-spark --scope user
+claude
 ```
 
-Requires Claude Code 2.1.287 or later. Mods do not run in `claude -p`, the SDK, the cloud, the VS Code panel or WSL.
+Once the repository is public, one line inside a session does the same: `/plugin install a11y-companion --marketplace unlocked-spark/claude-code-a11y`.
 
 ## Develop
 
