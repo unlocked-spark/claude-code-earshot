@@ -19,8 +19,16 @@
   },
   "architecture": {
     "languages": [
-      { "name": "typescript", "version": "5.x (strict), ES modules", "role": "plugin" },
-      { "name": "javascript", "version": "Node 22 for tooling only (npm, Vitest, ESLint); the mod itself runs inside the Claude Code process", "role": "scripting" }
+      {
+        "name": "typescript",
+        "version": "5.x (strict), ES modules",
+        "role": "plugin"
+      },
+      {
+        "name": "javascript",
+        "version": "Node 22 for tooling only (npm, Vitest, ESLint); the mod itself runs inside the Claude Code process",
+        "role": "scripting"
+      }
     ],
     "backend": {
       "framework": null,
@@ -42,7 +50,16 @@
       "entry": "src/mod.ts",
       "validate": "claude plugin validate .",
       "install_from_shell": "claude plugin install claude-code-a11y@<marketplace> --scope user",
-      "not_supported_by_mod_api": ["claude -p", "SDK", "cloud", "VS Code panel", "WSL", "permission prompt", "input field", "slash command menu"]
+      "not_supported_by_mod_api": [
+        "claude -p",
+        "SDK",
+        "cloud",
+        "VS Code panel",
+        "WSL",
+        "permission prompt",
+        "input field",
+        "slash command menu"
+      ]
     },
     "containerized": false,
     "container_strategy": "none",
@@ -50,8 +67,7 @@
   },
   "infrastructure": {
     "git_host": "github",
-    "git_remote": null,
-    "git_remote_planned": "https://github.com/unlocked-spark/claude-code-a11y (private until first release)",
+    "git_remote": "https://github.com/unlocked-spark/claude-code-a11y.git",
     "cloud_provider": "none",
     "cloud_services": [],
     "cicd": {
@@ -77,8 +93,11 @@
     "dev": null,
     "staging": null,
     "production": {
-      "deploy_trigger": "manual: publish to a plugin marketplace (own marketplace repo or an existing mod marketplace)",
-      "verify": ["claude plugin validate .", "manual session with NVDA and VoiceOver"],
+      "deploy_trigger": "manual: the repository is its own marketplace (.claude-plugin/marketplace.json); install from a clone with claude plugin marketplace add + claude plugin install; public /plugin install once the repository is public",
+      "verify": [
+        "claude plugin validate .",
+        "manual session with NVDA and VoiceOver"
+      ],
       "url": null,
       "requires_approval": true
     }
@@ -128,7 +147,9 @@
   "specs_directory": "specs/",
   "specs_format": "markdown",
   "plans_directory": "docs/plans/",
-  "design_docs": ["docs/research/rozpoznanie-2026-10-09.md"],
+  "design_docs": [
+    "docs/research/rozpoznanie-2026-10-09.md"
+  ],
   "branding": {
     "accentColor": "#174a92",
     "presetName": "unlocked-spark",
@@ -146,7 +167,11 @@
       "warning": "#eab308",
       "info": "#0ea5e9"
     },
-    "fonts": { "heading": "Atkinson Hyperlegible", "body": "Atkinson Hyperlegible", "code": null },
+    "fonts": {
+      "heading": "Atkinson Hyperlegible",
+      "body": "Atkinson Hyperlegible",
+      "code": null
+    },
     "tone": "Confident and factual. No quoting of regulations, no emphasis on the foundation being young or small, no double dashes in public text. Invitations to contact phrased positively (rules in ../CLAUDE.md).",
     "logoPath": null,
     "styleGuideSource": null
