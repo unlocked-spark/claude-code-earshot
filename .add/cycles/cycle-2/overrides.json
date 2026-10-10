@@ -8,5 +8,14 @@
       "hooks/stream.test.ts::holds the whole step, drops thinking, keeps order and rings once (AC-001 to AC-005)"
     ],
     "reason": "register.test.ts asserted the exact list of three commands from cycle 1; the new /a11y-stream command extends it to four. stream.test.ts read the step result from the kit stream's .result promise, which settles undefined on the engine side; the test now reads the iterator's return value, which carries the result. Assertions otherwise unchanged."
+  },
+  {
+    "kind": "test-rewrite",
+    "approved_by": "agent, pending human review",
+    "timestamp": "2026-10-10T14:34:18Z",
+    "affected_tests": [
+      "hooks/stream.test.ts::holds the whole step, drops thinking, keeps order and rings once (AC-001 to AC-005)"
+    ],
+    "reason": "Spec AC-001 changed to 0.1.2: text chunks of one block are merged into one before yielding, so the expected kinds list has one text chunk instead of two. The text, order of other chunks, bell and result assertions are unchanged."
   }
 ]

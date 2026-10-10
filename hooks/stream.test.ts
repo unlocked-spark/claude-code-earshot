@@ -98,7 +98,8 @@ test('holds the whole step, drops thinking, keeps order and rings once (AC-001 t
   await $.session.start(start)
   const seen = await collect($.turn.step(step()), log)
   expect(seen.firstSeenAfter).toBe(SCRIPT.length)
-  expect(seen.kinds).toEqual(['text', 'text', 'tool', 'input', 'stop'])
+  // The two text pieces of block 1 arrive as one chunk (one frame for the screen reader).
+  expect(seen.kinds).toEqual(['text', 'tool', 'input', 'stop'])
   expect(seen.text).toBe('First paragraph.\n\nSecond paragraph.')
   expect(log.notified).toBe(1)
   expect(seen.result?.answer).toBe('First paragraph.\n\nSecond paragraph.')

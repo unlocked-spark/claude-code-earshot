@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createHold, isStreamOverride, parseStreamArg, resolveDelivery } from '../../hooks/lib/stream-delivery'
+import { coalesceText, createHold, isStreamOverride, parseStreamArg, resolveDelivery } from '../../hooks/lib/stream-delivery'
 import { messages } from '../../hooks/lib/messages'
 
 const override = (mode: 'buffered' | 'live') => ({ mode, setAt: '2026-10-09T20:00:00.000Z' })
@@ -102,5 +102,43 @@ describe('stream messages (AC-007)', () => {
     expect(messages.streamSet('live')).toBe('Whole answer delivery off (forced). Answers stream live.')
     expect(messages.streamAuto()).toBe('Override removed.')
     expect(messages.streamInvalid()).toBe('Usage: /a11y-stream, /a11y-stream on, /a11y-stream off, or /a11y-stream auto.')
+  })
+})
+
+describe('coalesceText (AC-001, AC-004: one piece per block)', () => {
+  it('merges a run of text chunks of one block into one chunk without a ref', () => {
+    const out = coalesceText([
+      { kind: 'text', index: 1, text: 'First ', ref: 10 },
+      { kind: 'text', index: 1, text: 'sentence. ', ref: 11 },
+      { kind: 'text', index: 1, text: 'Second.', ref: 12 },
+    ])
+    expect(out).toEqual([{ kind: 'text', index: 1, text: 'First sentence. Second.' }])
+  })
+  it('keeps other chunks in place with their refs and cuts the run', () => {
+    const out = coalesceText([
+      { kind: 'engine', ref: 1 },
+      { kind: 'text', index: 0, text: 'a', ref: 2 },
+      { kind: 'text', index: 0, text: 'b', ref: 3 },
+      { kind: 'tool', index: 1, name: 'Read', ref: 4 },
+      { kind: 'text', index: 2, text: 'c', ref: 5 },
+      { kind: 'stop', ref: 6 },
+    ])
+    expect(out).toEqual([
+      { kind: 'engine', ref: 1 },
+      { kind: 'text', index: 0, text: 'ab' },
+      { kind: 'tool', index: 1, name: 'Read', ref: 4 },
+      { kind: 'text', index: 2, text: 'c' },
+      { kind: 'stop', ref: 6 },
+    ])
+  })
+  it('does not merge text of different blocks', () => {
+    const out = coalesceText([
+      { kind: 'text', index: 0, text: 'a' },
+      { kind: 'text', index: 1, text: 'b' },
+    ])
+    expect(out).toHaveLength(2)
+  })
+  it('passes an empty list through', () => {
+    expect(coalesceText([])).toEqual([])
   })
 })

@@ -47,3 +47,35 @@ export function createHold<C extends StepChunk>(): Hold<C> {
     },
   }
 }
+
+// Merges runs of text chunks that belong to one block into a single chunk
+// without an engine ref (a chunk built afresh is taken at its word), so the
+// terminal receives the whole answer in one piece and paints it in one frame.
+// Every other chunk keeps its place and its ref; a text run is cut by any
+// chunk of another kind or another block index.
+export function coalesceText<C extends StepChunk>(chunks: readonly C[]): C[] {
+  const out: C[] = []
+  let run: { index: unknown; text: string; first: C } | undefined
+  const flush = () => {
+    if (run === undefined) return
+    const merged = { kind: 'text', index: run.index, text: run.text } as unknown as C
+    out.push(merged)
+    run = undefined
+  }
+  for (const chunk of chunks) {
+    if (chunk.kind === 'text' && typeof chunk.text === 'string') {
+      const index = (chunk as { index?: unknown }).index
+      if (run !== undefined && run.index === index) {
+        run.text += chunk.text
+        continue
+      }
+      flush()
+      run = { index, text: chunk.text, first: chunk }
+      continue
+    }
+    flush()
+    out.push(chunk)
+  }
+  flush()
+  return out
+}

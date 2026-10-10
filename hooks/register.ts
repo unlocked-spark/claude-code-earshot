@@ -6,7 +6,7 @@ import { messages } from './lib/messages'
 import { decide, isStoredConsent, resolveModeState } from './lib/mode-state'
 import { applyAxSetting, settingsPath } from './lib/settings-file'
 import type { ApplyResult } from './lib/settings-file'
-import { createHold, parseStreamArg, resolveDelivery } from './lib/stream-delivery'
+import { coalesceText, createHold, parseStreamArg, resolveDelivery } from './lib/stream-delivery'
 import { countLines, describeToolUse, parseLastArg, resultLine, summaryLine, textOfResult } from './lib/tool-narration'
 import type { DeliveryMode, ModeState, Platform, SettingsLike, StoredConsent } from './lib/types'
 import { cancelTimer, COMMANDS, narrates, session, step } from './state'
@@ -283,7 +283,9 @@ export const register: Register = (on) => {
       failed = true
     }
     const held = hold.release()
-    for (const chunk of held.chunks) yield chunk
+    // One chunk per text block: the terminal paints the answer in one frame,
+    // so the screen reader is not interrupted after the first piece.
+    for (const chunk of coalesceText(held.chunks)) yield chunk
     if (failed) throw failure
     if (held.hasText && !next.signal.aborted) ring($, 'Answer ready.')
     return result

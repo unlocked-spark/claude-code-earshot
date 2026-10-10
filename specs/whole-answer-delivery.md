@@ -22,7 +22,7 @@ As a blind developer using Claude Code in screen reader mode, I want each answer
 
 | ID | Criterion | Priority |
 |----|-----------|----------|
-| AC-001 | A `turn.step` hook consumes the stream beneath it to the end before yielding anything, then yields every held chunk in the order received and returns the step's result unchanged. | Must |
+| AC-001 | A `turn.step` hook consumes the stream beneath it to the end before yielding anything, then yields the held chunks in the order received, with each run of text chunks of one block merged into a single chunk, and returns the step's result unchanged. One chunk per block makes the terminal paint the answer in one frame; chunks yielded one by one were painted in two frames and VoiceOver skipped the first sentence (session of 2026-10-10). | Must |
 | AC-002 | Chunks of kind `tool`, `input`, `stop` and `engine` are always yielded (held, never dropped), so the engine records and runs every tool call exactly as without the mod. | Must |
 | AC-003 | Chunks of kind `thinking` are dropped in buffered mode: nothing of the model's thinking is shown or read. The transcript's recorded thinking is the engine's signed block and is unaffected. | Must |
 | AC-004 | Chunks of kind `text` are held and yielded in order, so the printed and recorded answer is byte-identical to the unbuffered one. | Must |
@@ -200,4 +200,5 @@ Per test case in section 3.
 | Date | Version | Author | Changes |
 |------|---------|--------|---------|
 | 2026-10-09 | 0.1.0 | Łukasz Majewski | Initial spec from /add:spec interview: hold a whole step, hide thinking, bell on release, active in screen reader mode with /a11y-stream override |
+| 2026-10-10 | 0.1.2 | Łukasz Majewski | AC-001: text chunks of a block merged into one before yielding, after VoiceOver skipped the first sentence of an answer painted in two frames |
 | 2026-10-09 | 0.1.1 | Łukasz Majewski | After the TDD cycle: "Maps to" filled; the bell text is "Answer ready."; AC-011 verified by the validator listing and review, not by a kit test (a hook cannot be made to throw from the bottom) |
