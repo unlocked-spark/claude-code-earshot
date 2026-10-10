@@ -1,16 +1,15 @@
-import type { CommandSpec, EngineInterface, Register, RenderElement, Timer, TurnStepChunk, TurnStepResult } from 'claude-code'
-import { ANSWER_TIMEOUT_MS, consentReducer, IDLE } from './lib/consent'
-import type { ConsentEffect, ConsentEvent, ConsentState } from './lib/consent'
+import type { EngineInterface, Register, RenderElement, TurnStepChunk, TurnStepResult } from 'claude-code'
+import { ANSWER_TIMEOUT_MS } from './lib/consent'
+import type { ConsentEffect } from './lib/consent'
 import { detect, platformFromEnv } from './lib/detect'
 import { messages } from './lib/messages'
 import { decide, isStoredConsent, resolveModeState } from './lib/mode-state'
 import { applyAxSetting, settingsPath } from './lib/settings-file'
 import type { ApplyResult } from './lib/settings-file'
 import { createHold, parseStreamArg, resolveDelivery } from './lib/stream-delivery'
-import type { Delivery } from './lib/stream-delivery'
-import { countLines, createLastResults, parseLastArg, resultLine, summaryLine, textOfResult, describeToolUse } from './lib/tool-narration'
-import type { LastResults } from './lib/tool-narration'
-import type { DeliveryMode, DetectionResult, ModeState, Platform, SettingsLike, StoredConsent } from './lib/types'
+import { countLines, describeToolUse, parseLastArg, resultLine, summaryLine, textOfResult } from './lib/tool-narration'
+import type { DeliveryMode, ModeState, Platform, SettingsLike, StoredConsent } from './lib/types'
+import { cancelTimer, COMMANDS, narrates, session, step } from './state'
 
 // The only module that touches the mod API. Decisions live in ./lib and take
 // plain values, so Vitest covers them; this file turns them into $ calls.
@@ -21,34 +20,7 @@ import type { DeliveryMode, DetectionResult, ModeState, Platform, SettingsLike, 
 const CONSENT_KEY = 'screenReaderConsent'
 const STREAM_KEY = 'streamDelivery'
 
-const COMMANDS: readonly CommandSpec[] = [
-  { name: 'a11y-on', description: 'Enable Claude Code screen reader mode from the next start' },
-  { name: 'a11y-off', description: 'Disable Claude Code screen reader mode from the next start' },
-  { name: 'a11y-status', description: 'Report the detected screen reader and the screen reader mode state' },
-  { name: 'a11y-stream', description: 'Whole answer delivery: show each answer at once instead of streaming it', argumentHint: '[on|off|auto]' },
-  { name: 'a11y-last', description: 'Print the full text of a recent tool result', argumentHint: '[n]' },
-]
-
-const LAST_RESULTS_KEPT = 5
-
-type Facts = {
-  platform?: Platform
-  detection?: DetectionResult
-  mode?: ModeState
-  modVersion: string
-  settingsPath?: string
-  backedUp: boolean
-  delivery: Delivery
-}
-
 type ChangeOutcome = { ok: true; applied: Extract<ApplyResult, { ok: true }> } | { ok: false; text: string }
-
-const session: { consent: ConsentState; timer: Timer | undefined; facts: Facts; lastResults: LastResults } = {
-  consent: IDLE,
-  timer: undefined,
-  lastResults: createLastResults(LAST_RESULTS_KEPT),
-  facts: { modVersion: '0.0.0', backedUp: false, delivery: { mode: 'live', source: 'mode' } },
-}
 
 // Speech and transcript always carry the same line (AC-012). Speech is not
 // awaited: it resolves only once the utterance ends.
@@ -60,17 +32,6 @@ function say($: EngineInterface, text: string): void {
 // The native channel rings the terminal bell when the user chose that channel.
 function ring($: EngineInterface, text: string): void {
   void $.ui.notify(text).catch(() => undefined)
-}
-
-function cancelTimer(): void {
-  session.timer?.cancel()
-  session.timer = undefined
-}
-
-function step(event: ConsentEvent): ConsentEffect {
-  const next = consentReducer(session.consent, event)
-  session.consent = next.state
-  return next.effect
 }
 
 async function readOwnVersion($: EngineInterface): Promise<string> {
@@ -244,10 +205,6 @@ function lastCommand($: EngineInterface, args: string): { text: string } {
   const header = messages.lastHeader(entry.summary)
   void $.audio.speak(header).catch(() => undefined)
   return { text: `${header}\n${entry.text}` }
-}
-
-function narrates(): boolean {
-  return session.facts.delivery.mode === 'buffered'
 }
 
 async function statusCommand($: EngineInterface): Promise<{ text: string }> {

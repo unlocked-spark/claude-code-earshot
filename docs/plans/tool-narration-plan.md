@@ -4,7 +4,7 @@
 **Created:** 2026-10-09
 **Team:** solo
 **Estimated Effort:** 9 h of focused work plus one manual VoiceOver session, after a 15-minute spike that decides whether the feature can be built at all
-**Status:** Draft
+**Status:** In Progress (tasks 1 to 12 done on 2026-10-10; 13 and 14 need the VoiceOver session)
 
 ## 1. Overview
 
@@ -133,3 +133,4 @@ Critical path: 1 → 2..6 → 7 → 8 → 10 → 11 → 12 → 13 → 14.
 ## 9. Plan History
 
 - 2026-10-09: Initial plan from /add:plan. A mandatory spike gates the feature; pure summaries and counts under Vitest; kit tests mount the rows on the terminal surface.
+- 2026-10-10: Spike D positive (docs/research/spikes-2026-10.md). TDD cycle 3 done in about an hour. Findings: kit tests must answer ui.render at the bottom; a mounted drawing's requestId is not the call id, so the result store is keyed on props.tool_use_id. One test rewrite recorded in .add/cycles/cycle-3/overrides.json.

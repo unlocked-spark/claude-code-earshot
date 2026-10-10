@@ -4,7 +4,7 @@
 **Created:** 2026-10-09
 **PRD Reference:** docs/prd.md (Feature 5: tool call significance; milestone M2)
 **Research:** VoiceOver session of 2026-10-09: tool rows with full shell commands and dumped file contents are read with the same weight as the answer
-**Status:** Draft
+**Status:** Implementing (code and automated tests done; manual test cases pending)
 
 ## 1. Overview
 
@@ -45,7 +45,7 @@ Manual, VoiceOver on, screen reader mode on. Captures under `tests/screenshots/t
 1. Ask Claude to read two Markdown files and summarise them in a way that makes it use one shell command.
 **Expected Result:** The transcript shows `tool: <the model's description of the command>` and `result: <N> lines`, no command text, no file content; then the summary step arrives whole.
 **Screenshot Checkpoint:** tests/screenshots/tool-narration/tc-001-bash.txt
-**Maps to:** TBD
+**Maps to:** hooks/narration.test.ts → "draws the call row from the Bash description in buffered delivery (AC-001, AC-002)" and "draws the result as a count and keeps the text for /a11y-last (AC-004, AC-006)"; manual for what is heard
 
 ### TC-002: A failed command
 
@@ -54,7 +54,7 @@ Manual, VoiceOver on, screen reader mode on. Captures under `tests/screenshots/t
 1. Ask Claude to run a command that fails (a missing file).
 **Expected Result:** `tool error: <description>` and `error: <N> lines`; no stderr text; Claude's next step explains the failure in its own words.
 **Screenshot Checkpoint:** tests/screenshots/tool-narration/tc-002-error.txt
-**Maps to:** TBD
+**Maps to:** hooks/narration.test.ts → "labels running and errored calls (AC-001)"; tests/unit/tool-narration.spec.ts → resultLine
 
 ### TC-003: Reading the full result on demand
 
@@ -65,7 +65,7 @@ Manual, VoiceOver on, screen reader mode on. Captures under `tests/screenshots/t
 3. Run `/a11y-last 9`.
 **Expected Result:** Step 1 prints the whole result of the last tool call. Step 2 prints the one before it. Step 3 answers `Only 2 results are kept; ask for 1 to 2.`
 **Screenshot Checkpoint:** tests/screenshots/tool-narration/tc-003-last.txt
-**Maps to:** TBD
+**Maps to:** hooks/narration.test.ts → "draws the result as a count and keeps the text for /a11y-last (AC-004, AC-006)"; tests/unit/tool-narration.spec.ts → createLastResults, parseLastArg
 
 ### TC-004: Folded groups and dialogs untouched
 
@@ -75,7 +75,7 @@ Manual, VoiceOver on, screen reader mode on. Captures under `tests/screenshots/t
 2. Ask Claude something that makes it use AskUserQuestion.
 **Expected Result:** The group line `Read 3 files` is the engine's own. The question dialog is the engine's numbered list and works as before.
 **Screenshot Checkpoint:** tests/screenshots/tool-narration/tc-004-untouched.txt
-**Maps to:** TBD
+**Maps to:** hooks/narration.test.ts → "leaves AskUserQuestion rows and live delivery to the engine (AC-005, AC-007)"; manual for the folded group
 
 ### TC-005: Off outside buffered delivery
 
@@ -84,7 +84,7 @@ Manual, VoiceOver on, screen reader mode on. Captures under `tests/screenshots/t
 1. Ask Claude to run a shell command.
 **Expected Result:** The engine's own `tool: Bash (...)` row and full result, as without the mod.
 **Screenshot Checkpoint:** tests/screenshots/tool-narration/tc-005-off.txt
-**Maps to:** TBD
+**Maps to:** hooks/narration.test.ts → "draws the engine row outside buffered delivery (AC-007)"
 
 ## 4. Data Model
 
@@ -192,3 +192,4 @@ Per test case in section 3.
 | Date | Version | Author | Changes |
 |------|---------|--------|---------|
 | 2026-10-09 | 0.1.0 | Łukasz Majewski | Initial spec from /add:spec interview: one-line call rows from the model's own description, count-only result rows, errors as a count too, /a11y-last for the full text, active with buffered delivery |
+| 2026-10-10 | 0.1.1 | Łukasz Majewski | Spike D confirmed the mechanism; after the TDD cycle: "Maps to" filled; per-call state keyed on tool_use_id, not requestId; result line says `1 line` for a single line |

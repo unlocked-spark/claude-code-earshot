@@ -163,6 +163,38 @@
       "date": "2026-10-09",
       "classified_by": "agent",
       "checkpoint_type": "post-tdd-cycle"
+    },
+    {
+      "id": "L-011",
+      "title": "Tool rows: key per-call state on props.tool_use_id, answer ui.render at the kit bottom",
+      "body": "ui.render fires for ToolUse and ToolResult in screen reader mode and the terminal draws the hook's tree (spike D, 2026-10-10). In a kit-mounted drawing e.requestId is a mount id, not the tool call id, so state shared between the call row and the result row must be keyed on e.props.tool_use_id, present on both. A kit test that mounts a row the mod may leave alone must register a bottom ui.render hook, or $.ui.mount fails with no implementation for ui.render. Each row is drawn four to five times per call (start, running, done): render hooks must be pure and cheap.",
+      "scope": "project",
+      "stack": [
+        "typescript",
+        "claude-code-mod-api",
+        "claude-plugin-test"
+      ],
+      "category": "technical",
+      "severity": "medium",
+      "source": "claude-code-a11y",
+      "date": "2026-10-10",
+      "classified_by": "agent",
+      "checkpoint_type": "post-tdd-cycle"
+    },
+    {
+      "id": "L-012",
+      "title": "The loader refuses $ passed to a function imported from another file",
+      "body": "claude plugin validate: \"$ is passed to probeImported, imported from ./probe-import: $ is followed only into a function declared in this same file\". A hooks module cannot be split by moving $-taking helpers into other files; only $-free state and transitions can move (hooks/state.ts). Plan for one long register.ts per plugin, or several plugins.",
+      "scope": "project",
+      "stack": [
+        "claude-code-mod-api"
+      ],
+      "category": "technical",
+      "severity": "high",
+      "source": "claude-code-a11y",
+      "date": "2026-10-10",
+      "classified_by": "agent",
+      "checkpoint_type": "post-tdd-cycle"
     }
   ]
 }
