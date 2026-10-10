@@ -29,9 +29,19 @@ function say($: EngineInterface, text: string): void {
   void $.audio.speak(text).catch(() => undefined)
 }
 
-// The native channel rings the terminal bell when the user chose that channel.
+const READY_EARCON = 'assets/earcons/answer-ready.wav'
+
+// The native channel rings the terminal bell when the user chose one. When
+// nothing delivers it (no channel for this terminal, or disabled), a short
+// earcon plays instead, independent of the terminal's bell and of speech.
 function ring($: EngineInterface, text: string): void {
-  void $.ui.notify(text).catch(() => undefined)
+  void $.ui
+    .notify(text)
+    .then((sent) => {
+      $.ui.log(`notify: ${sent.isSent ? sent.channel : sent.reason}`, { to: 'debug' })
+      return sent.isSent ? undefined : $.audio.play({ asset: READY_EARCON })
+    })
+    .catch(() => undefined)
 }
 
 async function readOwnVersion($: EngineInterface): Promise<string> {

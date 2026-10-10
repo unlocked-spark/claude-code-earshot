@@ -36,7 +36,7 @@ function host(on: On, world: { voiceover: boolean; env: Record<string, string>; 
     return { value: { via: 'system' as const } }
   })
   on('ui.log', (_$, e) => {
-    log.logged.push(e.text)
+    if (e.to !== 'debug') log.logged.push(e.text)
     return { value: undefined }
   })
   on('ui.notify', () => {

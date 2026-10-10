@@ -26,14 +26,14 @@ As a blind developer using Claude Code in screen reader mode, I want each answer
 | AC-002 | Chunks of kind `tool`, `input`, `stop` and `engine` are always yielded (held, never dropped), so the engine records and runs every tool call exactly as without the mod. | Must |
 | AC-003 | Chunks of kind `thinking` are dropped in buffered mode: nothing of the model's thinking is shown or read. The transcript's recorded thinking is the engine's signed block and is unaffected. | Must |
 | AC-004 | Chunks of kind `text` are held and yielded in order, so the printed and recorded answer is byte-identical to the unbuffered one. | Must |
-| AC-005 | After the held chunks are yielded for a step whose answer is non-empty, the mod raises a native notification (the terminal bell on the user's channel). A step with no visible text (tool calls only) raises nothing. | Must |
+| AC-005 | After the held chunks are yielded for a step whose answer is non-empty, the mod raises a native notification (the terminal bell on the user's channel); when the notification is not delivered (`isSent: false`, as on Terminal.app with no `preferredNotifChannel`), it plays the bundled earcon `assets/earcons/answer-ready.wav` through `$.audio.play`. A step with no visible text (tool calls only) raises nothing. | Must |
 | AC-006 | Buffered mode is active when the resolved mode state is on (`CLAUDE_AX_SCREEN_READER` truthy, or `axScreenReader` true in settings) and no override is stored; it is inactive otherwise. Outside buffered mode the hook forwards chunks as they arrive (`yield* next(e)`), adding no delay. | Must |
 | AC-007 | `/a11y-stream on` forces buffered mode for this and later sessions, `/a11y-stream off` forces live streaming, `/a11y-stream auto` removes the override; each answers with one sentence naming the resulting mode and whether it comes from the override or the screen reader mode. `/a11y-stream` alone reports the current state. The override lives in `$.store` under `streamDelivery`. | Must |
 | AC-008 | Steps that belong to a subagent (`e.agentId` set) are never buffered; the hook forwards them unchanged. | Must |
 | AC-009 | When the step is interrupted (`next.signal` aborts, the user pressed Escape or Ctrl+C) the hook yields whatever it has held so far before returning, so the transcript keeps the partial answer. | Must |
 | AC-010 | The hook does no work of its own per chunk beyond pushing it to an array, so its own time stays far below the hook budget regardless of how long the model takes. | Should |
 | AC-011 | If the hook fails, its `.catch` handler forwards the stream beneath unchanged, so a bug in buffering degrades to today's behaviour rather than a lost answer. | Must |
-| AC-012 | `claude plugin validate .` lists `turn.step` among the hooks and no new `$` calls beyond `$.ui.notify`, `$.store.get`, `$.store.set`, `$.store.delete` and `$.audio.speak` for the command's reply. | Must |
+| AC-012 | `claude plugin validate .` lists `turn.step` among the hooks and no new `$` calls beyond `$.ui.notify`, `$.audio.play`, `$.store.get`, `$.store.set`, `$.store.delete` and `$.audio.speak` for the command's reply. | Must |
 | AC-013 | README documents the behaviour, the bell, the hidden thinking and the three forms of `/a11y-stream`. | Should |
 
 ## 3. User Test Cases
@@ -200,5 +200,6 @@ Per test case in section 3.
 | Date | Version | Author | Changes |
 |------|---------|--------|---------|
 | 2026-10-09 | 0.1.0 | Łukasz Majewski | Initial spec from /add:spec interview: hold a whole step, hide thinking, bell on release, active in screen reader mode with /a11y-stream override |
+| 2026-10-10 | 0.1.3 | Łukasz Majewski | AC-005: earcon fallback when the notification channel does not deliver (no bell was heard on Terminal.app) |
 | 2026-10-10 | 0.1.2 | Łukasz Majewski | AC-001: text chunks of a block merged into one before yielding, after VoiceOver skipped the first sentence of an answer painted in two frames |
 | 2026-10-09 | 0.1.1 | Łukasz Majewski | After the TDD cycle: "Maps to" filled; the bell text is "Answer ready."; AC-011 verified by the validator listing and review, not by a kit test (a hook cannot be made to throw from the bottom) |

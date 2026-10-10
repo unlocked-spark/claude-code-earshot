@@ -1,13 +1,13 @@
 import { expect, mock, test } from 'claude-code/testing'
 import type { On, TurnStepChunk, TurnStepResult } from 'claude-code'
 
-type Log = { spoken: string[]; logged: string[]; notified: number; yielded: number; stored: { key: string; value: unknown }[]; deleted: string[] }
+type Log = { spoken: string[]; logged: string[]; notified: number; yielded: number; stored: { key: string; value: unknown }[]; deleted: string[]; played: string[] }
 
 // A host with no screen reader running (so session.start stays silent), in or
 // out of screen reader mode, with an optional stored override, and a scripted
 // model response played by the bottom turn.step hook.
-function host(on: On, world: { modeOn: boolean; override?: { mode: 'buffered' | 'live'; setAt: string }; script: TurnStepChunk[]; answer: string }): Log {
-  const log: Log = { spoken: [], logged: [], notified: 0, yielded: 0, stored: [], deleted: [] }
+function host(on: On, world: { modeOn: boolean; override?: { mode: 'buffered' | 'live'; setAt: string }; script: TurnStepChunk[]; answer: string; notifyDelivers?: boolean }): Log {
+  const log: Log = { spoken: [], logged: [], notified: 0, yielded: 0, stored: [], deleted: [], played: [] }
   mock.env(on, { HOME: '/Users/t' })
   // A matcher keeps these distinct from mock.store's own hooks; registered first, they run above it.
   on('store.set', { key: 'streamDelivery' }, (_$, e, next) => {
@@ -37,12 +37,18 @@ function host(on: On, world: { modeOn: boolean; override?: { mode: 'buffered' | 
     return { value: { via: 'system' as const } }
   })
   on('ui.log', (_$, e) => {
-    log.logged.push(e.text)
+    if (e.to !== 'debug') log.logged.push(e.text)
     return { value: undefined }
   })
   on('ui.notify', () => {
     log.notified += 1
-    return { value: { isSent: true as const, channel: 'terminal_bell' as const } }
+    return world.notifyDelivers === false
+      ? { value: { isSent: false as const, reason: 'no-channel' as const } }
+      : { value: { isSent: true as const, channel: 'terminal_bell' as const } }
+  })
+  on('audio.play', (_$, e) => {
+    log.played.push('asset' in e.clip && typeof e.clip.asset === 'string' ? e.clip.asset : 'other')
+    return { value: undefined }
   })
   on('command.register', (_$, e) => ({ value: { command: e.name } }))
   on('session.start', (_$, e) => ({ cwd: e.cwd }))
@@ -159,4 +165,19 @@ test('/a11y-stream on, off and auto change the mode and the store (AC-007)', asy
   expect(log.deleted).toContain('streamDelivery')
   expect((await $.command.run(command('maybe'))).text).toBe('Usage: /a11y-stream, /a11y-stream on, /a11y-stream off, or /a11y-stream auto.')
   expect(log.spoken.length).toBeGreaterThanOrEqual(4)
+})
+
+test('plays the ready earcon when no notification channel delivers (AC-005)', async ($, on) => {
+  const log = host(on, { modeOn: true, script: SCRIPT, answer: 'x', notifyDelivers: false })
+  await $.session.start(start)
+  await collect($.turn.step(step()), log)
+  expect(log.notified).toBe(1)
+  expect(log.played).toEqual(['assets/earcons/answer-ready.wav'])
+})
+
+test('plays nothing when the notification was delivered (AC-005)', async ($, on) => {
+  const log = host(on, { modeOn: true, script: SCRIPT, answer: 'x' })
+  await $.session.start(start)
+  await collect($.turn.step(step()), log)
+  expect(log.played).toEqual([])
 })
