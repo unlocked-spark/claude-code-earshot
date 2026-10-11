@@ -1,4 +1,4 @@
-import type { DeliveryMode, DeliverySource, DetectionResult, ModeState, Reader, StoredConsent } from './types'
+import type { DeliveryMode, DeliverySource, DetectionResult, ModeState, Reader, StoredConsent, ToolNarrationMode } from './types'
 
 // Every line here is spoken and printed verbatim (AC-012), so each one is a
 // short sentence that stands on its own when heard once.
@@ -85,6 +85,44 @@ export const messages = {
   },
   streamInvalid(): string {
     return 'Usage: /a11y-stream, /a11y-stream on, /a11y-stream off, or /a11y-stream auto.'
+  },
+  toolsReport(args: { mode: ToolNarrationMode; source: DeliverySource }): string {
+    const why = args.source === 'override' ? 'forced' : args.mode === 'off' ? 'whole answer delivery' : 'whole answer delivery is off'
+    return `Tool narration ${args.mode} (${why}).`
+  },
+  toolsSet(mode: ToolNarrationMode): string {
+    switch (mode) {
+      case 'off':
+        return 'Tool narration off (forced). Tool calls and results are not shown; /a11y-last still prints a recent result.'
+      case 'brief':
+        return 'Tool narration brief (forced). One line per tool call and a count per result.'
+      case 'full':
+        return 'Tool narration full (forced). Tool rows are drawn by Claude Code itself.'
+    }
+  },
+  toolsAuto(): string {
+    return 'Override removed.'
+  },
+  toolsInvalid(): string {
+    return 'Usage: /a11y-tools, /a11y-tools off, /a11y-tools brief, /a11y-tools full, or /a11y-tools auto.'
+  },
+  heartbeat(seconds: number): string {
+    return `Still working, ${seconds} seconds.`
+  },
+  heartbeatReport(seconds: number): string {
+    return seconds === 0 ? 'Heartbeat off.' : `Heartbeat every ${seconds} seconds of silence while an answer is being prepared, in screen reader mode.`
+  },
+  heartbeatSet(seconds: number): string {
+    return seconds === 0 ? 'Heartbeat off.' : `Heartbeat set to every ${seconds} seconds of silence.`
+  },
+  heartbeatInvalid(): string {
+    return 'Usage: /a11y-heartbeat, /a11y-heartbeat <seconds> (5 to 600), or /a11y-heartbeat off.'
+  },
+  logReport(on: boolean): string {
+    return on ? 'Render log on. Every drawn component is written to the debug log of a session started with claude --debug.' : 'Render log off.'
+  },
+  logInvalid(): string {
+    return 'Usage: /a11y-log, /a11y-log on, or /a11y-log off.'
   },
   lastHeader(summary: string): string {
     return `Result of: ${summary}`

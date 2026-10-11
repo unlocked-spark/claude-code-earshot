@@ -1,9 +1,35 @@
-import type { LastResultEntry, ToolFlags, ToolLabel } from './types'
+import type { DeliveryMode, DeliverySource, LastResultEntry, ToolFlags, ToolLabel, ToolNarrationMode, ToolsOverride } from './types'
 
 // One line per tool call and one count per result, from what the model
 // already wrote: a screen reader hears the work, not shell syntax or dumps.
 
 export const SUMMARY_LIMIT = 60
+
+export type ToolNarration = { mode: ToolNarrationMode; source: DeliverySource }
+
+export type ToolsArg = 'report' | ToolNarrationMode | 'auto' | 'invalid'
+
+export function isToolsOverride(value: unknown): value is ToolsOverride {
+  if (typeof value !== 'object' || value === null) return false
+  const record = value as Record<string, unknown>
+  const mode = record['mode']
+  return (mode === 'off' || mode === 'brief' || mode === 'full') && typeof record['setAt'] === 'string'
+}
+
+// An override from /a11y-tools wins. Otherwise whole answer delivery decides:
+// buffered (screen reader mode) hides the tool rows, so the transcript carries
+// the answers alone; live delivery leaves the engine's own rows.
+export function resolveToolNarration(args: { delivery: DeliveryMode; override: unknown }): ToolNarration {
+  if (isToolsOverride(args.override)) return { mode: args.override.mode, source: 'override' }
+  return { mode: args.delivery === 'buffered' ? 'off' : 'full', source: 'mode' }
+}
+
+export function parseToolsArg(args: string): ToolsArg {
+  const word = args.trim().toLowerCase()
+  if (word === '') return 'report'
+  if (word === 'off' || word === 'brief' || word === 'full' || word === 'auto') return word
+  return 'invalid'
+}
 
 export type LastResults = {
   note(id: string, summary: string): void

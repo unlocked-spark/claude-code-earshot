@@ -33,6 +33,12 @@ As a blind developer in screen reader mode, I want tool activity read as short s
 | AC-009 | Every summary and count is a single line without box characters, colour-only meaning or control sequences. | Must |
 | AC-010 | `claude plugin validate .` lists `ui.render{component=ToolUse}` and `ui.render{component=ToolResult}` among the hooks and no `$` call beyond those already listed plus `$.ui.resolve`. | Must |
 | AC-011 | README documents the narration, the count lines and `/a11y-last`. | Should |
+| AC-012 | Tool narration has three modes. `off`: the `ToolUse` and `ToolResult` hooks return an empty `Box` (nothing is drawn) and still record the result for `/a11y-last`. `brief`: AC-001 to AC-004. `full`: the hooks return `next(e)`. Without an override the mode follows delivery: `off` under buffered delivery, `full` under live delivery. | Must |
+| AC-013 | `/a11y-tools off|brief|full` stores `toolNarration: { mode, setAt }` and applies at once; `/a11y-tools auto` deletes it and recomputes from delivery; `/a11y-tools` reports the mode and whether it is forced; a change of delivery recomputes a mode-derived narration and leaves a forced one. | Must |
+| AC-014 | A `ui.render` hook with no matcher writes one line per drawn terminal component to the debug sink (`$.ui.log(line, { to: 'debug' })`): `ui.render <Component> <requestId> [<marks>]: <text>`, text clipped to 160 characters on one line, and only when the line differs from the last one for that component instance. It always returns `next(e)`. | Must |
+| AC-015 | `/a11y-log on|off` stores `renderLog: { on, setAt }`; the log is on until stored off; `/a11y-log` reports the state. | Must |
+| AC-016 | Heartbeat: under buffered delivery, from `turn.start` to the main loop's `turn.complete`, a tick each second counts the visible rows the mod's hooks produced (text chunks of the main loop's steps, tool rows drawn in `brief` or `full`); after N seconds without one, the mod prints and speaks `Still working, N seconds.`, and again each further N seconds of the same silence. Outside buffered delivery, or with the interval 0, nothing. | Must |
+| AC-017 | `/a11y-heartbeat <seconds>` (5 to 600) and `/a11y-heartbeat off` store `heartbeat: { seconds, setAt }` (off is 0); the default is 20; `/a11y-heartbeat` reports the interval. | Must |
 
 ## 3. User Test Cases
 
@@ -76,6 +82,38 @@ Manual, VoiceOver on, screen reader mode on. Captures under `tests/screenshots/t
 **Expected Result:** The group line `Read 3 files` is the engine's own. The question dialog is the engine's numbered list and works as before.
 **Screenshot Checkpoint:** tests/screenshots/tool-narration/tc-004-untouched.txt
 **Maps to:** hooks/narration.test.ts → "leaves AskUserQuestion rows and live delivery to the engine (AC-005, AC-007)"; manual for the folded group
+
+### TC-006: Hidden rows by default, narration on request
+
+**Precondition:** screen reader mode on, no `/a11y-tools` override.
+**Steps:**
+1. Ask Claude to run a shell command and read a file.
+2. Run `/a11y-tools brief` and repeat step 1.
+3. Run `/a11y-tools auto`.
+**Expected Result:** Step 1 shows Claude's words only, no tool rows and no counts. Step 2 shows `tool: ...` and `result: N lines` rows. Step 3 answers `Override removed. Tool narration off (whole answer delivery).`
+**Screenshot Checkpoint:** tests/screenshots/tool-narration/tc-006-modes.txt
+**Maps to:** hooks/narration.test.ts → "draws nothing for tool rows by default in screen reader mode (AC-012)" and "/a11y-tools full and auto switch the rows and the store (AC-012, AC-013)"
+
+### TC-007: The render log names what the terminal drew
+
+**Precondition:** `claude --debug`, screen reader mode on.
+**Steps:**
+1. Work for a few turns until a message you did not ask for is read (a limit notice, a hint).
+2. Open `~/.claude/debug/<session>.txt` and find the `earshot: ui.render` lines around that moment.
+**Expected Result:** Each drawn component has a line with its name and text, so the message can be matched to its component (`InfoNotice`, `PromptHint`, `SessionMode`, `Spinner`, ...) and filtered in a later feature.
+**Screenshot Checkpoint:** tests/screenshots/tool-narration/tc-007-log.txt
+**Maps to:** hooks/narration.test.ts → "writes every drawn component to the debug log until /a11y-log off (AC-014, AC-015)"; tests/unit/render-log.spec.ts
+
+### TC-008: The heartbeat during a long silent turn
+
+**Precondition:** screen reader mode on, tool narration off (default).
+**Steps:**
+1. Ask Claude for a task that takes many tool calls (a search across a large folder, then a summary).
+2. Wait.
+3. Run `/a11y-heartbeat off` and repeat step 1.
+**Expected Result:** Step 2: after 20 seconds without a new row, `earshot: Still working, 20 seconds.` is read, then `40 seconds`, until the answer lands; the answer is followed by no further heartbeat. Step 3: silence until the answer.
+**Screenshot Checkpoint:** tests/screenshots/tool-narration/tc-008-heartbeat.txt
+**Maps to:** hooks/heartbeat.test.ts
 
 ### TC-005: Off outside buffered delivery
 
@@ -124,6 +162,14 @@ No HTTP endpoints.
 | `/a11y-last <n>` | Print the n-th newest | as above |
 | `/a11y-last` with nothing stored | | `No tool result stored yet.` |
 | `/a11y-last <n>` out of range | | `Only <k> results are kept; ask for 1 to <k>.` |
+| `/a11y-tools` | Report the narration mode | `Tool narration <mode> (<forced | whole answer delivery | whole answer delivery is off>).` |
+| `/a11y-tools off|brief|full` | Force a mode, stored | `Tool narration <mode> (forced). ...` |
+| `/a11y-tools auto` | Drop the override | `Override removed. Tool narration <mode> (...).` |
+| `/a11y-log` | Report the render log state | `Render log on. ...` or `Render log off.` |
+| `/a11y-log on|off` | Switch the render log, stored | as above |
+| `/a11y-heartbeat` | Report the interval | `Heartbeat every <n> seconds ...` or `Heartbeat off.` |
+| `/a11y-heartbeat <seconds>` | Set the interval (5 to 600), stored | `Heartbeat set to every <n> seconds of silence.` |
+| `/a11y-heartbeat off` | Switch off, stored | `Heartbeat off.` |
 
 The command's text is printed in the transcript and read by the model, as every command's output is; this is accepted because the user asks for it explicitly and rarely.
 
@@ -133,6 +179,10 @@ The command's text is printed in the transcript and read by the model, as every 
 |---------------|---------|
 | `on('ui.render', { component: 'ToolUse' }, ...)` | Draw the call row (AC-001 to AC-003, AC-005) |
 | `on('ui.render', { component: 'ToolResult' }, ...)` | Draw the count row, store the full text (AC-004, AC-006) |
+| `on('ui.render', ...)` without a matcher | The render log line per drawn component (AC-014) |
+| `$.ui.log(line, { to: 'debug' })` | The render log sink (AC-014) |
+| `$.store.get/set/delete('toolNarration')`, `('renderLog')`, `('heartbeat')` | The remembered choices (AC-013, AC-015, AC-017) |
+| `on('turn.start', ...)`, `on('turn.complete', ...)`, `$.clock.every`, `$.clock.now` | The heartbeat ticks (AC-016) |
 | `$.ui.resolve(e)` | The surface's `Text` element |
 | `$.command.register` | `a11y-last` with argument hint `[n]` |
 | `on('command.run', { command: 'a11y-last' }, ...)` | AC-006 |

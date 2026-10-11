@@ -2,14 +2,16 @@ import type { EngineInterface, Register, RenderElement, TurnStepChunk, TurnStepR
 import { ANSWER_TIMEOUT_MS } from './lib/consent'
 import type { ConsentEffect } from './lib/consent'
 import { detect, platformFromEnv } from './lib/detect'
+import { createSilence, HEARTBEAT_TICK_MS, parseHeartbeatArg, resolveHeartbeat, tick } from './lib/heartbeat'
 import { messages } from './lib/messages'
 import { decide, isStoredConsent, resolveModeState } from './lib/mode-state'
+import { describeRender, parseLogArg, resolveRenderLog } from './lib/render-log'
 import { applyAxSetting, settingsPath } from './lib/settings-file'
 import type { ApplyResult } from './lib/settings-file'
 import { coalesceText, createHold, parseStreamArg, resolveDelivery } from './lib/stream-delivery'
-import { countLines, describeToolUse, parseLastArg, resultLine, summaryLine, textOfResult } from './lib/tool-narration'
-import type { DeliveryMode, ModeState, Platform, SettingsLike, StoredConsent } from './lib/types'
-import { cancelTimer, COMMANDS, narrates, session, step } from './state'
+import { countLines, describeToolUse, parseLastArg, parseToolsArg, resolveToolNarration, resultLine, summaryLine, textOfResult } from './lib/tool-narration'
+import type { DeliveryMode, HeartbeatSetting, ModeState, Platform, RenderLogSetting, SettingsLike, StoredConsent, ToolNarrationMode, ToolsOverride } from './lib/types'
+import { cancelTimer, COMMANDS, endTurn, markVisible, session, step, toolNarration } from './state'
 
 // The only module that touches the mod API. Decisions live in ./lib and take
 // plain values, so Vitest covers them; this file turns them into $ calls.
@@ -19,6 +21,9 @@ import { cancelTimer, COMMANDS, narrates, session, step } from './state'
 
 const CONSENT_KEY = 'screenReaderConsent'
 const STREAM_KEY = 'streamDelivery'
+const TOOLS_KEY = 'toolNarration'
+const LOG_KEY = 'renderLog'
+const HEARTBEAT_KEY = 'heartbeat'
 
 type ChangeOutcome = { ok: true; applied: Extract<ApplyResult, { ok: true }> } | { ok: false; text: string }
 
@@ -155,6 +160,9 @@ async function startSession($: EngineInterface): Promise<void> {
   facts.settingsPath = settingsPath(facts.platform, { HOME: await $.env.get('HOME'), USERPROFILE: await $.env.get('USERPROFILE') })
   facts.mode = await loadMode($)
   facts.delivery = resolveDelivery({ modeOn: facts.mode.on, override: await $.store.get(STREAM_KEY) })
+  await refreshTools($)
+  facts.renderLog = resolveRenderLog(await $.store.get(LOG_KEY))
+  facts.heartbeatSeconds = resolveHeartbeat(await $.store.get(HEARTBEAT_KEY))
   facts.detection = await detect({ platform: facts.platform, run: (argv, init) => $.process.run(argv, init), now: () => Date.now() })
   const decision = decide({ mode: facts.mode, detection: facts.detection, consent: await $.store.get(CONSENT_KEY), modVersion: facts.modVersion })
   if (decision.action !== 'ask') return
@@ -185,11 +193,81 @@ async function offCommand($: EngineInterface): Promise<{ text: string }> {
   return speak($, await disable($))
 }
 
+// Tool narration follows the delivery unless /a11y-tools forced a mode, so
+// every change of delivery recomputes it.
+async function refreshTools($: EngineInterface): Promise<void> {
+  session.facts.tools = resolveToolNarration({ delivery: session.facts.delivery.mode, override: await $.store.get(TOOLS_KEY) })
+}
+
 async function setDelivery($: EngineInterface, mode: DeliveryMode): Promise<{ text: string }> {
   const setAt = new Date(await $.clock.now()).toISOString()
   await $.store.set(STREAM_KEY, { mode, setAt })
   session.facts.delivery = { mode, source: 'override' }
+  await refreshTools($)
   return speak($, messages.streamSet(mode))
+}
+
+async function setTools($: EngineInterface, mode: ToolNarrationMode): Promise<{ text: string }> {
+  const setAt = new Date(await $.clock.now()).toISOString()
+  await $.store.set(TOOLS_KEY, { mode, setAt } satisfies ToolsOverride)
+  session.facts.tools = { mode, source: 'override' }
+  return speak($, messages.toolsSet(mode))
+}
+
+async function toolsCommand($: EngineInterface, args: string): Promise<{ text: string }> {
+  const arg = parseToolsArg(args)
+  if (arg === 'invalid') return speak($, messages.toolsInvalid())
+  if (arg === 'report') return speak($, messages.toolsReport(session.facts.tools))
+  if (arg === 'auto') {
+    await $.store.delete(TOOLS_KEY)
+    await refreshTools($)
+    return speak($, `${messages.toolsAuto()} ${messages.toolsReport(session.facts.tools)}`)
+  }
+  return setTools($, arg)
+}
+
+// Heartbeat: while a turn runs in screen reader mode, a tick each second
+// compares the rows the hooks counted with the clock, and says every N
+// seconds of silence that work goes on. The line is printed and spoken like
+// every other line of the mod; it does not count as output of its own.
+async function startTurn($: EngineInterface): Promise<void> {
+  endTurn()
+  session.turn = { active: true, silence: createSilence(await $.clock.now()), timer: undefined }
+  if (session.facts.heartbeatSeconds === 0 || session.facts.delivery.mode !== 'buffered') return
+  session.turn.timer = $.clock.every(HEARTBEAT_TICK_MS, () => {
+    void beat($)
+  })
+}
+
+async function beat($: EngineInterface): Promise<void> {
+  if (!session.turn.active) return
+  const now = await $.clock.now()
+  if (!session.turn.active) return
+  const { state, announce } = tick(session.turn.silence, now, session.facts.heartbeatSeconds)
+  session.turn.silence = state
+  if (announce !== undefined) say($, messages.heartbeat(announce))
+}
+
+async function heartbeatCommand($: EngineInterface, args: string): Promise<{ text: string }> {
+  const arg = parseHeartbeatArg(args)
+  if (arg === 'invalid') return speak($, messages.heartbeatInvalid())
+  if (arg === 'report') return speak($, messages.heartbeatReport(session.facts.heartbeatSeconds))
+  const seconds = arg === 'off' ? 0 : arg
+  const setAt = new Date(await $.clock.now()).toISOString()
+  await $.store.set(HEARTBEAT_KEY, { seconds, setAt } satisfies HeartbeatSetting)
+  session.facts.heartbeatSeconds = seconds
+  return speak($, messages.heartbeatSet(seconds))
+}
+
+async function logCommand($: EngineInterface, args: string): Promise<{ text: string }> {
+  const arg = parseLogArg(args)
+  if (arg === 'invalid') return speak($, messages.logInvalid())
+  if (arg !== 'report') {
+    const setAt = new Date(await $.clock.now()).toISOString()
+    await $.store.set(LOG_KEY, { on: arg === 'on', setAt } satisfies RenderLogSetting)
+    session.facts.renderLog = arg === 'on'
+  }
+  return speak($, messages.logReport(session.facts.renderLog))
 }
 
 async function streamCommand($: EngineInterface, args: string): Promise<{ text: string }> {
@@ -200,6 +278,7 @@ async function streamCommand($: EngineInterface, args: string): Promise<{ text: 
   if (arg === 'auto') {
     await $.store.delete(STREAM_KEY)
     session.facts.delivery = resolveDelivery({ modeOn: session.facts.mode?.on === true, override: undefined })
+    await refreshTools($)
     return speak($, `${messages.streamAuto()} ${messages.streamReport(session.facts.delivery)}`)
   }
   return speak($, messages.streamReport(session.facts.delivery))
@@ -246,23 +325,54 @@ export const register: Register = (on) => {
   on('command.run', { command: 'a11y-off' }, ($) => offCommand($))
   on('command.run', { command: 'a11y-status' }, ($) => statusCommand($))
   on('command.run', { command: 'a11y-stream' }, ($, e) => streamCommand($, e.args))
+  on('command.run', { command: 'a11y-tools' }, ($, e) => toolsCommand($, e.args))
   on('command.run', { command: 'a11y-last' }, ($, e) => lastCommand($, e.args))
+  on('command.run', { command: 'a11y-log' }, ($, e) => logCommand($, e.args))
+  on('command.run', { command: 'a11y-heartbeat' }, ($, e) => heartbeatCommand($, e.args))
 
-  // Tool narration: with buffered delivery the terminal's tool rows become one
-  // line each, from the model's own description, and results become a count.
-  // Dialogs and other surfaces are left to the engine.
+  on('turn.start', async ($, e, next) => {
+    await startTurn($)
+    return next(e)
+  })
+
+  on('turn.complete', ($, e, next) => {
+    if (e.agentId === undefined) endTurn()
+    return next(e)
+  })
+
+  // Render log: one debug line per drawn terminal component, when its line
+  // changed, so `claude --debug` shows what the screen reader was given.
+  // Registered first, so it sees every row before the hooks below answer.
+  on('ui.render', ($, e, next) => {
+    if (session.facts.renderLog && e.surface === 'terminal') {
+      const line = describeRender(e)
+      if (session.renderMemo.changed(`${e.component}:${e.requestId}`, line)) $.ui.log(line, { to: 'debug' })
+    }
+    return next(e)
+  })
+
+  // Tool narration: by default in screen reader mode the tool rows draw
+  // nothing, so the transcript carries the answers alone; `brief` draws one
+  // line per call from the model's own description and a count per result;
+  // `full` leaves the engine's rows. The result text is kept for /a11y-last
+  // in every mode but full. Dialogs and other surfaces are left to the engine.
   on('ui.render', { component: 'ToolUse' }, ($, e, next) => {
-    if (e.surface !== 'terminal' || !narrates() || e.props.tool === 'AskUserQuestion') return next(e)
+    const mode = toolNarration()
+    if (e.surface === 'terminal' && mode !== 'off') markVisible()
+    if (e.surface !== 'terminal' || mode === 'full' || e.props.tool === 'AskUserQuestion') return next(e)
     session.lastResults.note(e.props.tool_use_id, describeToolUse(e.props.tool, e.props.input))
-    const { Text } = $.ui.resolve(e)
+    const { Box, Text } = $.ui.resolve(e)
+    if (mode === 'off') return h(Box, null) as RenderElement
     return h(Text, null, summaryLine(e.props, e.props.tool, e.props.input)) as RenderElement
   })
 
   on('ui.render', { component: 'ToolResult' }, ($, e, next) => {
-    if (e.surface !== 'terminal' || !narrates() || e.props.tool === 'AskUserQuestion') return next(e)
+    const mode = toolNarration()
+    if (e.surface !== 'terminal' || mode === 'full' || e.props.tool === 'AskUserQuestion') return next(e)
     const text = textOfResult(e.props.tool, e.props.output)
     session.lastResults.put({ id: e.props.tool_use_id, text, fallbackSummary: e.props.tool })
-    const { Text } = $.ui.resolve(e)
+    const { Box, Text } = $.ui.resolve(e)
+    if (mode === 'off') return h(Box, null) as RenderElement
     return h(Text, null, resultLine(e.props.isErrored, countLines(text))) as RenderElement
   })
 
@@ -271,11 +381,20 @@ export const register: Register = (on) => {
   // the answer as one block. Thinking is dropped from the display; the engine
   // keeps its own signed thinking block. Subagent steps stream live.
   on('turn.step', async function* ($, e, next) {
-    if (session.facts.delivery.mode !== 'buffered' || e.agentId !== undefined) return yield* next(e)
-    const hold = createHold<TurnStepChunk>()
     // Iterated by hand: the stream's return value is the step's result, which
     // a for-await loop would discard.
     const iterator = next(e)[Symbol.asyncIterator]()
+    if (session.facts.delivery.mode !== 'buffered' || e.agentId !== undefined) {
+      // Live: every chunk passes as it comes; the main loop's text counts as
+      // visible output for the heartbeat.
+      for (;;) {
+        const item = await iterator.next()
+        if (item.done) return item.value
+        if (e.agentId === undefined && item.value.kind === 'text') markVisible()
+        yield item.value
+      }
+    }
+    const hold = createHold<TurnStepChunk>()
     let result: TurnStepResult | undefined
     let failure: unknown
     let failed = false
@@ -296,6 +415,7 @@ export const register: Register = (on) => {
     // One chunk per text block: the terminal paints the answer in one frame,
     // so the screen reader is not interrupted after the first piece.
     for (const chunk of coalesceText(held.chunks)) yield chunk
+    if (held.hasText) markVisible()
     if (failed) throw failure
     if (held.hasText && !next.signal.aborted) ring($, 'Answer ready.')
     return result

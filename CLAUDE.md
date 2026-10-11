@@ -2,7 +2,7 @@
 
 Accessibility mod for Claude Code aimed at blind developers. It is an overlay on the built-in screen reader mode (`--ax-screen-reader`) and adds only what that mode lacks: spoken end-of-turn summaries, earcons for tool and permission events, a screen-reader-usable `AskUserQuestion` dialog, significance-filtered tool narration, speech on Windows, and automatic enabling of the mode when a screen reader is detected. Project of the Unlocked Spark Foundation.
 
-Stage: screen reader detection (confirmed with VoiceOver), whole answer delivery (turn.step hold) and tool narration (ui.render on tool rows, mechanism confirmed by a spike in screen reader mode) implemented with unit and mod tests; VoiceOver sessions for the last two and all NVDA sessions pending. Research (Polish): `docs/research/rozpoznanie-2026-10-09.md`; spike results and loader constraints: `docs/research/spikes-2026-10.md`.
+Stage: screen reader detection (confirmed with VoiceOver), whole answer delivery (turn.step hold) and tool narration (ui.render on tool rows, mechanism confirmed by a spike in screen reader mode; hidden by default since 2026-10-11, `/a11y-tools` chooses) implemented with unit and mod tests, plus a heartbeat every 20 s of silence during a turn (`/a11y-heartbeat`) and a render log of every drawn component in the debug log (`/a11y-log`) for hunting the messages a screen reader reads; VoiceOver sessions for the last two and all NVDA sessions pending. Research (Polish): `docs/research/rozpoznanie-2026-10-09.md`; spike results and loader constraints: `docs/research/spikes-2026-10.md`.
 
 The plugin is named `earshot` (names starting with `claude-` are reserved by the validator); the repository keeps its name.
 
@@ -62,11 +62,14 @@ hooks/lib/mode-state.ts      # mode resolution (variable over settings) and the 
 hooks/lib/settings-file.ts   # settings path and strict JSON editing of axScreenReader
 hooks/lib/consent.ts         # consent state machine, y/n parsing, 30 s timeout constant
 hooks/lib/stream-delivery.ts # whole answer delivery: mode resolution, /a11y-stream parsing, the chunk hold
-hooks/lib/tool-narration.ts  # tool narration: summaries per tool, labels, result counts, ring buffer of results
+hooks/lib/tool-narration.ts  # tool narration: mode (off/brief/full), summaries per tool, labels, result counts, ring buffer of results
+hooks/lib/render-log.ts      # render log: one debug line per drawn component, change memo, /a11y-log parsing
+hooks/lib/heartbeat.ts       # heartbeat: silence reducer per tick, interval setting, /a11y-heartbeat parsing
 hooks/lib/messages.ts        # every spoken and printed line
 hooks/register.test.ts       # mod-level tests: detection and commands (claude plugin test)
 hooks/stream.test.ts         # mod-level tests: turn.step hold and /a11y-stream
-hooks/narration.test.ts      # mod-level tests: ToolUse and ToolResult rows mounted on the terminal surface
+hooks/narration.test.ts      # mod-level tests: ToolUse and ToolResult rows mounted on the terminal surface, the render log
+hooks/heartbeat.test.ts      # mod-level tests: turn.start/turn.complete ticks on the mocked clock
 tests/unit/*.spec.ts         # Vitest tests of hooks/lib
 docs/research/               # research notes (Polish) and spike results
 docs/testing/                # manual test protocols
@@ -80,6 +83,9 @@ Planned next: `hooks/lib/classify/` (tool call significance), speech backends fo
 - The module has no Node and no DOM; relative imports within the plugin work.
 - A streaming hook (`turn.step`) is an async generator and so is its `.catch` handler. Read the stream by hand with the iterator: the return value is the step's result, which `for await` discards and the kit's `.result` promise does not carry.
 - In kit tests, the bottom `turn.step` hook cannot fabricate `engine` chunks, and a second hook on an event `mock.store` already answers needs a matcher.
+- A `ui.render` hook with no matcher may stand beside matched ones on the same event; the mod's render log is one and runs outermost of the mod's own, so it sees every row. An empty `Box` is a valid tree that draws nothing (the engine's blank row above a message stays).
+- `turn.start` is raised for the main loop only; `turn.complete` carries `agentId` for a subagent's run. A `$.clock.every` timer started in `turn.start` and cancelled in `turn.complete` survives across the turn's steps; the kit's `mock.clock(on).advance(ms)` runs its ticks in order.
+- The engine's debug log records only hooked dispatches, never what it drew of its own; the mod's render log (`$.ui.log` to the `debug` sink) is the way to see what the terminal put in front of a screen reader.
 - Screen reader mode does raise `ui.render` for tool rows and draws the hook's tree (spike D). In a mounted kit drawing `e.requestId` is not the call id; key per-call state on `e.props.tool_use_id`, which both `ToolUse` and `ToolResult` carry. Kit tests must answer `ui.render` at the bottom for the rows the mod leaves alone.
 
 ### Design rules

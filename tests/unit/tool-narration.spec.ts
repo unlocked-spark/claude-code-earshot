@@ -3,8 +3,11 @@ import {
   countLines,
   createLastResults,
   describeToolUse,
+  isToolsOverride,
   labelFor,
   parseLastArg,
+  parseToolsArg,
+  resolveToolNarration,
   resultLine,
   SUMMARY_LIMIT,
   summaryLine,
@@ -147,5 +150,38 @@ describe('parseLastArg and messages (AC-006)', () => {
     expect(messages.lastOutOfRange(2)).toBe('Only 2 results are kept; ask for 1 to 2.')
     expect(messages.lastOutOfRange(1)).toBe('Only 1 result is kept; ask for 1.')
     expect(messages.lastInvalid()).toBe('Usage: /a11y-last or /a11y-last <n>.')
+  })
+})
+
+describe('resolveToolNarration and parseToolsArg (AC-012, AC-013)', () => {
+  it('hides the rows under buffered delivery and leaves them under live delivery', () => {
+    expect(resolveToolNarration({ delivery: 'buffered', override: undefined })).toEqual({ mode: 'off', source: 'mode' })
+    expect(resolveToolNarration({ delivery: 'live', override: undefined })).toEqual({ mode: 'full', source: 'mode' })
+  })
+  it('lets a stored override win', () => {
+    const override = { mode: 'brief', setAt: '2026-10-11T00:00:00Z' }
+    expect(resolveToolNarration({ delivery: 'live', override })).toEqual({ mode: 'brief', source: 'override' })
+    expect(resolveToolNarration({ delivery: 'buffered', override: { mode: 'loud', setAt: 'x' } })).toEqual({ mode: 'off', source: 'mode' })
+    expect(isToolsOverride(override)).toBe(true)
+    expect(isToolsOverride({ mode: 'off' })).toBe(false)
+    expect(isToolsOverride(null)).toBe(false)
+  })
+  it('reads the argument', () => {
+    expect(parseToolsArg('')).toBe('report')
+    expect(parseToolsArg(' Brief ')).toBe('brief')
+    expect(parseToolsArg('off')).toBe('off')
+    expect(parseToolsArg('full')).toBe('full')
+    expect(parseToolsArg('auto')).toBe('auto')
+    expect(parseToolsArg('on')).toBe('invalid')
+  })
+  it('has the reply lines', () => {
+    expect(messages.toolsReport({ mode: 'off', source: 'mode' })).toBe('Tool narration off (whole answer delivery).')
+    expect(messages.toolsReport({ mode: 'full', source: 'mode' })).toBe('Tool narration full (whole answer delivery is off).')
+    expect(messages.toolsReport({ mode: 'brief', source: 'override' })).toBe('Tool narration brief (forced).')
+    expect(messages.toolsSet('off')).toMatch(/^Tool narration off \(forced\)\./)
+    expect(messages.toolsSet('brief')).toMatch(/^Tool narration brief \(forced\)\./)
+    expect(messages.toolsSet('full')).toMatch(/^Tool narration full \(forced\)\./)
+    expect(messages.toolsAuto()).toBe('Override removed.')
+    expect(messages.toolsInvalid()).toBe('Usage: /a11y-tools, /a11y-tools off, /a11y-tools brief, /a11y-tools full, or /a11y-tools auto.')
   })
 })

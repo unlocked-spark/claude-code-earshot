@@ -51,3 +51,15 @@ export type ToolFlags = { isRunning: boolean; isErrored: boolean; isInterrupted:
 export type ToolLabel = 'tool' | 'tool error' | 'tool running' | 'tool interrupted'
 
 export type LastResultEntry = { id: string; summary: string; text: string }
+
+export type ToolNarrationMode = 'off' | 'brief' | 'full'
+
+export type ToolsOverride = { mode: ToolNarrationMode; setAt: string }
+
+// Render log
+
+export type RenderLogSetting = { on: boolean; setAt: string }
+
+// Heartbeat
+
+export type HeartbeatSetting = { seconds: number; setAt: string }
