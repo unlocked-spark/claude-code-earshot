@@ -149,7 +149,7 @@ describe('parseLastArg and messages (AC-006)', () => {
     expect(messages.lastNone()).toBe('No tool result stored yet.')
     expect(messages.lastOutOfRange(2)).toBe('Only 2 results are kept; ask for 1 to 2.')
     expect(messages.lastOutOfRange(1)).toBe('Only 1 result is kept; ask for 1.')
-    expect(messages.lastInvalid()).toBe('Usage: /a11y-last or /a11y-last <n>.')
+    expect(messages.lastInvalid()).toBe('Usage: /earshot-last or /earshot-last <n>.')
   })
 })
 
@@ -182,6 +182,6 @@ describe('resolveToolNarration and parseToolsArg (AC-012, AC-013)', () => {
     expect(messages.toolsSet('brief')).toMatch(/^Tool narration brief \(forced\)\./)
     expect(messages.toolsSet('full')).toMatch(/^Tool narration full \(forced\)\./)
     expect(messages.toolsAuto()).toBe('Override removed.')
-    expect(messages.toolsInvalid()).toBe('Usage: /a11y-tools, /a11y-tools off, /a11y-tools brief, /a11y-tools full, or /a11y-tools auto.')
+    expect(messages.toolsInvalid()).toBe('Usage: /earshot-tools, /earshot-tools off, /earshot-tools brief, /earshot-tools full, or /earshot-tools auto.')
   })
 })

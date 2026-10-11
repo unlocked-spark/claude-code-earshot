@@ -15,7 +15,7 @@ export function isStreamOverride(value: unknown): value is StreamOverride {
   return (record['mode'] === 'buffered' || record['mode'] === 'live') && typeof record['setAt'] === 'string'
 }
 
-// An override from /a11y-stream wins; otherwise the screen reader mode decides.
+// An override from /earshot-stream wins; otherwise the screen reader mode decides.
 export function resolveDelivery(args: { modeOn: boolean; override: unknown }): Delivery {
   if (isStreamOverride(args.override)) return { mode: args.override.mode, source: 'override' }
   return { mode: args.modeOn ? 'buffered' : 'live', source: 'mode' }

@@ -8,7 +8,7 @@
 
 ## 1. Overview
 
-Two `ui.render` hooks on the `ToolUse` and `ToolResult` rows, drawn only when delivery is buffered, plus `/a11y-last`. Everything that decides what the rows say (the summary from the model's own `description` or the file name, the line count, the ring buffer of the last five results) is pure and lives in `hooks/lib/tool-narration.ts` under Vitest. The hooks themselves are thin: resolve the surface's `Text` element, return one line, or `next(e)`.
+Two `ui.render` hooks on the `ToolUse` and `ToolResult` rows, drawn only when delivery is buffered, plus `/earshot-last`. Everything that decides what the rows say (the summary from the model's own `description` or the file name, the line count, the ring buffer of the last five results) is pure and lives in `hooks/lib/tool-narration.ts` under Vitest. The hooks themselves are thin: resolve the surface's `Text` element, return one line, or `next(e)`.
 
 The spec hangs on one unknown: whether the terminal in screen reader mode, which prints flat labelled lines instead of Ink boxes, draws a render hook's tree for tool rows. Phase 0 answers it before any test is written. If the answer is no, the spec is withdrawn and the plan ends there.
 
@@ -32,7 +32,7 @@ Decision gate: `tool: probe` seen → continue. Not seen, and the debug log show
 | 3 | Tests for `labelFor(flags)` and `summaryLine(flags, summary)`: running, errored, interrupted, done; single line, no control characters | AC-001, AC-009 | tests/unit/tool-narration.spec.ts | test | 0.25 h |
 | 4 | Tests for `textOfResult(tool, output)` and `countLines`: Bash stdout+stderr, `content`, `text`, `file.content`, string output, object without text fields (JSON), empty, trailing newline not counted twice | AC-004, edge cases | tests/unit/tool-narration.spec.ts | test | 0.5 h |
 | 5 | Tests for `createLastResults(5)`: newest first, replace on the same id, drop the sixth, `get(1)`, `get(n)` out of range, empty | AC-006, edge cases | tests/unit/tool-narration.spec.ts | test | 0.5 h |
-| 6 | Tests for the `/a11y-last` reply lines (`Result of: <summary>`, nothing stored, out of range) | AC-006 | tests/unit/tool-narration.spec.ts | test | 0.25 h |
+| 6 | Tests for the `/earshot-last` reply lines (`Result of: <summary>`, nothing stored, out of range) | AC-006 | tests/unit/tool-narration.spec.ts | test | 0.25 h |
 | 7 | Implement `hooks/lib/tool-narration.ts` and the message lines | AC-001 to AC-006, AC-009 | hooks/lib/tool-narration.ts, hooks/lib/messages.ts, hooks/lib/types.ts | impl | 1.25 h |
 
 ### Phase 2: Mod wiring, test-first (3 h)
@@ -40,8 +40,8 @@ Decision gate: `tool: probe` seen → continue. Not seen, and the debug log show
 | # | Task | Spec Ref | Files | Type | Estimate |
 |---|------|----------|-------|------|----------|
 | 8 | Kit tests with `$.ui.mount({ plugin: 'earshot', surface: 'terminal', component: 'ToolUse', props })`: buffered delivery draws `tool: <summary>` (found by `ui.find({ type: 'Text', text: /^tool: / })`), errored and running labels, AskUserQuestion row left to the engine (`find` returns nothing of ours), live delivery left to the engine | AC-001 to AC-003, AC-005, AC-007 | hooks/narration.test.ts | test | 1 h |
-| 9 | Kit tests for `ToolResult`: `result: N lines`, `error: N lines`, and that `/a11y-last` afterwards returns the full text with the `Result of:` line; out of range reply | AC-004, AC-006 | hooks/narration.test.ts | test | 0.75 h |
-| 10 | Implement the two render hooks in `hooks/register.ts` with `h(Text, null, line)` (no JSX, so the file stays `.ts` and the loader's top-level rule is untouched); the `ToolResult` hook also stores the result; register `a11y-last` with argument hint `[n]` and its `command.run` handler | AC-001 to AC-008, AC-010 | hooks/register.ts | impl | 1.25 h |
+| 9 | Kit tests for `ToolResult`: `result: N lines`, `error: N lines`, and that `/earshot-last` afterwards returns the full text with the `Result of:` line; out of range reply | AC-004, AC-006 | hooks/narration.test.ts | test | 0.75 h |
+| 10 | Implement the two render hooks in `hooks/register.ts` with `h(Text, null, line)` (no JSX, so the file stays `.ts` and the loader's top-level rule is untouched); the `ToolResult` hook also stores the result; register `earshot-last` with argument hint `[n]` and its `command.run` handler | AC-001 to AC-008, AC-010 | hooks/register.ts | impl | 1.25 h |
 
 ### Phase 3: Verification and docs (2 h + session)
 
@@ -60,7 +60,7 @@ graph TD
     T1 -->|no| X[Withdraw spec]
     T2 --> T7[7 pure module]
     T7 --> T8[8 kit tests ToolUse] --> T10[10 hooks and command]
-    T7 --> T9[9 kit tests ToolResult and a11y-last] --> T10
+    T7 --> T9[9 kit tests ToolResult and earshot-last] --> T10
     T10 --> T11[11 gates] --> T12[12 docs] --> T13[13 VoiceOver session] --> T14[14 close]
 ```
 
@@ -74,10 +74,10 @@ Critical path: 1 → 2..6 → 7 → 8 → 10 → 11 → 12 → 13 → 14.
 
 ### GREEN Phase (Implementation)
 - Task 7, then 10. The render hooks contain no logic beyond `resolve`, one function call and `h(Text, null, line)`.
-- The `ToolResult` hook stores `{ id: e.requestId, summary, text }` in the session's ring buffer; `/a11y-last` reads it.
+- The `ToolResult` hook stores `{ id: e.requestId, summary, text }` in the session's ring buffer; `/earshot-last` reads it.
 
 ### REFACTOR Phase
-- `hooks/register.ts` will pass 300 lines with this feature: move the command handlers (`a11y-on`, `a11y-off`, `a11y-status`, `a11y-stream`, `a11y-last`) into `hooks/commands.ts` as top-level functions taking `$`, and keep `register.ts` to registration and the hooks. Verify with `claude plugin validate .` that the loader accepts `$` crossing into an imported module's top-level functions; if it refuses, keep everything in `register.ts` and accept the length.
+- `hooks/register.ts` will pass 300 lines with this feature: move the command handlers (`earshot-on`, `earshot-off`, `earshot-status`, `earshot-stream`, `earshot-last`) into `hooks/commands.ts` as top-level functions taking `$`, and keep `register.ts` to registration and the hooks. Verify with `claude plugin validate .` that the loader accepts `$` crossing into an imported module's top-level functions; if it refuses, keep everything in `register.ts` and accept the length.
 
 ## 5. File Changes
 
@@ -89,7 +89,7 @@ Critical path: 1 → 2..6 → 7 → 8 → 10 → 11 → 12 → 13 → 14.
 - `tests/screenshots/tool-narration/*.txt`
 
 ### Modified Files
-- `hooks/register.ts`: two `ui.render` hooks, `a11y-last`, ring buffer in session facts (possibly `hooks/commands.ts` after the refactor)
+- `hooks/register.ts`: two `ui.render` hooks, `earshot-last`, ring buffer in session facts (possibly `hooks/commands.ts` after the refactor)
 - `hooks/lib/messages.ts`, `hooks/lib/types.ts`
 - `docs/research/spikes-2026-10.md`: spike result
 - `README.md`, `CHANGELOG.md`, `CLAUDE.md`, `specs/tool-narration.md`
@@ -109,7 +109,7 @@ Critical path: 1 → 2..6 → 7 → 8 → 10 → 11 → 12 → 13 → 14.
 |------|--------|------------|
 | Screen reader mode bypasses render hooks for tool rows | Fatal for this design | Spike first (task 1); withdraw with evidence rather than build around it |
 | The engine refuses the tree (an element or prop the terminal table lacks) | Medium: engine draws its own row, feature silently off | One `Text` with a string child and no props is the smallest valid tree; the kit's `mount` validates it against the terminal table before any session does |
-| `output` in `ToolResult` props is truncated or shaped differently from the tool's result record for some tools | Low: wrong count or an unreadable `/a11y-last` | `textOfResult` falls back to JSON; counts are advisory |
+| `output` in `ToolResult` props is truncated or shaped differently from the tool's result record for some tools | Low: wrong count or an unreadable `/earshot-last` | `textOfResult` falls back to JSON; counts are advisory |
 | Storing full result texts in memory | Low: five entries, bounded | Ring buffer of 5; nothing persisted |
 | `ToolUse` is drawn several times per call (running, then done) | Low | The hook is pure per draw; the store replaces by id |
 | `$` crossing into `hooks/commands.ts` refused by the loader during the refactor | Low | Validator run before committing the split; fallback is one long file |
@@ -123,7 +123,7 @@ Critical path: 1 → 2..6 → 7 → 8 → 10 → 11 → 12 → 13 → 14.
 | AC-003 | Summaries per built-in and MCP tool | tool-narration.spec.ts | Pending |
 | AC-004 | `result: N lines` / `error: N lines` | tool-narration.spec.ts; narration.test.ts | Pending |
 | AC-005 | Dialogs untouched | narration.test.ts (AskUserQuestion row) | Pending |
-| AC-006 | `/a11y-last [n]`, five kept | tool-narration.spec.ts; narration.test.ts | Pending |
+| AC-006 | `/earshot-last [n]`, five kept | tool-narration.spec.ts; narration.test.ts | Pending |
 | AC-007 | Follows the delivery decision | narration.test.ts live mode | Pending |
 | AC-008 | No `.catch` drawing a tree | review, validator listing | Pending |
 | AC-009 | Single plain line | tool-narration.spec.ts | Pending |

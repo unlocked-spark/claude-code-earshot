@@ -30,7 +30,7 @@ export const pl: Messages = {
   question: (reader) =>
     `Wykryto ${nameOf(reader, FALLBACK)}. Włączyć tryb czytnika ekranu w Claude Code od następnego uruchomienia? Naciśnij t albo n.`,
   enabled: () => 'Tryb czytnika ekranu włączony od następnego uruchomienia. Uruchom teraz Claude Code ponownie.',
-  declined: () => 'Rozumiem. Tryb czytnika ekranu pozostaje wyłączony. Możesz go włączyć w każdej chwili poleceniem /a11y-on.',
+  declined: () => 'Rozumiem. Tryb czytnika ekranu pozostaje wyłączony. Możesz go włączyć w każdej chwili poleceniem /earshot-on.',
   withdrawn: () => 'Brak odpowiedzi. Tryb czytnika ekranu pozostaje wyłączony w tej sesji.',
   answered: () => 'Odpowiedziano.',
   answerReady: () => 'Odpowiedź gotowa.',
@@ -63,7 +63,7 @@ export const pl: Messages = {
       ? 'Odpowiedzi w całości włączone (wymuszone). Każda odpowiedź pojawia się naraz, myślenie jest ukryte.'
       : 'Odpowiedzi w całości wyłączone (wymuszone). Odpowiedzi pojawiają się na bieżąco.',
   streamAuto: () => 'Wymuszenie usunięte.',
-  streamInvalid: () => 'Użycie: /a11y-stream, /a11y-stream on, /a11y-stream off albo /a11y-stream auto.',
+  streamInvalid: () => 'Użycie: /earshot-stream, /earshot-stream on, /earshot-stream off albo /earshot-stream auto.',
   toolsReport({ mode, source }) {
     const why = source === 'override' ? 'wymuszone' : mode === 'off' ? 'odpowiedzi w całości' : 'odpowiedzi w całości są wyłączone'
     return `Narracja narzędzi ${TOOLS[mode]} (${why}).`
@@ -71,7 +71,7 @@ export const pl: Messages = {
   toolsSet(mode) {
     switch (mode) {
       case 'off':
-        return 'Narracja narzędzi wyłączona (wymuszone). Wywołania narzędzi i wyniki nie są pokazywane. /a11y-last nadal wypisuje ostatni wynik.'
+        return 'Narracja narzędzi wyłączona (wymuszone). Wywołania narzędzi i wyniki nie są pokazywane. /earshot-last nadal wypisuje ostatni wynik.'
       case 'brief':
         return 'Narracja narzędzi skrócona (wymuszone). Jeden wiersz na wywołanie i liczba wierszy wyniku.'
       case 'full':
@@ -79,24 +79,24 @@ export const pl: Messages = {
     }
   },
   toolsAuto: () => 'Wymuszenie usunięte.',
-  toolsInvalid: () => 'Użycie: /a11y-tools, /a11y-tools off, /a11y-tools brief, /a11y-tools full albo /a11y-tools auto.',
+  toolsInvalid: () => 'Użycie: /earshot-tools, /earshot-tools off, /earshot-tools brief, /earshot-tools full albo /earshot-tools auto.',
   toolLabel: (label) => LABELS[label],
   resultLine: (isErrored, lines) => `${isErrored ? 'błąd' : 'wynik'}: ${lines} ${polishPlural(lines, 'wiersz', 'wiersze', 'wierszy')}`,
   heartbeat: (n) => `Nadal pracuję, ${sekundy(n)}.`,
   heartbeatReport: (n) =>
     n === 0 ? 'Sygnał pracy wyłączony.' : `Sygnał pracy co ${coSekund(n)} ciszy podczas przygotowywania odpowiedzi, w trybie czytnika ekranu.`,
   heartbeatSet: (n) => (n === 0 ? 'Sygnał pracy wyłączony.' : `Sygnał pracy ustawiony co ${coSekund(n)} ciszy.`),
-  heartbeatInvalid: () => 'Użycie: /a11y-heartbeat, /a11y-heartbeat <sekundy> (od 5 do 600) albo /a11y-heartbeat off.',
+  heartbeatInvalid: () => 'Użycie: /earshot-heartbeat, /earshot-heartbeat <sekundy> (od 5 do 600) albo /earshot-heartbeat off.',
   logReport: (on) =>
     on
       ? 'Log renderowania włączony. Każdy rysowany element trafia do logu debug sesji uruchomionej przez claude --debug.'
       : 'Log renderowania wyłączony.',
-  logInvalid: () => 'Użycie: /a11y-log, /a11y-log on albo /a11y-log off.',
+  logInvalid: () => 'Użycie: /earshot-log, /earshot-log on albo /earshot-log off.',
   lastHeader: (summary) => `Wynik: ${summary}`,
   lastNone: () => 'Nie zapisano jeszcze żadnego wyniku narzędzia.',
   lastOutOfRange: (kept) =>
     kept === 1 ? 'Zapisany jest tylko 1 wynik. Poproś o 1.' : `Zapisane są tylko ostatnie wyniki, ${kept}. Poproś o numer od 1 do ${kept}.`,
-  lastInvalid: () => 'Użycie: /a11y-last albo /a11y-last <n>.',
+  lastInvalid: () => 'Użycie: /earshot-last albo /earshot-last <n>.',
   error(kind, path) {
     const fallback = `Dopisz ręcznie "axScreenReader": true do ${path ?? SETTINGS_FILE} albo ustaw CLAUDE_AX_SCREEN_READER=1 w profilu powłoki.`
     switch (kind) {
@@ -113,13 +113,13 @@ export const pl: Messages = {
     }
   },
   commandDescriptions: {
-    'a11y-on': 'Włącz tryb czytnika ekranu w Claude Code od następnego uruchomienia',
-    'a11y-off': 'Wyłącz tryb czytnika ekranu w Claude Code od następnego uruchomienia',
-    'a11y-status': 'Podaj wykryty czytnik ekranu i stan trybu czytnika ekranu',
-    'a11y-stream': 'Odpowiedzi w całości: pokazuj każdą odpowiedź naraz zamiast na bieżąco',
-    'a11y-tools': 'Narracja narzędzi: ukryj wiersze narzędzi, pokaż jeden wiersz na wywołanie albo zostaw je Claude Code',
-    'a11y-last': 'Wypisz pełny tekst ostatniego wyniku narzędzia',
-    'a11y-log': 'Log renderowania: zapisuj każdy rysowany element do logu debug',
-    'a11y-heartbeat': 'Mów co N sekund ciszy, że praca trwa',
+    'earshot-on': 'Włącz tryb czytnika ekranu w Claude Code od następnego uruchomienia',
+    'earshot-off': 'Wyłącz tryb czytnika ekranu w Claude Code od następnego uruchomienia',
+    'earshot-status': 'Podaj wykryty czytnik ekranu i stan trybu czytnika ekranu',
+    'earshot-stream': 'Odpowiedzi w całości: pokazuj każdą odpowiedź naraz zamiast na bieżąco',
+    'earshot-tools': 'Narracja narzędzi: ukryj wiersze narzędzi, pokaż jeden wiersz na wywołanie albo zostaw je Claude Code',
+    'earshot-last': 'Wypisz pełny tekst ostatniego wyniku narzędzia',
+    'earshot-log': 'Log renderowania: zapisuj każdy rysowany element do logu debug',
+    'earshot-heartbeat': 'Mów co N sekund ciszy, że praca trwa',
   },
 }

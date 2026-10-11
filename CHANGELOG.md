@@ -7,6 +7,15 @@ Commits are written as imperative sentences without type prefixes.
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-10-11
+
+### Changed
+- The commands are named after the mod: `/earshot-on`, `/earshot-off`, `/earshot-status`, `/earshot-stream`, `/earshot-tools`, `/earshot-last`, `/earshot-heartbeat` and `/earshot-log` replace the `/a11y-` names.
+
+### Fixed
+- The run-in-background pill `(ctrl+b to run in background)` under a running command is no longer drawn unless tool narration is `full`, so a screen reader does not read it.
+- The spinner line and its changing word are not drawn under whole answer delivery; the heartbeat says that work goes on.
+
 ## [0.1.3] - 2026-10-11
 
 ### Fixed

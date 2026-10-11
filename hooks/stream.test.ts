@@ -66,7 +66,7 @@ function host(on: On, world: { modeOn: boolean; override?: { mode: 'buffered' | 
 
 const start = { cwd: '/work', surface: 'terminal' as const, isInteractive: true }
 const step = (agentId?: string) => ({ turnId: 't1', index: 0, model: 'test-model', messageCount: 1, ...(agentId === undefined ? {} : { agentId }) })
-const command = (args: string) => ({ command: 'a11y-stream', args, origin: { kind: 'composer' as const }, presentation: { isFullscreen: false, columns: 80 } })
+const command = (args: string) => ({ command: 'earshot-stream', args, origin: { kind: 'composer' as const }, presentation: { isFullscreen: false, columns: 80 } })
 
 // No engine chunks: a test's bottom hook cannot fabricate them (the kit refuses a ref it never pulled).
 const SCRIPT: TurnStepChunk[] = [
@@ -152,7 +152,7 @@ test('a stored override forces buffering outside the mode and survives sessions 
   expect(seen.firstSeenAfter).toBe(SCRIPT.length)
 })
 
-test('/a11y-stream on, off and auto change the mode and the store (AC-007)', async ($, on) => {
+test('/earshot-stream on, off and auto change the mode and the store (AC-007)', async ($, on) => {
   const log = host(on, { modeOn: false, script: SCRIPT, answer: 'x' })
   await $.session.start(start)
   expect((await $.command.run(command('on'))).text).toBe('Whole answer delivery on (forced). Answers appear whole; thinking is hidden.')
@@ -163,7 +163,7 @@ test('/a11y-stream on, off and auto change the mode and the store (AC-007)', asy
   expect((await collect($.turn.step(step()), log)).firstSeenAfter).toBe(1)
   expect((await $.command.run(command('auto'))).text).toBe('Override removed. Whole answer delivery off (screen reader mode is off).')
   expect(log.deleted).toContain('streamDelivery')
-  expect((await $.command.run(command('maybe'))).text).toBe('Usage: /a11y-stream, /a11y-stream on, /a11y-stream off, or /a11y-stream auto.')
+  expect((await $.command.run(command('maybe'))).text).toBe('Usage: /earshot-stream, /earshot-stream on, /earshot-stream off, or /earshot-stream auto.')
   expect(log.spoken.length).toBeGreaterThanOrEqual(4)
 })
 

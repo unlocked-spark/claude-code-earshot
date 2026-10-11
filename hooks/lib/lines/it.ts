@@ -30,7 +30,7 @@ export const it: Messages = {
   readerFallback: FALLBACK,
   question: (reader) => `${detected(reader)} Attivare la modalità lettore di schermo di Claude Code dal prossimo avvio? Premi s o n.`,
   enabled: () => 'Modalità lettore di schermo attivata dal prossimo avvio. Riavvia Claude Code ora.',
-  declined: () => 'Capito. La modalità lettore di schermo resta disattivata. Esegui /a11y-on in qualsiasi momento per attivarla.',
+  declined: () => 'Capito. La modalità lettore di schermo resta disattivata. Esegui /earshot-on in qualsiasi momento per attivarla.',
   withdrawn: () => 'Nessuna risposta. La modalità lettore di schermo resta disattivata in questa sessione.',
   answered: () => 'Risposto.',
   answerReady: () => 'Risposta pronta.',
@@ -66,7 +66,7 @@ export const it: Messages = {
       ? 'Risposte intere attive (forzato). Ogni risposta appare tutta insieme e il ragionamento è nascosto.'
       : 'Risposte intere disattivate (forzato). Le risposte appaiono man mano.',
   streamAuto: () => 'Forzatura rimossa.',
-  streamInvalid: () => 'Uso: /a11y-stream, /a11y-stream on, /a11y-stream off o /a11y-stream auto.',
+  streamInvalid: () => 'Uso: /earshot-stream, /earshot-stream on, /earshot-stream off o /earshot-stream auto.',
   toolsReport({ mode, source }) {
     const why = source === 'override' ? 'forzato' : mode === 'off' ? 'risposte intere' : 'le risposte intere sono disattivate'
     return `Narrazione degli strumenti ${TOOLS[mode]} (${why}).`
@@ -74,7 +74,7 @@ export const it: Messages = {
   toolsSet(mode) {
     switch (mode) {
       case 'off':
-        return 'Narrazione degli strumenti disattivata (forzato). Chiamate e risultati non vengono mostrati. /a11y-last stampa comunque un risultato recente.'
+        return 'Narrazione degli strumenti disattivata (forzato). Chiamate e risultati non vengono mostrati. /earshot-last stampa comunque un risultato recente.'
       case 'brief':
         return 'Narrazione degli strumenti breve (forzato). Una riga per chiamata e un conteggio per risultato.'
       case 'full':
@@ -82,7 +82,7 @@ export const it: Messages = {
     }
   },
   toolsAuto: () => 'Forzatura rimossa.',
-  toolsInvalid: () => 'Uso: /a11y-tools, /a11y-tools off, /a11y-tools brief, /a11y-tools full o /a11y-tools auto.',
+  toolsInvalid: () => 'Uso: /earshot-tools, /earshot-tools off, /earshot-tools brief, /earshot-tools full o /earshot-tools auto.',
   toolLabel: (label) => LABELS[label],
   resultLine: (isErrored, lines) => `${isErrored ? 'errore' : 'risultato'}: ${lines} ${lines === 1 ? 'riga' : 'righe'}`,
   heartbeat: (n) => `Sto ancora lavorando, ${secondi(n)}.`,
@@ -91,17 +91,17 @@ export const it: Messages = {
       ? 'Segnale di lavoro disattivato.'
       : `Segnale di lavoro ogni ${secondi(n)} di silenzio mentre si prepara una risposta, in modalità lettore di schermo.`,
   heartbeatSet: (n) => (n === 0 ? 'Segnale di lavoro disattivato.' : `Segnale di lavoro impostato ogni ${secondi(n)} di silenzio.`),
-  heartbeatInvalid: () => 'Uso: /a11y-heartbeat, /a11y-heartbeat <secondi> (da 5 a 600) o /a11y-heartbeat off.',
+  heartbeatInvalid: () => 'Uso: /earshot-heartbeat, /earshot-heartbeat <secondi> (da 5 a 600) o /earshot-heartbeat off.',
   logReport: (on) =>
     on
       ? 'Registro di disegno attivo. Ogni elemento disegnato viene scritto nel registro di debug di una sessione avviata con claude --debug.'
       : 'Registro di disegno disattivato.',
-  logInvalid: () => 'Uso: /a11y-log, /a11y-log on o /a11y-log off.',
+  logInvalid: () => 'Uso: /earshot-log, /earshot-log on o /earshot-log off.',
   lastHeader: (summary) => `Risultato di: ${summary}`,
   lastNone: () => 'Nessun risultato di strumento ancora salvato.',
   lastOutOfRange: (kept) =>
     kept === 1 ? 'Viene conservato solo 1 risultato. Chiedi l’1.' : `Vengono conservati solo ${kept} risultati. Chiedi da 1 a ${kept}.`,
-  lastInvalid: () => 'Uso: /a11y-last o /a11y-last <n>.',
+  lastInvalid: () => 'Uso: /earshot-last o /earshot-last <n>.',
   error(kind, path) {
     const fallback = `Aggiungi a mano "axScreenReader": true in ${path ?? SETTINGS_FILE}, oppure imposta CLAUDE_AX_SCREEN_READER=1 nel profilo della shell.`
     switch (kind) {
@@ -118,13 +118,13 @@ export const it: Messages = {
     }
   },
   commandDescriptions: {
-    'a11y-on': 'Attivare la modalità lettore di schermo di Claude Code dal prossimo avvio',
-    'a11y-off': 'Disattivare la modalità lettore di schermo di Claude Code dal prossimo avvio',
-    'a11y-status': 'Indicare il lettore di schermo rilevato e lo stato della modalità lettore di schermo',
-    'a11y-stream': 'Risposte intere: mostrare ogni risposta tutta insieme invece che man mano',
-    'a11y-tools': 'Narrazione degli strumenti: nascondere le righe, una riga per chiamata o lasciarle a Claude Code',
-    'a11y-last': 'Stampare il testo completo di un risultato di strumento recente',
-    'a11y-log': 'Registro di disegno: scrivere ogni elemento disegnato nel registro di debug',
-    'a11y-heartbeat': 'Dire ogni N secondi di silenzio che il lavoro continua',
+    'earshot-on': 'Attivare la modalità lettore di schermo di Claude Code dal prossimo avvio',
+    'earshot-off': 'Disattivare la modalità lettore di schermo di Claude Code dal prossimo avvio',
+    'earshot-status': 'Indicare il lettore di schermo rilevato e lo stato della modalità lettore di schermo',
+    'earshot-stream': 'Risposte intere: mostrare ogni risposta tutta insieme invece che man mano',
+    'earshot-tools': 'Narrazione degli strumenti: nascondere le righe, una riga per chiamata o lasciarle a Claude Code',
+    'earshot-last': 'Stampare il testo completo di un risultato di strumento recente',
+    'earshot-log': 'Registro di disegno: scrivere ogni elemento disegnato nel registro di debug',
+    'earshot-heartbeat': 'Dire ogni N secondi di silenzio che il lavoro continua',
   },
 }

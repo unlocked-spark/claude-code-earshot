@@ -17,7 +17,7 @@ export function isToolsOverride(value: unknown): value is ToolsOverride {
   return (mode === 'off' || mode === 'brief' || mode === 'full') && typeof record['setAt'] === 'string'
 }
 
-// An override from /a11y-tools wins. Otherwise whole answer delivery decides:
+// An override from /earshot-tools wins. Otherwise whole answer delivery decides:
 // buffered (screen reader mode) hides the tool rows, so the transcript carries
 // the answers alone; live delivery leaves the engine's own rows.
 export function resolveToolNarration(args: { delivery: DeliveryMode; override: unknown }): ToolNarration {

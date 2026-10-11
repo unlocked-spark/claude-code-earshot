@@ -53,7 +53,7 @@ function host(on: On, world: { modeOn: boolean; script: TurnStepChunk[] }): { lo
 const start = { cwd: '/work', surface: 'terminal' as const, isInteractive: true }
 const step = () => ({ turnId: 't1', index: 0, model: 'test-model', messageCount: 1 })
 const complete = () => ({ answer: 'x', durationMs: 1, isAborted: false, turnId: 't1', reason: 'answer' as const })
-const command = (args: string) => ({ command: 'a11y-heartbeat', args, origin: { kind: 'composer' as const }, presentation: { isFullscreen: false, columns: 80 } })
+const command = (args: string) => ({ command: 'earshot-heartbeat', args, origin: { kind: 'composer' as const }, presentation: { isFullscreen: false, columns: 80 } })
 
 const SCRIPT: TurnStepChunk[] = [
   { kind: 'text', index: 0, text: 'A paragraph.' },
@@ -101,7 +101,7 @@ test('stays silent outside screen reader mode and when switched off (AC-016, AC-
   await $.turn.complete(complete())
 })
 
-test('/a11y-heartbeat sets the interval, switches off and reports (AC-017)', async ($, on) => {
+test('/earshot-heartbeat sets the interval, switches off and reports (AC-017)', async ($, on) => {
   const { log, clock } = host(on, { modeOn: true, script: SCRIPT })
   await $.session.start(start)
   expect((await $.command.run(command(''))).text).toBe('Heartbeat every 20 seconds of silence while an answer is being prepared, in screen reader mode.')
@@ -117,6 +117,6 @@ test('/a11y-heartbeat sets the interval, switches off and reports (AC-017)', asy
   await clock.advance(60_000)
   expect(log.logged).toEqual(['Still working, 5 seconds.'])
   await $.turn.complete({ ...complete(), turnId: 't2' })
-  expect((await $.command.run(command('3'))).text).toBe('Usage: /a11y-heartbeat, /a11y-heartbeat <seconds> (5 to 600), or /a11y-heartbeat off.')
+  expect((await $.command.run(command('3'))).text).toBe('Usage: /earshot-heartbeat, /earshot-heartbeat <seconds> (5 to 600), or /earshot-heartbeat off.')
   expect((await $.command.run(command(''))).text).toBe('Heartbeat off.')
 })

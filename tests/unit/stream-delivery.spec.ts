@@ -101,7 +101,7 @@ describe('stream messages (AC-007)', () => {
     expect(messages.streamSet('buffered')).toBe('Whole answer delivery on (forced). Answers appear whole; thinking is hidden.')
     expect(messages.streamSet('live')).toBe('Whole answer delivery off (forced). Answers stream live.')
     expect(messages.streamAuto()).toBe('Override removed.')
-    expect(messages.streamInvalid()).toBe('Usage: /a11y-stream, /a11y-stream on, /a11y-stream off, or /a11y-stream auto.')
+    expect(messages.streamInvalid()).toBe('Usage: /earshot-stream, /earshot-stream on, /earshot-stream off, or /earshot-stream auto.')
   })
 })
 

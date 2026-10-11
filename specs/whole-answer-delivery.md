@@ -12,7 +12,7 @@ In screen reader mode Claude Code prints the model's answer as it streams, line 
 
 The answer reaches the terminal through the streaming event `turn.step`, whose hooks are async generators: what the person sees stream is the concatenation of the chunks a hook yields. This feature holds every chunk of a model step until the step's stream has ended, then yields them all at once. The terminal receives the whole answer in one write and the screen reader reads it as one block. Thinking is not shown at all in this mode. A bell marks the moment the block appears.
 
-The mode is active when the session runs in screen reader mode, and can be forced on or off with `/a11y-stream`.
+The mode is active when the session runs in screen reader mode, and can be forced on or off with `/earshot-stream`.
 
 ### User Story
 
@@ -28,13 +28,13 @@ As a blind developer using Claude Code in screen reader mode, I want each answer
 | AC-004 | Chunks of kind `text` are held and yielded in order, so the printed and recorded answer is byte-identical to the unbuffered one. | Must |
 | AC-005 | After the held chunks are yielded for a step whose answer is non-empty, the mod raises a native notification (the terminal bell on the user's channel); when the notification is not delivered (`isSent: false`, as on Terminal.app with no `preferredNotifChannel`), it plays the bundled earcon `assets/earcons/answer-ready.wav` through `$.audio.play`. A step with no visible text (tool calls only) raises nothing. | Must |
 | AC-006 | Buffered mode is active when the resolved mode state is on (`CLAUDE_AX_SCREEN_READER` truthy, or `axScreenReader` true in settings) and no override is stored; it is inactive otherwise. Outside buffered mode the hook forwards chunks as they arrive (`yield* next(e)`), adding no delay. | Must |
-| AC-007 | `/a11y-stream on` forces buffered mode for this and later sessions, `/a11y-stream off` forces live streaming, `/a11y-stream auto` removes the override; each answers with one sentence naming the resulting mode and whether it comes from the override or the screen reader mode. `/a11y-stream` alone reports the current state. The override lives in `$.store` under `streamDelivery`. | Must |
+| AC-007 | `/earshot-stream on` forces buffered mode for this and later sessions, `/earshot-stream off` forces live streaming, `/earshot-stream auto` removes the override; each answers with one sentence naming the resulting mode and whether it comes from the override or the screen reader mode. `/earshot-stream` alone reports the current state. The override lives in `$.store` under `streamDelivery`. | Must |
 | AC-008 | Steps that belong to a subagent (`e.agentId` set) are never buffered; the hook forwards them unchanged. | Must |
 | AC-009 | When the step is interrupted (`next.signal` aborts, the user pressed Escape or Ctrl+C) the hook yields whatever it has held so far before returning, so the transcript keeps the partial answer. | Must |
 | AC-010 | The hook does no work of its own per chunk beyond pushing it to an array, so its own time stays far below the hook budget regardless of how long the model takes. | Should |
 | AC-011 | If the hook fails, its `.catch` handler forwards the stream beneath unchanged, so a bug in buffering degrades to today's behaviour rather than a lost answer. | Must |
 | AC-012 | `claude plugin validate .` lists `turn.step` among the hooks and no new `$` calls beyond `$.ui.notify`, `$.audio.play`, `$.store.get`, `$.store.set`, `$.store.delete` and `$.audio.speak` for the command's reply. | Must |
-| AC-013 | README documents the behaviour, the bell, the hidden thinking and the three forms of `/a11y-stream`. | Should |
+| AC-013 | README documents the behaviour, the bell, the hidden thinking and the three forms of `/earshot-stream`. | Should |
 
 ## 3. User Test Cases
 
@@ -72,12 +72,12 @@ Manual, with a screen reader running. Captures are transcript text under `tests/
 
 **Precondition:** session without the mode.
 **Steps:**
-1. Run `/a11y-stream on`, ask a question.
-2. Run `/a11y-stream off`, ask a question.
-3. Run `/a11y-stream auto`, run `/a11y-stream`.
+1. Run `/earshot-stream on`, ask a question.
+2. Run `/earshot-stream off`, ask a question.
+3. Run `/earshot-stream auto`, run `/earshot-stream`.
 **Expected Result:** Step 1: "Whole answer delivery on (forced). Answers appear whole; thinking is hidden." and the next answer arrives whole. Step 2: "Whole answer delivery off (forced). Answers stream live." and the next answer streams. Step 3: "Override removed." then "Whole answer delivery off (screen reader mode is off)."
 **Screenshot Checkpoint:** tests/screenshots/whole-answer-delivery/tc-004-override.txt
-**Maps to:** hooks/stream.test.ts → "/a11y-stream on, off and auto change the mode and the store (AC-007)"; tests/unit/stream-delivery.spec.ts → "stream messages"
+**Maps to:** hooks/stream.test.ts → "/earshot-stream on, off and auto change the mode and the store (AC-007)"; tests/unit/stream-delivery.spec.ts → "stream messages"
 
 ### TC-005: Interrupting a buffered answer
 
@@ -90,9 +90,9 @@ Manual, with a screen reader running. Captures are transcript text under `tests/
 
 ### TC-006: Override survives a restart
 
-**Precondition:** `/a11y-stream on` was run in a previous session.
+**Precondition:** `/earshot-stream on` was run in a previous session.
 **Steps:**
-1. Start a new session without the mode, run `/a11y-stream`.
+1. Start a new session without the mode, run `/earshot-stream`.
 **Expected Result:** "Whole answer delivery on (forced)."
 **Screenshot Checkpoint:** tests/screenshots/whole-answer-delivery/tc-006-persist.txt
 **Maps to:** hooks/stream.test.ts → "a stored override forces buffering outside the mode and survives sessions (AC-007, TC-006)"
@@ -127,10 +127,10 @@ No HTTP endpoints.
 
 | Command | Effect | Reply |
 |---------|--------|-------|
-| `/a11y-stream` | Report | "Whole answer delivery on (forced)." / "... on (screen reader mode)." / "... off (forced)." / "... off (screen reader mode is off)." |
-| `/a11y-stream on` | Store `{ mode: "buffered" }` | "Whole answer delivery on (forced). Answers appear whole; thinking is hidden." |
-| `/a11y-stream off` | Store `{ mode: "live" }` | "Whole answer delivery off (forced). Answers stream live." |
-| `/a11y-stream auto` | Delete the key | "Override removed." followed by the report line |
+| `/earshot-stream` | Report | "Whole answer delivery on (forced)." / "... on (screen reader mode)." / "... off (forced)." / "... off (screen reader mode is off)." |
+| `/earshot-stream on` | Store `{ mode: "buffered" }` | "Whole answer delivery on (forced). Answers appear whole; thinking is hidden." |
+| `/earshot-stream off` | Store `{ mode: "live" }` | "Whole answer delivery off (forced). Answers stream live." |
+| `/earshot-stream auto` | Delete the key | "Override removed." followed by the report line |
 
 ### Mod API usage
 
@@ -141,7 +141,7 @@ No HTTP endpoints.
 | `$.ui.notify(text)` | Bell after a step with text (AC-005); text: "Answer ready." |
 | `$.store.get/set/delete('streamDelivery')` | Override |
 | `$.audio.speak` | Speak the command reply, as the other commands do |
-| `$.command.register` | `a11y-stream` with argument hint `[on|off|auto]` |
+| `$.command.register` | `earshot-stream` with argument hint `[on|off|auto]` |
 
 ## 6. UI Behavior
 
@@ -166,8 +166,8 @@ Per test case in section 3.
 | Empty text chunks | Held and replayed; do not count as text for the bell |
 | Very long answer (thousands of lines) | Held in memory as an array of small objects; no size cap needed below the engine's own limits |
 | Two steps of the same turn back to back | Each held and released separately; two bells |
-| Mode turned on by `/a11y-on` in this session | Buffering follows the resolved state at session start plus the override; it does not switch mid-session without `/a11y-stream on` (the mode itself needs a restart anyway) |
-| `--ax-screen-reader` flag alone, no variable, no setting | Invisible to the mod: mode reads as off, so buffering is off until `/a11y-stream on`. Documented in README |
+| Mode turned on by `/earshot-on` in this session | Buffering follows the resolved state at session start plus the override; it does not switch mid-session without `/earshot-stream on` (the mode itself needs a restart anyway) |
+| `--ax-screen-reader` flag alone, no variable, no setting | Invisible to the mod: mode reads as off, so buffering is off until `/earshot-stream on`. Documented in README |
 | Hook fails before yielding | `.catch` forwards the stream beneath; the answer streams live |
 | Hook fails after yielding some chunks | What was yielded stays; the rest comes from beneath (engine behaviour) |
 | `claude -p`, SDK, VS Code panel | Mods do not run there; nothing changes |
@@ -199,7 +199,7 @@ Per test case in section 3.
 
 | Date | Version | Author | Changes |
 |------|---------|--------|---------|
-| 2026-10-09 | 0.1.0 | Łukasz Majewski | Initial spec from /add:spec interview: hold a whole step, hide thinking, bell on release, active in screen reader mode with /a11y-stream override |
+| 2026-10-09 | 0.1.0 | Łukasz Majewski | Initial spec from /add:spec interview: hold a whole step, hide thinking, bell on release, active in screen reader mode with /earshot-stream override |
 | 2026-10-10 | 0.1.3 | Łukasz Majewski | AC-005: earcon fallback when the notification channel does not deliver (no bell was heard on Terminal.app) |
 | 2026-10-10 | 0.1.2 | Łukasz Majewski | AC-001: text chunks of a block merged into one before yielding, after VoiceOver skipped the first sentence of an answer painted in two frames |
 | 2026-10-09 | 0.1.1 | Łukasz Majewski | After the TDD cycle: "Maps to" filled; the bell text is "Answer ready."; AC-011 verified by the validator listing and review, not by a kit test (a hook cannot be made to throw from the bottom) |

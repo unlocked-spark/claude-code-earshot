@@ -64,6 +64,6 @@ describe('setting and argument (AC-017)', () => {
     expect(messages.heartbeatReport(20)).toBe('Heartbeat every 20 seconds of silence while an answer is being prepared, in screen reader mode.')
     expect(messages.heartbeatSet(0)).toBe('Heartbeat off.')
     expect(messages.heartbeatSet(30)).toBe('Heartbeat set to every 30 seconds of silence.')
-    expect(messages.heartbeatInvalid()).toBe('Usage: /a11y-heartbeat, /a11y-heartbeat <seconds> (5 to 600), or /a11y-heartbeat off.')
+    expect(messages.heartbeatInvalid()).toBe('Usage: /earshot-heartbeat, /earshot-heartbeat <seconds> (5 to 600), or /earshot-heartbeat off.')
   })
 })

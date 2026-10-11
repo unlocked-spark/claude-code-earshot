@@ -204,7 +204,7 @@ async function offCommand($: EngineInterface): Promise<{ text: string }> {
   return speak($, await disable($))
 }
 
-// Tool narration follows the delivery unless /a11y-tools forced a mode, so
+// Tool narration follows the delivery unless /earshot-tools forced a mode, so
 // every change of delivery recomputes it.
 async function refreshTools($: EngineInterface): Promise<void> {
   session.facts.tools = resolveToolNarration({ delivery: session.facts.delivery.mode, override: await $.store.get(TOOLS_KEY) })
@@ -333,14 +333,14 @@ export const register: Register = (on) => {
     return { drop: text ?? messages.answered() }
   }).catch(($, e, next) => next(e))
 
-  on('command.run', { command: 'a11y-on' }, ($) => onCommand($))
-  on('command.run', { command: 'a11y-off' }, ($) => offCommand($))
-  on('command.run', { command: 'a11y-status' }, ($) => statusCommand($))
-  on('command.run', { command: 'a11y-stream' }, ($, e) => streamCommand($, e.args))
-  on('command.run', { command: 'a11y-tools' }, ($, e) => toolsCommand($, e.args))
-  on('command.run', { command: 'a11y-last' }, ($, e) => lastCommand($, e.args))
-  on('command.run', { command: 'a11y-log' }, ($, e) => logCommand($, e.args))
-  on('command.run', { command: 'a11y-heartbeat' }, ($, e) => heartbeatCommand($, e.args))
+  on('command.run', { command: 'earshot-on' }, ($) => onCommand($))
+  on('command.run', { command: 'earshot-off' }, ($) => offCommand($))
+  on('command.run', { command: 'earshot-status' }, ($) => statusCommand($))
+  on('command.run', { command: 'earshot-stream' }, ($, e) => streamCommand($, e.args))
+  on('command.run', { command: 'earshot-tools' }, ($, e) => toolsCommand($, e.args))
+  on('command.run', { command: 'earshot-last' }, ($, e) => lastCommand($, e.args))
+  on('command.run', { command: 'earshot-log' }, ($, e) => logCommand($, e.args))
+  on('command.run', { command: 'earshot-heartbeat' }, ($, e) => heartbeatCommand($, e.args))
 
   on('turn.start', async ($, e, next) => {
     await startTurn($)
@@ -366,7 +366,7 @@ export const register: Register = (on) => {
   // Tool narration: by default in screen reader mode the tool rows draw
   // nothing, so the transcript carries the answers alone; `brief` draws one
   // line per call from the model's own description and a count per result;
-  // `full` leaves the engine's rows. The result text is kept for /a11y-last
+  // `full` leaves the engine's rows. The result text is kept for /earshot-last
   // in every mode but full. Dialogs and other surfaces are left to the engine.
   on('ui.render', { component: 'ToolUse' }, ($, e, next) => {
     const mode = toolNarration()
@@ -402,6 +402,23 @@ export const register: Register = (on) => {
     const { Box, Text } = $.ui.resolve(e)
     if (mode === 'off') return h(Box, null) as RenderElement
     return h(Box, { flexDirection: 'column' }, ...e.props.calls.map((call) => h(Text, null, summaryLine(call, call.tool, call.input)))) as RenderElement
+  })
+
+  // The run-in-background pill under a running call, `(ctrl+b to run in
+  // background)`, is read aloud each time a command runs a few seconds. It
+  // belongs to the tool row, so it is drawn only when the rows are (`full`).
+  on('ui.render', { component: 'ToolProgress' }, ($, e, next) => {
+    if (e.surface !== 'terminal' || toolNarration() === 'full') return next(e)
+    return next({ ...e, props: { ...e.props, hint: '' } })
+  })
+
+  // The spinner line's word changes every turn (`Sauteing...`) and the screen
+  // reader reads each one. Under buffered delivery it draws nothing; the
+  // heartbeat says that work goes on.
+  on('ui.render', { component: 'Spinner' }, ($, e, next) => {
+    if (e.surface !== 'terminal' || session.facts.delivery.mode !== 'buffered') return next(e)
+    const { Box } = $.ui.resolve(e)
+    return h(Box, null) as RenderElement
   })
 
   // Whole answer delivery: in buffered mode the step's chunks are held until

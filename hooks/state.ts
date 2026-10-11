@@ -16,14 +16,14 @@ import type { DetectionResult, ModeState, Platform, ToolNarrationMode } from './
 // so the functions that take `$` stay in register.ts.
 
 export const COMMANDS: readonly CommandSpec[] = [
-  { name: 'a11y-on', description: 'Enable Claude Code screen reader mode from the next start' },
-  { name: 'a11y-off', description: 'Disable Claude Code screen reader mode from the next start' },
-  { name: 'a11y-status', description: 'Report the detected screen reader and the screen reader mode state' },
-  { name: 'a11y-stream', description: 'Whole answer delivery: show each answer at once instead of streaming it', argumentHint: '[on|off|auto]' },
-  { name: 'a11y-tools', description: 'Tool narration: hide tool rows, show one line per call, or leave them to Claude Code', argumentHint: '[off|brief|full|auto]' },
-  { name: 'a11y-last', description: 'Print the full text of a recent tool result', argumentHint: '[n]' },
-  { name: 'a11y-log', description: 'Render log: write every drawn component to the debug log', argumentHint: '[on|off]' },
-  { name: 'a11y-heartbeat', description: 'Say every N seconds of silence that work goes on', argumentHint: '[seconds|off]' },
+  { name: 'earshot-on', description: 'Enable Claude Code screen reader mode from the next start' },
+  { name: 'earshot-off', description: 'Disable Claude Code screen reader mode from the next start' },
+  { name: 'earshot-status', description: 'Report the detected screen reader and the screen reader mode state' },
+  { name: 'earshot-stream', description: 'Whole answer delivery: show each answer at once instead of streaming it', argumentHint: '[on|off|auto]' },
+  { name: 'earshot-tools', description: 'Tool narration: hide tool rows, show one line per call, or leave them to Claude Code', argumentHint: '[off|brief|full|auto]' },
+  { name: 'earshot-last', description: 'Print the full text of a recent tool result', argumentHint: '[n]' },
+  { name: 'earshot-log', description: 'Render log: write every drawn component to the debug log', argumentHint: '[on|off]' },
+  { name: 'earshot-heartbeat', description: 'Say every N seconds of silence that work goes on', argumentHint: '[seconds|off]' },
 ]
 
 export const LAST_RESULTS_KEPT = 5

@@ -35,8 +35,10 @@ function host(on: On, world: { modeOn: boolean }): Log {
   on('session.start', (_$, e) => ({ cwd: e.cwd }))
   on('prompt.submit', (_$, e) => ({ text: e.text }))
   // The engine's own drawing of a row, for the cases the mod leaves alone.
+  // The pill draws its hint, nothing when the hint is empty.
   on('ui.render', ($, e) => {
-    const { Text } = $.ui.resolve(e)
+    const { Box, Text } = $.ui.resolve(e)
+    if (e.component === 'ToolProgress') return (e.props.hint === '' ? h(Box, null) : h(Text, null, e.props.hint)) as RenderElement
     return h(Text, null, 'engine row') as RenderElement
   })
   return log
@@ -75,20 +77,32 @@ const notice = (text: string, command: string | null) => ({
   component: 'InfoNotice' as const,
   props: { text, command },
 })
+const progress = (id: string) => ({
+  plugin: 'earshot',
+  surface: 'terminal' as const,
+  component: 'ToolProgress' as const,
+  props: { tool_use_id: id, kind: 'background_hint' as const, hint: '(ctrl+b to run in background)' },
+})
+const spinner = {
+  plugin: 'earshot',
+  surface: 'terminal' as const,
+  component: 'Spinner' as const,
+  props: { word: 'Sauteing', message: null, suffix: '…', mode: 'tool-use' as const },
+}
 const command = (name: string, args = '') => ({ command: name, args, origin: { kind: 'composer' as const }, presentation: { isFullscreen: false, columns: 80 } })
 
 test('draws nothing for tool rows by default in screen reader mode (AC-012)', async ($, on) => {
   host(on, { modeOn: true })
   await $.session.start(start)
-  expect((await $.command.run(command('a11y-tools'))).text).toBe('Tool narration off (whole answer delivery).')
+  expect((await $.command.run(command('earshot-tools'))).text).toBe('Tool narration off (whole answer delivery).')
   const use = await $.ui.mount(bashUse('t0'))
   expect(await use.findAll({ type: 'Text' })).toHaveLength(0)
   await use.unmount()
   const result = await $.ui.mount(bashResult('t0', 'a\nb\n'))
   expect(await result.findAll({ type: 'Text' })).toHaveLength(0)
   await result.unmount()
-  // The result is still kept for /a11y-last.
-  expect((await $.command.run(command('a11y-last'))).text).toBe('Result of: List files and search for x\na\nb\n')
+  // The result is still kept for /earshot-last.
+  expect((await $.command.run(command('earshot-last'))).text).toBe('Result of: List files and search for x\na\nb\n')
 })
 
 test('treats a folded tool group like its calls: nothing by default, one line per call in brief', async ($, on) => {
@@ -97,8 +111,8 @@ test('treats a folded tool group like its calls: nothing by default, one line pe
   const off = await $.ui.mount(group())
   expect(await off.findAll({ type: 'Text' })).toHaveLength(0)
   await off.unmount()
-  expect((await $.command.run(command('a11y-last'))).text).toBe('Result of: Read notes.md\none\ntwo\n')
-  await $.command.run(command('a11y-tools', 'brief'))
+  expect((await $.command.run(command('earshot-last'))).text).toBe('Result of: Read notes.md\none\ntwo\n')
+  await $.command.run(command('earshot-tools', 'brief'))
   const brief = await $.ui.mount(group())
   expect((await brief.findAll({ type: 'Text' })).map((t) => t.text)).toEqual(['tool: Read notes.md', 'tool running: Read memory files'])
   await brief.unmount()
@@ -106,7 +120,7 @@ test('treats a folded tool group like its calls: nothing by default, one line pe
   const expanded = await $.ui.mount(group(true))
   expect((await expanded.find({ type: 'Text' }))?.text).toBe('engine row')
   await expanded.unmount()
-  await $.command.run(command('a11y-tools', 'full'))
+  await $.command.run(command('earshot-tools', 'full'))
   const full = await $.ui.mount(group())
   expect((await full.find({ type: 'Text' }))?.text).toBe('engine row')
   await full.unmount()
@@ -115,7 +129,7 @@ test('treats a folded tool group like its calls: nothing by default, one line pe
 test('draws the call row from the Bash description in brief narration (AC-001, AC-002)', async ($, on) => {
   host(on, { modeOn: true })
   await $.session.start(start)
-  expect((await $.command.run(command('a11y-tools', 'brief'))).text).toBe('Tool narration brief (forced). One line per tool call and a count per result.')
+  expect((await $.command.run(command('earshot-tools', 'brief'))).text).toBe('Tool narration brief (forced). One line per tool call and a count per result.')
   const ui = await $.ui.mount(bashUse('t1'))
   const row = await ui.find({ type: 'Text', text: /^tool/ })
   expect(row?.text).toBe('tool: List files and search for x')
@@ -127,7 +141,7 @@ test('draws the call row from the Bash description in brief narration (AC-001, A
 test('labels running and errored calls (AC-001)', async ($, on) => {
   host(on, { modeOn: true })
   await $.session.start(start)
-  await $.command.run(command('a11y-tools', 'brief'))
+  await $.command.run(command('earshot-tools', 'brief'))
   const running = await $.ui.mount(bashUse('t2', { isRunning: true }))
   expect((await running.find({ type: 'Text' }))?.text).toBe('tool running: List files and search for x')
   await running.unmount()
@@ -148,38 +162,38 @@ test('leaves AskUserQuestion rows and live delivery to the engine (AC-005, AC-00
 test('draws the engine row outside buffered delivery (AC-007)', async ($, on) => {
   host(on, { modeOn: false })
   await $.session.start(start)
-  expect((await $.command.run(command('a11y-tools'))).text).toBe('Tool narration full (whole answer delivery is off).')
+  expect((await $.command.run(command('earshot-tools'))).text).toBe('Tool narration full (whole answer delivery is off).')
   const ui = await $.ui.mount(bashUse('t5'))
   expect(await ui.find({ type: 'Text', text: 'tool: List files and search for x' })).toBeUndefined()
   expect((await ui.find({ type: 'Text' }))?.text).toBe('engine row')
   await ui.unmount()
 })
 
-test('/a11y-tools full and auto switch the rows and the store (AC-012, AC-013)', async ($, on) => {
+test('/earshot-tools full and auto switch the rows and the store (AC-012, AC-013)', async ($, on) => {
   host(on, { modeOn: true })
   await $.session.start(start)
-  expect((await $.command.run(command('a11y-tools', 'full'))).text).toBe('Tool narration full (forced). Tool rows are drawn by Claude Code itself.')
+  expect((await $.command.run(command('earshot-tools', 'full'))).text).toBe('Tool narration full (forced). Tool rows are drawn by Claude Code itself.')
   const full = await $.ui.mount(bashUse('t8'))
   expect((await full.find({ type: 'Text' }))?.text).toBe('engine row')
   await full.unmount()
-  expect((await $.command.run(command('a11y-tools', 'auto'))).text).toBe('Override removed. Tool narration off (whole answer delivery).')
+  expect((await $.command.run(command('earshot-tools', 'auto'))).text).toBe('Override removed. Tool narration off (whole answer delivery).')
   const off = await $.ui.mount(bashUse('t9'))
   expect(await off.findAll({ type: 'Text' })).toHaveLength(0)
   await off.unmount()
-  expect((await $.command.run(command('a11y-tools', 'loud'))).text).toBe('Usage: /a11y-tools, /a11y-tools off, /a11y-tools brief, /a11y-tools full, or /a11y-tools auto.')
+  expect((await $.command.run(command('earshot-tools', 'loud'))).text).toBe('Usage: /earshot-tools, /earshot-tools off, /earshot-tools brief, /earshot-tools full, or /earshot-tools auto.')
   // A forced mode survives a change of delivery; a mode-derived one follows it.
-  await $.command.run(command('a11y-tools', 'brief'))
-  await $.command.run(command('a11y-stream', 'off'))
-  expect((await $.command.run(command('a11y-tools'))).text).toBe('Tool narration brief (forced).')
-  await $.command.run(command('a11y-tools', 'auto'))
-  expect((await $.command.run(command('a11y-tools'))).text).toBe('Tool narration full (whole answer delivery is off).')
+  await $.command.run(command('earshot-tools', 'brief'))
+  await $.command.run(command('earshot-stream', 'off'))
+  expect((await $.command.run(command('earshot-tools'))).text).toBe('Tool narration brief (forced).')
+  await $.command.run(command('earshot-tools', 'auto'))
+  expect((await $.command.run(command('earshot-tools'))).text).toBe('Tool narration full (whole answer delivery is off).')
 })
 
-test('draws the result as a count and keeps the text for /a11y-last (AC-004, AC-006)', async ($, on) => {
+test('draws the result as a count and keeps the text for /earshot-last (AC-004, AC-006)', async ($, on) => {
   host(on, { modeOn: true })
   await $.session.start(start)
-  await $.command.run(command('a11y-tools', 'brief'))
-  expect((await $.command.run(command('a11y-last'))).text).toBe('No tool result stored yet.')
+  await $.command.run(command('earshot-tools', 'brief'))
+  expect((await $.command.run(command('earshot-last'))).text).toBe('No tool result stored yet.')
   const use = await $.ui.mount(bashUse('t6'))
   await use.unmount()
   const result = await $.ui.mount(bashResult('t6', 'AGENTS.md\ncatalog\nCHANGELOG.md\n'))
@@ -189,16 +203,16 @@ test('draws the result as a count and keeps the text for /a11y-last (AC-004, AC-
   const errored = await $.ui.mount(bashResult('t7', 'ls: no such file\n', true))
   expect((await errored.find({ type: 'Text' }))?.text).toBe('error: 1 line')
   await errored.unmount()
-  expect((await $.command.run(command('a11y-last'))).text).toBe('Result of: Bash\nls: no such file\n')
-  expect((await $.command.run(command('a11y-last', '2'))).text).toBe('Result of: List files and search for x\nAGENTS.md\ncatalog\nCHANGELOG.md\n')
-  expect((await $.command.run(command('a11y-last', '3'))).text).toBe('Only 2 results are kept; ask for 1 to 2.')
-  expect((await $.command.run(command('a11y-last', 'x'))).text).toBe('Usage: /a11y-last or /a11y-last <n>.')
+  expect((await $.command.run(command('earshot-last'))).text).toBe('Result of: Bash\nls: no such file\n')
+  expect((await $.command.run(command('earshot-last', '2'))).text).toBe('Result of: List files and search for x\nAGENTS.md\ncatalog\nCHANGELOG.md\n')
+  expect((await $.command.run(command('earshot-last', '3'))).text).toBe('Only 2 results are kept; ask for 1 to 2.')
+  expect((await $.command.run(command('earshot-last', 'x'))).text).toBe('Usage: /earshot-last or /earshot-last <n>.')
 })
 
-test('writes every drawn component to the debug log until /a11y-log off (AC-014, AC-015)', async ($, on) => {
+test('writes every drawn component to the debug log until /earshot-log off (AC-014, AC-015)', async ($, on) => {
   const log = host(on, { modeOn: true })
   await $.session.start(start)
-  expect((await $.command.run(command('a11y-log'))).text).toBe('Render log on. Every drawn component is written to the debug log of a session started with claude --debug.')
+  expect((await $.command.run(command('earshot-log'))).text).toBe('Render log on. Every drawn component is written to the debug log of a session started with claude --debug.')
   const use = await $.ui.mount(bashUse('t10', { isRunning: true }))
   await use.unmount()
   const useLine = log.debug.find((line) => line.startsWith('ui.render ToolUse '))
@@ -210,11 +224,39 @@ test('writes every drawn component to the debug log until /a11y-log off (AC-014,
   expect(log.debug.some((line) => /^ui\.render InfoNotice \S+: Context left until auto-compact: 12% \/compact$/.test(line))).toBe(true)
   expect(log.logged).toHaveLength(0)
   // Off: nothing more is written, and the choice is stored.
-  expect((await $.command.run(command('a11y-log', 'off'))).text).toBe('Render log off.')
+  expect((await $.command.run(command('earshot-log', 'off'))).text).toBe('Render log off.')
   const before = log.debug.length
   const quiet = await $.ui.mount(notice('Tip: use /compact', null))
   await quiet.unmount()
   expect(log.debug).toHaveLength(before)
-  expect((await $.command.run(command('a11y-log', 'maybe'))).text).toBe('Usage: /a11y-log, /a11y-log on, or /a11y-log off.')
-  expect((await $.command.run(command('a11y-log', 'on'))).text).toBe('Render log on. Every drawn component is written to the debug log of a session started with claude --debug.')
+  expect((await $.command.run(command('earshot-log', 'maybe'))).text).toBe('Usage: /earshot-log, /earshot-log on, or /earshot-log off.')
+  expect((await $.command.run(command('earshot-log', 'on'))).text).toBe('Render log on. Every drawn component is written to the debug log of a session started with claude --debug.')
+})
+
+test('empties the run-in-background pill unless tool rows are full (AC-018)', async ($, on) => {
+  host(on, { modeOn: true })
+  await $.session.start(start)
+  const off = await $.ui.mount(progress('p1'))
+  expect(await off.findAll({ type: 'Text' })).toHaveLength(0)
+  await off.unmount()
+  await $.command.run(command('earshot-tools', 'brief'))
+  const brief = await $.ui.mount(progress('p2'))
+  expect(await brief.findAll({ type: 'Text' })).toHaveLength(0)
+  await brief.unmount()
+  await $.command.run(command('earshot-tools', 'full'))
+  const full = await $.ui.mount(progress('p3'))
+  expect((await full.find({ type: 'Text' }))?.text).toBe('(ctrl+b to run in background)')
+  await full.unmount()
+})
+
+test('hides the spinner line under buffered delivery only (AC-019)', async ($, on) => {
+  host(on, { modeOn: true })
+  await $.session.start(start)
+  const hidden = await $.ui.mount(spinner)
+  expect(await hidden.findAll({ type: 'Text' })).toHaveLength(0)
+  await hidden.unmount()
+  await $.command.run(command('earshot-stream', 'off'))
+  const live = await $.ui.mount(spinner)
+  expect((await live.find({ type: 'Text' }))?.text).toBe('engine row')
+  await live.unmount()
 })

@@ -28,7 +28,7 @@ The implementation does not wait for this: the chunk kinds are declared in the t
 |---|------|----------|-------|------|----------|
 | 2 | Tests for `resolveDelivery`: mode on and no override → buffered (source mode); mode off → live; override buffered/live wins either way; malformed override ignored | AC-006, AC-007, TC-003, TC-004, TC-006 | tests/unit/stream-delivery.spec.ts | test | 0.5 h |
 | 3 | Tests for the hold: `thinking` dropped; `text`, `tool`, `input`, `stop`, `engine` kept in order; `hasText` true only for a non-empty text chunk; empty text kept but not counted | AC-002, AC-003, AC-004, AC-005, edge cases | tests/unit/stream-delivery.spec.ts | test | 0.5 h |
-| 4 | Tests for `parseStreamArg` (`""`, `on`, `off`, `auto`, garbage) and the reply lines of `/a11y-stream` in each state | AC-007, TC-004 | tests/unit/stream-delivery.spec.ts, tests/unit/consent.spec.ts (messages) | test | 0.5 h |
+| 4 | Tests for `parseStreamArg` (`""`, `on`, `off`, `auto`, garbage) and the reply lines of `/earshot-stream` in each state | AC-007, TC-004 | tests/unit/stream-delivery.spec.ts, tests/unit/consent.spec.ts (messages) | test | 0.5 h |
 | 5 | Implement `hooks/lib/stream-delivery.ts`: `resolveDelivery`, `isStreamOverride`, `parseStreamArg`, `createHold()` returning `{ take(chunk), release() }` as plain data; add the reply lines to `hooks/lib/messages.ts` | AC-002 to AC-007 | hooks/lib/stream-delivery.ts, hooks/lib/messages.ts, hooks/lib/types.ts | impl | 2 h |
 
 ### Phase 2: Mod wiring, test-first (4 h)
@@ -36,16 +36,16 @@ The implementation does not wait for this: the chunk kinds are declared in the t
 | # | Task | Spec Ref | Files | Type | Estimate |
 |---|------|----------|-------|------|----------|
 | 6 | Kit tests: bottom `on('turn.step', async function* ...)` yields a scripted stream (thinking, text, text, tool, input, stop, engine) and counts its yields; in buffered mode the test receives the first chunk only after the bottom finished all yields, no thinking chunk, order preserved, one `ui.notify`; in live mode chunks arrive interleaved and thinking passes; `agentId` set → live; a tool-only step → no notify | AC-001 to AC-005, AC-008 | hooks/stream.test.ts | test | 1.5 h |
-| 7 | Kit tests for `/a11y-stream` on, off, auto, report; override persisted in the mocked store | AC-007 | hooks/stream.test.ts | test | 0.5 h |
+| 7 | Kit tests for `/earshot-stream` on, off, auto, report; override persisted in the mocked store | AC-007 | hooks/stream.test.ts | test | 0.5 h |
 | 8 | Implement the generator hook in `hooks/register.ts`: read delivery mode from session facts, `for await` over `next(e)` into the hold, on `next.signal` abort yield what is held and return, then yield held chunks, `return stream.result`; `.catch` handler that forwards `next(e)` (check in the types whether the handler of a streaming hook is itself a generator) | AC-001, AC-009, AC-011 | hooks/register.ts | impl | 1.5 h |
-| 9 | Register `a11y-stream` with `argumentHint: '[on|off|auto]'`, `command.run` handler, store writes; keep every helper top-level | AC-007, AC-012 | hooks/register.ts | impl | 0.5 h |
+| 9 | Register `earshot-stream` with `argumentHint: '[on|off|auto]'`, `command.run` handler, store writes; keep every helper top-level | AC-007, AC-012 | hooks/register.ts | impl | 0.5 h |
 
 ### Phase 3: Verification and docs (1.5 h + session)
 
 | # | Task | Spec Ref | Files | Type | Estimate |
 |---|------|----------|-------|------|----------|
 | 10 | `npm test`, `claude plugin test .`, `tsc`, `eslint`, `claude plugin validate .`; confirm the validator lists `turn.step` and only the expected calls | AC-012 | | verify | 0.5 h |
-| 11 | README section: whole answers, hidden thinking, the bell, `/a11y-stream`; CHANGELOG; CLAUDE.md layout line | AC-013 | README.md, CHANGELOG.md, CLAUDE.md | docs | 0.5 h |
+| 11 | README section: whole answers, hidden thinking, the bell, `/earshot-stream`; CHANGELOG; CLAUDE.md layout line | AC-013 | README.md, CHANGELOG.md, CLAUDE.md | docs | 0.5 h |
 | 12 | Manual VoiceOver session: TC-001 to TC-006; captures; note whether a long block is read as one unit | TC-* | tests/screenshots/whole-answer-delivery/, docs/testing/whole-answer-delivery.md | manual | 1 h |
 | 13 | Fill "Maps to" in the spec, set its status, `/add:verify` | all | specs/whole-answer-delivery.md | verify | 0.5 h |
 
@@ -89,8 +89,8 @@ Critical path: 2/3/4 → 5 → 6 → 8 → 10 → 11 → 12 → 13.
 - `tests/screenshots/whole-answer-delivery/*.txt`: captures
 
 ### Modified Files
-- `hooks/register.ts`: `turn.step` generator hook, `a11y-stream` command, facts extended with the delivery mode
-- `hooks/lib/messages.ts`: reply lines for `/a11y-stream`
+- `hooks/register.ts`: `turn.step` generator hook, `earshot-stream` command, facts extended with the delivery mode
+- `hooks/lib/messages.ts`: reply lines for `/earshot-stream`
 - `hooks/lib/types.ts`: `StreamOverride`, `DeliveryMode`
 - `README.md`, `CHANGELOG.md`, `CLAUDE.md`
 - `specs/whole-answer-delivery.md`: "Maps to", status
@@ -113,7 +113,7 @@ Critical path: 2/3/4 → 5 → 6 → 8 → 10 → 11 → 12 → 13.
 | Holding chunks delays the engine's tool calls until the stream ends | None in practice: the engine runs tools only after the response is whole anyway | Documented in the spec's overview |
 | Interruption while awaiting the stream beneath: the iteration may throw rather than end | Medium: a thrown error could skip the replay | try/finally around the loop (AC-009); kit test with an aborting signal if the kit allows it, otherwise manual TC-005 |
 | Subagent steps buffered by mistake would hide their output from the main transcript | Low | AC-008 guard on `e.agentId`, kit test |
-| The mode read at session start goes stale after `/a11y-on` | Low: the mode needs a restart anyway | Spec edge case; `/a11y-stream on` covers the session |
+| The mode read at session start goes stale after `/earshot-on` | Low: the mode needs a restart anyway | Spec edge case; `/earshot-stream on` covers the session |
 
 ## 8. Acceptance Verification
 
@@ -125,7 +125,7 @@ Critical path: 2/3/4 → 5 → 6 → 8 → 10 → 11 → 12 → 13.
 | AC-004 | text byte-identical | kit: concatenated text equals scripted text | Pending |
 | AC-005 | bell after a step with text, none without | kit: notify count | Pending |
 | AC-006 | active in screen reader mode, live otherwise | stream-delivery.spec.ts resolveDelivery; kit live mode | Pending |
-| AC-007 | /a11y-stream on, off, auto, report; stored | stream-delivery.spec.ts parse; kit command | Pending |
+| AC-007 | /earshot-stream on, off, auto, report; stored | stream-delivery.spec.ts parse; kit command | Pending |
 | AC-008 | subagent steps live | kit with agentId | Pending |
 | AC-009 | interruption yields held chunks | try/finally; manual TC-005 (kit if the signal can be aborted) | Pending |
 | AC-010 | no per-chunk work | review | Pending |

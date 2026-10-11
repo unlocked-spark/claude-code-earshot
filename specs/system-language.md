@@ -10,7 +10,7 @@
 
 Every line the mod speaks or prints, and the descriptions of its slash commands, follow the operating system's display language. The mod ships full tables for English, Polish, German, French, Spanish and Italian. Any other language, or a system the mod cannot ask, gets English.
 
-The language is settled once per session, before the commands are registered. Command names and their arguments (`/a11y-tools brief`) stay in English in every language, so documentation and muscle memory carry over.
+The language is settled once per session, before the commands are registered. Command names and their arguments (`/earshot-tools brief`) stay in English in every language, so documentation and muscle memory carry over.
 
 The consent question names the answer letters of its language (`y`/`n`, `t`/`n`, `j`/`n`, `o`/`n`, `s`/`n`). The answer parser takes the yes and no words of every supported language, whatever language asked.
 
@@ -36,5 +36,5 @@ As a blind developer whose system speaks Polish, I want the mod's lines in Polis
 | ID | Steps | Expected |
 |----|-------|----------|
 | TC-001 | Windows with a Polish display language, NVDA running, screen reader mode off; start `claude`. | The question is spoken and printed in Polish and ends with `Naciśnij t albo n.`; answering `t` enables the mode with a Polish confirmation. |
-| TC-002 | Same machine; type `/` and move through the `a11y` commands. | The descriptions are Polish. |
+| TC-002 | Same machine; type `/` and move through the `earshot` commands. | The descriptions are Polish. |
 | TC-003 | Screen reader mode on, a turn longer than 20 s. | The heartbeat says `Nadal pracuję, 20 sekund.` |

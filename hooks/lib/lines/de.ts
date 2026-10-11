@@ -30,7 +30,7 @@ export const de: Messages = {
   readerFallback: FALLBACK,
   question: (reader) => `${detected(reader)} Den Screenreader-Modus von Claude Code ab dem nächsten Start einschalten? Drücke j oder n.`,
   enabled: () => 'Screenreader-Modus ab dem nächsten Start eingeschaltet. Starte Claude Code jetzt neu.',
-  declined: () => 'Verstanden. Der Screenreader-Modus bleibt aus. Mit /a11y-on kannst du ihn jederzeit einschalten.',
+  declined: () => 'Verstanden. Der Screenreader-Modus bleibt aus. Mit /earshot-on kannst du ihn jederzeit einschalten.',
   withdrawn: () => 'Keine Antwort. Der Screenreader-Modus bleibt in dieser Sitzung aus.',
   answered: () => 'Beantwortet.',
   answerReady: () => 'Antwort fertig.',
@@ -63,7 +63,7 @@ export const de: Messages = {
       ? 'Ganze Antworten an (erzwungen). Jede Antwort erscheint auf einmal, das Nachdenken ist verborgen.'
       : 'Ganze Antworten aus (erzwungen). Antworten erscheinen laufend.',
   streamAuto: () => 'Erzwingung entfernt.',
-  streamInvalid: () => 'Verwendung: /a11y-stream, /a11y-stream on, /a11y-stream off oder /a11y-stream auto.',
+  streamInvalid: () => 'Verwendung: /earshot-stream, /earshot-stream on, /earshot-stream off oder /earshot-stream auto.',
   toolsReport({ mode, source }) {
     const why = source === 'override' ? 'erzwungen' : mode === 'off' ? 'ganze Antworten' : 'ganze Antworten sind aus'
     return `Werkzeugansage ${TOOLS[mode]} (${why}).`
@@ -71,7 +71,7 @@ export const de: Messages = {
   toolsSet(mode) {
     switch (mode) {
       case 'off':
-        return 'Werkzeugansage aus (erzwungen). Werkzeugaufrufe und Ergebnisse werden nicht gezeigt. /a11y-last gibt weiterhin ein letztes Ergebnis aus.'
+        return 'Werkzeugansage aus (erzwungen). Werkzeugaufrufe und Ergebnisse werden nicht gezeigt. /earshot-last gibt weiterhin ein letztes Ergebnis aus.'
       case 'brief':
         return 'Werkzeugansage kurz (erzwungen). Eine Zeile pro Aufruf und eine Zeilenzahl pro Ergebnis.'
       case 'full':
@@ -79,24 +79,24 @@ export const de: Messages = {
     }
   },
   toolsAuto: () => 'Erzwingung entfernt.',
-  toolsInvalid: () => 'Verwendung: /a11y-tools, /a11y-tools off, /a11y-tools brief, /a11y-tools full oder /a11y-tools auto.',
+  toolsInvalid: () => 'Verwendung: /earshot-tools, /earshot-tools off, /earshot-tools brief, /earshot-tools full oder /earshot-tools auto.',
   toolLabel: (label) => LABELS[label],
   resultLine: (isErrored, lines) => `${isErrored ? 'Fehler' : 'Ergebnis'}: ${lines} ${lines === 1 ? 'Zeile' : 'Zeilen'}`,
   heartbeat: (n) => `Arbeite noch, ${sekunden(n)}.`,
   heartbeatReport: (n) =>
     n === 0 ? 'Lebenszeichen aus.' : `Lebenszeichen nach je ${sekunden(n)} Stille, während eine Antwort entsteht, im Screenreader-Modus.`,
   heartbeatSet: (n) => (n === 0 ? 'Lebenszeichen aus.' : `Lebenszeichen auf je ${sekunden(n)} Stille gesetzt.`),
-  heartbeatInvalid: () => 'Verwendung: /a11y-heartbeat, /a11y-heartbeat <Sekunden> (5 bis 600) oder /a11y-heartbeat off.',
+  heartbeatInvalid: () => 'Verwendung: /earshot-heartbeat, /earshot-heartbeat <Sekunden> (5 bis 600) oder /earshot-heartbeat off.',
   logReport: (on) =>
     on
       ? 'Render-Protokoll an. Jedes gezeichnete Element landet im Debug-Protokoll einer mit claude --debug gestarteten Sitzung.'
       : 'Render-Protokoll aus.',
-  logInvalid: () => 'Verwendung: /a11y-log, /a11y-log on oder /a11y-log off.',
+  logInvalid: () => 'Verwendung: /earshot-log, /earshot-log on oder /earshot-log off.',
   lastHeader: (summary) => `Ergebnis von: ${summary}`,
   lastNone: () => 'Noch kein Werkzeugergebnis gespeichert.',
   lastOutOfRange: (kept) =>
     kept === 1 ? 'Nur 1 Ergebnis ist gespeichert. Frage nach 1.' : `Nur ${kept} Ergebnisse sind gespeichert. Frage nach 1 bis ${kept}.`,
-  lastInvalid: () => 'Verwendung: /a11y-last oder /a11y-last <n>.',
+  lastInvalid: () => 'Verwendung: /earshot-last oder /earshot-last <n>.',
   error(kind, path) {
     const fallback = `Trage "axScreenReader": true von Hand in ${path ?? SETTINGS_FILE} ein oder setze CLAUDE_AX_SCREEN_READER=1 in deinem Shell-Profil.`
     switch (kind) {
@@ -113,13 +113,13 @@ export const de: Messages = {
     }
   },
   commandDescriptions: {
-    'a11y-on': 'Screenreader-Modus von Claude Code ab dem nächsten Start einschalten',
-    'a11y-off': 'Screenreader-Modus von Claude Code ab dem nächsten Start ausschalten',
-    'a11y-status': 'Erkannten Screenreader und Zustand des Screenreader-Modus melden',
-    'a11y-stream': 'Ganze Antworten: jede Antwort auf einmal zeigen statt laufend',
-    'a11y-tools': 'Werkzeugansage: Werkzeugzeilen verbergen, eine Zeile pro Aufruf zeigen oder Claude Code überlassen',
-    'a11y-last': 'Den vollen Text eines letzten Werkzeugergebnisses ausgeben',
-    'a11y-log': 'Render-Protokoll: jedes gezeichnete Element ins Debug-Protokoll schreiben',
-    'a11y-heartbeat': 'Nach je N Sekunden Stille sagen, dass die Arbeit weitergeht',
+    'earshot-on': 'Screenreader-Modus von Claude Code ab dem nächsten Start einschalten',
+    'earshot-off': 'Screenreader-Modus von Claude Code ab dem nächsten Start ausschalten',
+    'earshot-status': 'Erkannten Screenreader und Zustand des Screenreader-Modus melden',
+    'earshot-stream': 'Ganze Antworten: jede Antwort auf einmal zeigen statt laufend',
+    'earshot-tools': 'Werkzeugansage: Werkzeugzeilen verbergen, eine Zeile pro Aufruf zeigen oder Claude Code überlassen',
+    'earshot-last': 'Den vollen Text eines letzten Werkzeugergebnisses ausgeben',
+    'earshot-log': 'Render-Protokoll: jedes gezeichnete Element ins Debug-Protokoll schreiben',
+    'earshot-heartbeat': 'Nach je N Sekunden Stille sagen, dass die Arbeit weitergeht',
   },
 }

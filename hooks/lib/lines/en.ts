@@ -19,7 +19,7 @@ export const en: Messages = {
   readerFallback: FALLBACK,
   question: (reader) => `${detected(reader)} Enable Claude Code screen reader mode from the next start? Press y or n.`,
   enabled: () => 'Screen reader mode enabled from the next start. Restart Claude Code now.',
-  declined: () => 'Understood. Screen reader mode stays off. Run /a11y-on at any time to enable it.',
+  declined: () => 'Understood. Screen reader mode stays off. Run /earshot-on at any time to enable it.',
   withdrawn: () => 'No answer, leaving screen reader mode off for this session.',
   answered: () => 'Answered.',
   answerReady: () => 'Answer ready.',
@@ -52,7 +52,7 @@ export const en: Messages = {
       ? 'Whole answer delivery on (forced). Answers appear whole; thinking is hidden.'
       : 'Whole answer delivery off (forced). Answers stream live.',
   streamAuto: () => 'Override removed.',
-  streamInvalid: () => 'Usage: /a11y-stream, /a11y-stream on, /a11y-stream off, or /a11y-stream auto.',
+  streamInvalid: () => 'Usage: /earshot-stream, /earshot-stream on, /earshot-stream off, or /earshot-stream auto.',
   toolsReport({ mode, source }) {
     const why = source === 'override' ? 'forced' : mode === 'off' ? 'whole answer delivery' : 'whole answer delivery is off'
     return `Tool narration ${mode} (${why}).`
@@ -60,7 +60,7 @@ export const en: Messages = {
   toolsSet(mode) {
     switch (mode) {
       case 'off':
-        return 'Tool narration off (forced). Tool calls and results are not shown; /a11y-last still prints a recent result.'
+        return 'Tool narration off (forced). Tool calls and results are not shown; /earshot-last still prints a recent result.'
       case 'brief':
         return 'Tool narration brief (forced). One line per tool call and a count per result.'
       case 'full':
@@ -68,21 +68,21 @@ export const en: Messages = {
     }
   },
   toolsAuto: () => 'Override removed.',
-  toolsInvalid: () => 'Usage: /a11y-tools, /a11y-tools off, /a11y-tools brief, /a11y-tools full, or /a11y-tools auto.',
+  toolsInvalid: () => 'Usage: /earshot-tools, /earshot-tools off, /earshot-tools brief, /earshot-tools full, or /earshot-tools auto.',
   toolLabel: (label) => label,
   resultLine: (isErrored, lines) => `${isErrored ? 'error' : 'result'}: ${lines} ${lines === 1 ? 'line' : 'lines'}`,
   heartbeat: (seconds) => `Still working, ${seconds} seconds.`,
   heartbeatReport: (seconds) =>
     seconds === 0 ? 'Heartbeat off.' : `Heartbeat every ${seconds} seconds of silence while an answer is being prepared, in screen reader mode.`,
   heartbeatSet: (seconds) => (seconds === 0 ? 'Heartbeat off.' : `Heartbeat set to every ${seconds} seconds of silence.`),
-  heartbeatInvalid: () => 'Usage: /a11y-heartbeat, /a11y-heartbeat <seconds> (5 to 600), or /a11y-heartbeat off.',
+  heartbeatInvalid: () => 'Usage: /earshot-heartbeat, /earshot-heartbeat <seconds> (5 to 600), or /earshot-heartbeat off.',
   logReport: (on) =>
     on ? 'Render log on. Every drawn component is written to the debug log of a session started with claude --debug.' : 'Render log off.',
-  logInvalid: () => 'Usage: /a11y-log, /a11y-log on, or /a11y-log off.',
+  logInvalid: () => 'Usage: /earshot-log, /earshot-log on, or /earshot-log off.',
   lastHeader: (summary) => `Result of: ${summary}`,
   lastNone: () => 'No tool result stored yet.',
   lastOutOfRange: (kept) => (kept === 1 ? 'Only 1 result is kept; ask for 1.' : `Only ${kept} results are kept; ask for 1 to ${kept}.`),
-  lastInvalid: () => 'Usage: /a11y-last or /a11y-last <n>.',
+  lastInvalid: () => 'Usage: /earshot-last or /earshot-last <n>.',
   error(kind, path) {
     const fallback = `Add "axScreenReader": true to ${path ?? SETTINGS_FILE} by hand, or set CLAUDE_AX_SCREEN_READER=1 in your shell profile.`
     switch (kind) {
@@ -99,13 +99,13 @@ export const en: Messages = {
     }
   },
   commandDescriptions: {
-    'a11y-on': 'Enable Claude Code screen reader mode from the next start',
-    'a11y-off': 'Disable Claude Code screen reader mode from the next start',
-    'a11y-status': 'Report the detected screen reader and the screen reader mode state',
-    'a11y-stream': 'Whole answer delivery: show each answer at once instead of streaming it',
-    'a11y-tools': 'Tool narration: hide tool rows, show one line per call, or leave them to Claude Code',
-    'a11y-last': 'Print the full text of a recent tool result',
-    'a11y-log': 'Render log: write every drawn component to the debug log',
-    'a11y-heartbeat': 'Say every N seconds of silence that work goes on',
+    'earshot-on': 'Enable Claude Code screen reader mode from the next start',
+    'earshot-off': 'Disable Claude Code screen reader mode from the next start',
+    'earshot-status': 'Report the detected screen reader and the screen reader mode state',
+    'earshot-stream': 'Whole answer delivery: show each answer at once instead of streaming it',
+    'earshot-tools': 'Tool narration: hide tool rows, show one line per call, or leave them to Claude Code',
+    'earshot-last': 'Print the full text of a recent tool result',
+    'earshot-log': 'Render log: write every drawn component to the debug log',
+    'earshot-heartbeat': 'Say every N seconds of silence that work goes on',
   },
 }

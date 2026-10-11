@@ -15,7 +15,7 @@ describe('parseAnswer (AC-005)', () => {
   it('treats anything else as another prompt', () => {
     expect(parseAnswer('yes please enable it')).toBe('other')
     expect(parseAnswer('')).toBe('other')
-    expect(parseAnswer('/a11y-on')).toBe('other')
+    expect(parseAnswer('/earshot-on')).toBe('other')
   })
 })
 

@@ -2,7 +2,7 @@
 
 Accessibility mod for Claude Code aimed at blind developers. It is an overlay on the built-in screen reader mode (`--ax-screen-reader`) and adds only what that mode lacks: spoken end-of-turn summaries, earcons for tool and permission events, a screen-reader-usable `AskUserQuestion` dialog, significance-filtered tool narration, speech on Windows, and automatic enabling of the mode when a screen reader is detected. Project of the Unlocked Spark Foundation.
 
-Stage: screen reader detection (confirmed with VoiceOver), whole answer delivery (turn.step hold) and tool narration (ui.render on tool rows, mechanism confirmed by a spike in screen reader mode; hidden by default since 2026-10-11, `/a11y-tools` chooses) implemented with unit and mod tests, plus a heartbeat every 20 s of silence during a turn (`/a11y-heartbeat`) and a render log of every drawn component in the debug log (`/a11y-log`) for hunting the messages a screen reader reads; VoiceOver sessions for the last two and all NVDA sessions pending. Research (Polish): `docs/research/rozpoznanie-2026-10-09.md`; spike results and loader constraints: `docs/research/spikes-2026-10.md`.
+Stage: screen reader detection (confirmed with VoiceOver), whole answer delivery (turn.step hold) and tool narration (ui.render on tool rows, mechanism confirmed by a spike in screen reader mode; hidden by default since 2026-10-11, `/earshot-tools` chooses) implemented with unit and mod tests, plus a heartbeat every 20 s of silence during a turn (`/earshot-heartbeat`) and a render log of every drawn component in the debug log (`/earshot-log`) for hunting the messages a screen reader reads; VoiceOver sessions for the last two and all NVDA sessions pending. Research (Polish): `docs/research/rozpoznanie-2026-10-09.md`; spike results and loader constraints: `docs/research/spikes-2026-10.md`.
 
 The plugin is named `earshot` (names starting with `claude-` are reserved by the validator); the repository keeps its name.
 
@@ -61,16 +61,16 @@ hooks/lib/detect.ts          # platform and screen reader detection (pgrep, Powe
 hooks/lib/mode-state.ts      # mode resolution (variable over settings) and the ask/silent decision
 hooks/lib/settings-file.ts   # settings path and strict JSON editing of axScreenReader
 hooks/lib/consent.ts         # consent state machine, y/n parsing, 30 s timeout constant
-hooks/lib/stream-delivery.ts # whole answer delivery: mode resolution, /a11y-stream parsing, the chunk hold
+hooks/lib/stream-delivery.ts # whole answer delivery: mode resolution, /earshot-stream parsing, the chunk hold
 hooks/lib/tool-narration.ts  # tool narration: mode (off/brief/full), summaries per tool, labels, result counts, ring buffer of results
-hooks/lib/render-log.ts      # render log: one debug line per drawn component, change memo, /a11y-log parsing
-hooks/lib/heartbeat.ts       # heartbeat: silence reducer per tick, interval setting, /a11y-heartbeat parsing
+hooks/lib/render-log.ts      # render log: one debug line per drawn component, change memo, /earshot-log parsing
+hooks/lib/heartbeat.ts       # heartbeat: silence reducer per tick, interval setting, /earshot-heartbeat parsing
 hooks/lib/language.ts        # system display language: PowerShell, AppleLanguages, LC_ALL/LC_MESSAGES/LANG
 hooks/lib/messages.ts        # the live table of spoken and printed lines, setLanguage
 hooks/lib/lines/*.ts         # one table per language (en, pl, de, fr, es, it) and the shared Messages type
 hooks/register.test.ts       # mod-level tests: detection and commands (claude plugin test)
-hooks/stream.test.ts         # mod-level tests: turn.step hold and /a11y-stream
-hooks/narration.test.ts      # mod-level tests: ToolUse, ToolResult and ToolGroup rows mounted on the terminal surface, the render log
+hooks/stream.test.ts         # mod-level tests: turn.step hold and /earshot-stream
+hooks/narration.test.ts      # mod-level tests: ToolUse, ToolResult, ToolGroup, ToolProgress and Spinner rows mounted on the terminal surface, the render log
 hooks/heartbeat.test.ts      # mod-level tests: turn.start/turn.complete ticks on the mocked clock
 tests/unit/*.spec.ts         # Vitest tests of hooks/lib
 docs/research/               # research notes (Polish) and spike results
@@ -94,7 +94,7 @@ Planned next: `hooks/lib/classify/` (tool call significance), speech backends fo
 - The mod complements `--ax-screen-reader`; it never re-implements what the mode already does (static spinner, flat transcript, numbered menus). Check the mode first, then add.
 - Speech is short. The screen reader reads the transcript; the mod speaks only what the transcript cannot convey (turn boundaries, event class, counts).
 - Nothing is conveyed by sound alone. Every earcon and spoken message has a text equivalent in the transcript.
-- Writes outside the plugin are limited to `~/.claude/settings.json` and its one-time backup, with consent, reversible (`/a11y-off`), never when `CLAUDE_AX_SCREEN_READER` is set.
+- Writes outside the plugin are limited to `~/.claude/settings.json` and its one-time backup, with consent, reversible (`/earshot-off`), never when `CLAUDE_AX_SCREEN_READER` is set.
 - The mod API cannot reach the permission prompt, the input field, the slash menu, the desktop app or the VS Code panel. Gaps there become reproducible bug reports to Anthropic, not workarounds.
 - Mods do not run in `claude -p`, the SDK, the cloud or WSL.
 

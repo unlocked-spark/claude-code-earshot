@@ -81,6 +81,6 @@ describe('log setting and command (AC-015)', () => {
   it('has the reply lines', () => {
     expect(messages.logReport(false)).toBe('Render log off.')
     expect(messages.logReport(true)).toMatch(/^Render log on\./)
-    expect(messages.logInvalid()).toBe('Usage: /a11y-log, /a11y-log on, or /a11y-log off.')
+    expect(messages.logInvalid()).toBe('Usage: /earshot-log, /earshot-log on, or /earshot-log off.')
   })
 })
