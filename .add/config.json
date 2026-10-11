@@ -7,7 +7,7 @@
     "created": "2026-10-09",
     "author": "Łukasz Majewski",
     "adopted": false,
-    "adoption_notes": "Repository existed as notes only (README and a Polish research note dated 2026-10-09, one commit). No code before ADD. Repository content is English; research notes under docs/research/ stay Polish. Repository private until first usable release. Directory and repository renamed from claude-code-a11y to claude-code-earshot on 2026-10-10; the plugin is earshot."
+    "adoption_notes": "Repository existed as notes only (README and a Polish research note dated 2026-10-09, one commit). No code before ADD. Repository content is English; research notes under docs/research/ stay Polish. Repository public since 2026-10-11 (Apache 2.0). Directory and repository renamed from claude-code-a11y to claude-code-earshot on 2026-10-10; the plugin is earshot."
   },
   "maturity": {
     "level": "poc",
@@ -93,7 +93,7 @@
     "dev": null,
     "staging": null,
     "production": {
-      "deploy_trigger": "manual: the repository is its own marketplace (.claude-plugin/marketplace.json); install from a clone with claude plugin marketplace add + claude plugin install; public /plugin install once the repository is public",
+      "deploy_trigger": "manual: the repository is its own public marketplace; users run claude plugin install earshot --marketplace unlocked-spark/claude-code-earshot; a release is a version bump in .claude-plugin/plugin.json pushed to main",
       "verify": [
         "claude plugin validate .",
         "manual session with NVDA and VoiceOver"
