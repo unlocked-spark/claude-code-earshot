@@ -1,4 +1,5 @@
 import type { DeliveryMode, DeliverySource, LastResultEntry, ToolFlags, ToolLabel, ToolNarrationMode, ToolsOverride } from './types'
+import { messages } from './messages'
 
 // One line per tool call and one count per result, from what the model
 // already wrote: a screen reader hears the work, not shell syntax or dumps.
@@ -119,7 +120,7 @@ export function labelFor(flags: ToolFlags): ToolLabel {
 }
 
 export function summaryLine(flags: ToolFlags, tool: string, input: unknown): string {
-  return `${labelFor(flags)}: ${oneLine(describeToolUse(tool, input))}`
+  return `${messages.toolLabel(labelFor(flags))}: ${oneLine(describeToolUse(tool, input))}`
 }
 
 export function textOfResult(tool: string, output: unknown): string {
@@ -149,7 +150,7 @@ export function countLines(text: string): number {
 }
 
 export function resultLine(isErrored: boolean, lines: number): string {
-  return `${isErrored ? 'error' : 'result'}: ${lines} ${lines === 1 ? 'line' : 'lines'}`
+  return messages.resultLine(isErrored, lines)
 }
 
 export function parseLastArg(args: string): number | 'invalid' {

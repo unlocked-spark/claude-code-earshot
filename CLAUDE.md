@@ -65,7 +65,9 @@ hooks/lib/stream-delivery.ts # whole answer delivery: mode resolution, /a11y-str
 hooks/lib/tool-narration.ts  # tool narration: mode (off/brief/full), summaries per tool, labels, result counts, ring buffer of results
 hooks/lib/render-log.ts      # render log: one debug line per drawn component, change memo, /a11y-log parsing
 hooks/lib/heartbeat.ts       # heartbeat: silence reducer per tick, interval setting, /a11y-heartbeat parsing
-hooks/lib/messages.ts        # every spoken and printed line
+hooks/lib/language.ts        # system display language: PowerShell, AppleLanguages, LC_ALL/LC_MESSAGES/LANG
+hooks/lib/messages.ts        # the live table of spoken and printed lines, setLanguage
+hooks/lib/lines/*.ts         # one table per language (en, pl, de, fr, es, it) and the shared Messages type
 hooks/register.test.ts       # mod-level tests: detection and commands (claude plugin test)
 hooks/stream.test.ts         # mod-level tests: turn.step hold and /a11y-stream
 hooks/narration.test.ts      # mod-level tests: ToolUse and ToolResult rows mounted on the terminal surface, the render log

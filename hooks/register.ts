@@ -3,7 +3,8 @@ import { ANSWER_TIMEOUT_MS } from './lib/consent'
 import type { ConsentEffect } from './lib/consent'
 import { detect, platformFromEnv } from './lib/detect'
 import { createSilence, HEARTBEAT_TICK_MS, parseHeartbeatArg, resolveHeartbeat, tick } from './lib/heartbeat'
-import { messages } from './lib/messages'
+import { resolveLanguage } from './lib/language'
+import { messages, setLanguage } from './lib/messages'
 import { decide, isStoredConsent, resolveModeState } from './lib/mode-state'
 import { describeRender, parseLogArg, resolveRenderLog } from './lib/render-log'
 import { applyAxSetting, settingsPath } from './lib/settings-file'
@@ -143,10 +144,20 @@ async function settle($: EngineInterface, effect: ConsentEffect): Promise<string
   return text
 }
 
+// The mod's lines follow the system's display language (English when it is
+// one the mod has no lines for), settled before the commands are listed so
+// their descriptions match.
+async function chooseLanguage($: EngineInterface): Promise<void> {
+  const platform = await platformOf($)
+  session.facts.platform = platform
+  const env = { LC_ALL: await $.env.get('LC_ALL'), LC_MESSAGES: await $.env.get('LC_MESSAGES'), LANG: await $.env.get('LANG') }
+  setLanguage(await resolveLanguage({ platform, env, run: (argv, init) => $.process.run(argv, init) }))
+}
+
 async function registerCommands($: EngineInterface): Promise<void> {
   for (const spec of COMMANDS) {
     try {
-      await $.command.register(spec)
+      await $.command.register({ ...spec, description: messages.commandDescriptions[spec.name] ?? spec.description })
     } catch {
       // The name is taken; the rest of the mod still works.
     }
@@ -156,7 +167,7 @@ async function registerCommands($: EngineInterface): Promise<void> {
 async function startSession($: EngineInterface): Promise<void> {
   const facts = session.facts
   facts.modVersion = await readOwnVersion($)
-  facts.platform = await platformOf($)
+  facts.platform ??= await platformOf($)
   facts.settingsPath = settingsPath(facts.platform, { HOME: await $.env.get('HOME'), USERPROFILE: await $.env.get('USERPROFILE') })
   facts.mode = await loadMode($)
   facts.delivery = resolveDelivery({ modeOn: facts.mode.on, override: await $.store.get(STREAM_KEY) })
@@ -304,6 +315,7 @@ async function statusCommand($: EngineInterface): Promise<{ text: string }> {
 export const register: Register = (on) => {
   on('session.start', async ($, e, next) => {
     const started = await next(e)
+    await chooseLanguage($)
     await registerCommands($)
     if (e.isInteractive) await startSession($)
     return started
@@ -318,7 +330,7 @@ export const register: Register = (on) => {
       return next(e)
     }
     const text = await settle($, effect)
-    return { drop: text ?? 'Answered.' }
+    return { drop: text ?? messages.answered() }
   }).catch(($, e, next) => next(e))
 
   on('command.run', { command: 'a11y-on' }, ($) => onCommand($))
@@ -417,7 +429,7 @@ export const register: Register = (on) => {
     for (const chunk of coalesceText(held.chunks)) yield chunk
     if (held.hasText) markVisible()
     if (failed) throw failure
-    if (held.hasText && !next.signal.aborted) ring($, 'Answer ready.')
+    if (held.hasText && !next.signal.aborted) ring($, messages.answerReady())
     return result
   }).catch(async function* ($, e, next) {
     return yield* next(e)

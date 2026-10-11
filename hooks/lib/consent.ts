@@ -16,10 +16,17 @@ export const IDLE: ConsentState = { status: 'idle' }
 
 export const ANSWER_TIMEOUT_MS = 30_000
 
+// y yes (English), t tak (Polish), j ja (German), o oui (French), s si sí
+// (Spanish), s si sì (Italian); n no nie nein non.
+const YES: ReadonlySet<string> = new Set(['y', 'yes', 't', 'tak', 'j', 'ja', 'o', 'oui', 's', 'si', 'sí', 'sì'])
+const NO: ReadonlySet<string> = new Set(['n', 'no', 'nie', 'nein', 'non'])
+
 export function parseAnswer(text: string): Answer {
   const word = text.trim().toLowerCase()
-  if (word === 'y' || word === 'yes') return 'yes'
-  if (word === 'n' || word === 'no') return 'no'
+  // Every supported language's answer is taken, whatever language asked:
+  // the letter the question names and the whole word.
+  if (YES.has(word)) return 'yes'
+  if (NO.has(word)) return 'no'
   return 'other'
 }
 

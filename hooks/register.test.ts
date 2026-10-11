@@ -6,7 +6,7 @@ type Log = { spoken: string[]; logged: string[]; written: { path: string; text: 
 // Stubs the world beneath the mod: a macOS host with or without VoiceOver, a
 // settings file, the mod's own manifest, and silent audio and transcript sinks
 // that record what the mod said. Each stub answers its event with { value }.
-function host(on: On, world: { voiceover: boolean; env: Record<string, string>; settings: string | undefined }): Log {
+function host(on: On, world: { voiceover: boolean; env: Record<string, string>; settings: string | undefined; appleLanguages?: string }): Log {
   const log: Log = { spoken: [], logged: [], written: [], notified: 0, commands: [] }
   let settings = world.settings
   mock.env(on, world.env)
@@ -17,6 +17,7 @@ function host(on: On, world: { voiceover: boolean; env: Record<string, string>; 
     const reply = (exitCode: number, stdout: string) => ({ value: { exitCode, stdout, stderr: '', isStdoutTruncated: false, isStderrTruncated: false } })
     if (cmd === 'uname') return reply(0, 'Darwin\n')
     if (cmd === 'pgrep') return world.voiceover ? reply(0, '123\n') : reply(1, '')
+    if (cmd === 'defaults') return world.appleLanguages === undefined ? reply(1, '') : reply(0, world.appleLanguages)
     throw new Error(`unexpected command ${e.argv.join(' ')}`)
   })
   on('settings.read', () => ({ value: settings === undefined ? {} : (JSON.parse(settings) as Record<string, unknown>) }))
@@ -96,4 +97,29 @@ test('registers the commands and /a11y-off removes the key (AC-009, AC-010)', as
   expect(result.text).toBe('Screen reader mode disabled from the next start.')
   const settingsWrite = log.written.find((w) => w.path === '/Users/t/.claude/settings.json')
   expect(JSON.parse(settingsWrite?.text ?? '{}')).toEqual({ model: 'opus' })
+})
+
+const polishMac = '(\n    "pl-PL",\n    "en-PL"\n)\n'
+
+test('speaks Polish when the system displays Polish, and takes t as yes (system language)', async ($, on) => {
+  const log = host(on, { voiceover: true, env: { HOME: '/Users/t' }, settings: '{\n  "model": "opus"\n}\n', appleLanguages: polishMac })
+  await $.session.start(start)
+  expect(log.spoken[0]).toBe('Wykryto VoiceOver. Włączyć tryb czytnika ekranu w Claude Code od następnego uruchomienia? Naciśnij t albo n.')
+  expect(log.logged).toContain(log.spoken[0])
+  await $.prompt.submit(typed('t'))
+  expect(log.spoken.at(-1)).toBe('Tryb czytnika ekranu włączony od następnego uruchomienia. Uruchom teraz Claude Code ponownie.')
+})
+
+test('speaks German for a German system and takes j as yes (system language)', async ($, on) => {
+  const log = host(on, { voiceover: true, env: { HOME: '/Users/t' }, settings: '{}', appleLanguages: '(\n    "de-DE"\n)\n' })
+  await $.session.start(start)
+  expect(log.spoken[0]).toBe('VoiceOver erkannt. Den Screenreader-Modus von Claude Code ab dem nächsten Start einschalten? Drücke j oder n.')
+  await $.prompt.submit(typed('j'))
+  expect(log.spoken.at(-1)).toBe('Screenreader-Modus ab dem nächsten Start eingeschaltet. Starte Claude Code jetzt neu.')
+})
+
+test('falls back to English for a system language without lines (system language)', async ($, on) => {
+  const log = host(on, { voiceover: true, env: { HOME: '/Users/t', LANG: 'pl_PL.UTF-8' }, settings: undefined, appleLanguages: '(\n    "ja-JP"\n)\n' })
+  await $.session.start(start)
+  expect(log.spoken[0]).toBe('VoiceOver detected. Enable Claude Code screen reader mode from the next start? Press y or n.')
 })
