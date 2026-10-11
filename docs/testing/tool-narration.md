@@ -23,3 +23,9 @@ Spec: `specs/tool-narration.md`. Primary platform: Windows 11 with NVDA in Windo
 
 - Is anything read during a turn that none of the cases names (tips, notices, hints)? Note its text, then find its component in the render log (TC-011).
 - Does a one-line result read `result: 1 line`?
+
+## Results
+
+| Case | Platform | Version | Result | Date | Notes |
+|------|----------|---------|--------|------|-------|
+| TC-003 | Windows 11, NVDA, Windows Terminal | 0.1.7 | Pass | 2026-10-11 | |
