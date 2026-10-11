@@ -1,0 +1,40 @@
+name: Feedback
+description: Report what you heard, what you expected, or an idea.
+body:
+  - type: input
+    id: screen-reader
+    attributes:
+      label: Screen reader and version
+      placeholder: NVDA 2026.3
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: System and terminal
+      placeholder: Windows 11, Windows Terminal
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Earshot and Claude Code versions
+      description: Earshot from /plugin, Claude Code from `claude --version`.
+      placeholder: Earshot 0.1.7, Claude Code 2.5.0
+    validations:
+      required: true
+  - type: textarea
+    id: heard
+    attributes:
+      label: What you did and what you heard
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected to hear
+  - type: input
+    id: test-case
+    attributes:
+      label: Test case, if you followed a protocol
+      description: For example tool-narration TC-003 from docs/testing/.

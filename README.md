@@ -21,7 +21,7 @@ The plugin is named `earshot`. It works with NVDA and JAWS on Windows and with V
 
 **Says when work starts.** As soon as a prompt starts a turn, the mod prints and speaks `Starting work.`, so you know the prompt was taken. The animated spinner word is hidden, because the screen reader would read every change of it.
 
-**Says that work goes on.** While an answer is being prepared and nothing new has reached the transcript for 10 seconds, the mod prints and speaks `Still working, 10 seconds.`, then again at 20, 30 and so on. `/earshot-heartbeat 45` changes the interval (5 to 600 seconds), `/earshot-heartbeat off` stops it; the choice is remembered.
+**Says that work goes on.** While an answer is being prepared and nothing new has reached the transcript for 10 seconds, the mod prints and speaks `Still working, 10 seconds.`, then again at 20, 30 and so on. From 70% full the line adds the context window (`Context 72%.`), a hint to run `/compact` once the task is done. From 80% used it adds a usage limit with its reset time (`5-hour limit 84%, resets 18:00.`), and only when the percentage moved since it was last read. `/earshot-heartbeat 45` changes the interval (5 to 600 seconds), `/earshot-heartbeat off` stops it; the choice is remembered.
 
 **Keeps tools quiet.** With whole answer delivery active, tool rows are hidden: the transcript carries Claude's own words, without the commands, file dumps, line counts or the `(ctrl+b to run in background)` hint in between.
 
@@ -77,6 +77,15 @@ claude plugin validate .
 ```
 
 The engine writes its type declarations into `.claude-plugin/types/` the first time it loads the mod from this folder; `tsc` needs them.
+
+## Feedback
+
+Tell us what you heard and what you expected to hear:
+
+- GitHub: [open an issue](https://github.com/unlocked-spark/claude-code-earshot/issues/new/choose) with the Feedback form. It asks for your screen reader, system, terminal and versions.
+- Discord: talk with us and other testers on the [Unlocked Spark Discord](https://discord.gg/FCnMqemkcv).
+
+If you follow a protocol from `docs/testing/`, add the case number, for example `tool-narration TC-003`.
 
 ## Documents
 
