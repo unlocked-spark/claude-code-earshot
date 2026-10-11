@@ -1,6 +1,6 @@
 # claude-code-earshot: Product Requirements Document
 
-**Version:** 0.1.6
+**Version:** 0.1.7
 **Author:** Łukasz Majewski
 **Status:** Active
 **Source research:** `docs/research/rozpoznanie-2026-10-09.md` (Polish)

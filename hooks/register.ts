@@ -453,7 +453,14 @@ export const register: Register = (on) => {
     }
     const { Box, Text } = $.ui.resolve(e)
     if (mode === 'off') return h(Box, null) as RenderElement
-    return h(Box, { flexDirection: 'column' }, ...e.props.calls.map((call) => h(Text, null, summaryLine(call, call.tool, call.input)))) as RenderElement
+    // A finished call in the group gets its count line under it, as a lone
+    // ToolResult would: a single Bash call is folded into a group too.
+    const lines = e.props.calls.flatMap((call) => {
+      const summary = summaryLine(call, call.tool, call.input)
+      if (call.isRunning || call.output === undefined) return [summary]
+      return [summary, resultLine(call.isErrored, countLines(textOfResult(call.tool, call.output)))]
+    })
+    return h(Box, { flexDirection: 'column' }, ...lines.map((line) => h(Text, null, line))) as RenderElement
   })
 
   // The run-in-background pill under a running call, `(ctrl+b to run in

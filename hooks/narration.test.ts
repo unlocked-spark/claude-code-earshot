@@ -105,7 +105,7 @@ test('draws nothing for tool rows by default in screen reader mode (AC-012)', as
   expect((await $.command.run(command('earshot-last'))).text).toBe('Result of: List files and search for x\na\nb\n')
 })
 
-test('treats a folded tool group like its calls: nothing by default, one line per call in brief', async ($, on) => {
+test('treats a folded tool group like its calls: nothing by default, a line per call and a count per finished one in brief', async ($, on) => {
   host(on, { modeOn: true })
   await $.session.start(start)
   const off = await $.ui.mount(group())
@@ -114,7 +114,7 @@ test('treats a folded tool group like its calls: nothing by default, one line pe
   expect((await $.command.run(command('earshot-last'))).text).toBe('Result of: Read notes.md\none\ntwo\n')
   await $.command.run(command('earshot-tools', 'brief'))
   const brief = await $.ui.mount(group())
-  expect((await brief.findAll({ type: 'Text' })).map((t) => t.text)).toEqual(['tool: Read notes.md', 'tool running: Read memory files'])
+  expect((await brief.findAll({ type: 'Text' })).map((t) => t.text)).toEqual(['tool: Read notes.md', 'result: 2 lines', 'tool running: Read memory files'])
   await brief.unmount()
   // Expanded, the group draws as ToolUse rows, so it is left to the engine.
   const expanded = await $.ui.mount(group(true))

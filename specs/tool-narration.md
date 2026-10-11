@@ -1,6 +1,6 @@
 # Spec: Tool Narration, Turn Signals and Render Log
 
-**Applies to:** earshot 0.1.6
+**Applies to:** earshot 0.1.7
 **PRD Reference:** docs/prd.md
 **Research:** docs/research/spikes-2026-10.md (spike D: render hooks on tool rows in screen reader mode)
 **Status:** Implemented (automated tests pass; manual test cases in docs/testing/)
@@ -43,7 +43,7 @@ As a blind developer in screen reader mode, I want to hear Claude's answers and 
 | AC-018 | On the terminal, unless tool narration is `full`, the `ToolProgress` hook rewrites `hint` to `""`, so the run-in-background pill `(ctrl+b to run in background)` draws nothing. | Must |
 | AC-019 | On the terminal, under buffered delivery, the `Spinner` hook returns an empty `Box`, so the spinner line and its changing word are not drawn. Under live delivery, `next(e)`. | Must |
 | AC-020 | Under buffered delivery, each `turn.start` prints and speaks one line, `Starting work.` in the system language (`Rozpoczynam pracę.` in Polish), because the hidden spinner leaves no sign that the prompt was taken. The line does not count as visible output for the heartbeat and is drawn with the heartbeat off. Outside buffered delivery, nothing. | Must |
-| AC-021 | A folded `ToolGroup` row (reads and searches the engine collapses into one count line, with the running call's command under it) follows the same modes: `off` draws an empty `Box`, `brief` one `<label>: <summary>` line per call, `full` and an expanded group return `next(e)`. Every call's result is kept for `/earshot-last`. | Must |
+| AC-021 | A folded `ToolGroup` row (reads and searches the engine collapses into one count line, with the running call's command under it) follows the same modes: `off` draws an empty `Box`, `brief` one `<label>: <summary>` line per call and, under each finished call, its `result: <N> lines` count line (a single Bash call is folded into a group too), `full` and an expanded group return `next(e)`. Every call's result is kept for `/earshot-last`. | Must |
 | AC-022 | With the mod turned off (`/earshot-off`), every hook in this spec returns `next(e)` and the heartbeat and start line stay silent. | Must |
 
 ## 3. User Test Cases
@@ -55,7 +55,7 @@ Full steps for NVDA on Windows 11 and VoiceOver on macOS are in `docs/testing/to
 | TC-001 | Default: a turn with a shell command and a file read | Claude's words only; no tool rows, counts, spinner words or ctrl+b hint | hooks/narration.test.ts → "draws nothing for tool rows by default in screen reader mode (AC-012)", "hides the spinner line under buffered delivery only (AC-019)", "empties the run-in-background pill unless tool rows are full (AC-018)" |
 | TC-002 | `/earshot-tools brief`, then a shell command | `tool: <description>` and `result: <N> lines` | hooks/narration.test.ts → "draws the call row from the Bash description in brief narration (AC-001, AC-002)", "draws the result as a count and keeps the text for /earshot-last (AC-004, AC-006)" |
 | TC-003 | `brief`, a failing command | `tool error: <description>` and `error: <N> lines` | hooks/narration.test.ts → "labels running and errored calls (AC-001)" |
-| TC-004 | Reads that fold into a group | Nothing by default; one line per call in brief | hooks/narration.test.ts → "treats a folded tool group like its calls: nothing by default, one line per call in brief" |
+| TC-004 | Reads that fold into a group | Nothing by default; one line per call and a count per finished call in brief | hooks/narration.test.ts → "treats a folded tool group like its calls: nothing by default, a line per call and a count per finished one in brief" |
 | TC-005 | `/earshot-last`, `/earshot-last 2`, out of range | Full text, the one before, the range sentence | hooks/narration.test.ts → "draws the result as a count and keeps the text for /earshot-last (AC-004, AC-006)" |
 | TC-006 | `/earshot-tools full`, then `auto` | The engine's rows, then hidden again | hooks/narration.test.ts → "/earshot-tools full and auto switch the rows and the store (AC-012, AC-013)" |
 | TC-007 | A question from Claude (`AskUserQuestion`) | The engine's dialog, unchanged | hooks/narration.test.ts → "leaves AskUserQuestion rows and live delivery to the engine (AC-005, AC-007)" |

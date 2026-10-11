@@ -7,6 +7,11 @@ Commits are written as imperative sentences without type prefixes.
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-10-11
+
+### Fixed
+- In brief tool narration a call folded into a group, which is how a single shell command is drawn too, gets its `result: <N> lines` line once it finishes; before, only the call line was drawn.
+
 ## [0.1.6] - 2026-10-11
 
 ### Changed

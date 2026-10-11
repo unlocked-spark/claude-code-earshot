@@ -9,7 +9,7 @@ Spec: `specs/tool-narration.md`. Primary platform: Windows 11 with NVDA in Windo
 | TC-001 | Ask Claude to run a shell command that takes a few seconds and to read a file | Only `Starting work.` and Claude's words are read; no tool rows, no counts, no command text, no `(ctrl+b to run in background)`, no spinner words |
 | TC-002 | `/earshot-tools brief`; repeat TC-001 | `tool: <Claude's description>` (`narzędzie: ...` in Polish) and `result: <N> lines` per call; still no ctrl+b hint |
 | TC-003 | In brief, ask for a command on a missing file | `tool error: <description>` and `error: <N> lines`; no stderr text |
-| TC-004 | In brief, ask Claude to read three files (they fold into a group) | One line per call; no `$ cat ...` under a `Reading 1 file…` line. Back in off: nothing |
+| TC-004 | In brief, ask Claude to read three files (they fold into a group) | One line per call and `result: <N> lines` under each finished call; no `$ cat ...` under a `Reading 1 file…` line. Back in off: nothing |
 | TC-005 | `/earshot-last`, `/earshot-last 2`, `/earshot-last 9` | Full text of the last result under `Result of: <summary>`, then the one before, then `Only <k> results are kept; ask for 1 to <k>.` |
 | TC-006 | `/earshot-tools full`, run a command; `/earshot-tools auto` | Claude Code's own tool rows and ctrl+b hint; then `Override removed. Tool narration off (whole answer delivery).` and rows hidden again |
 | TC-007 | Ask something that makes Claude ask a question (`AskUserQuestion`) | The engine's question dialog, unchanged |

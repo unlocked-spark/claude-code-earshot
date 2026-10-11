@@ -1,6 +1,6 @@
 # Spec: System Language
 
-**Applies to:** earshot 0.1.6
+**Applies to:** earshot 0.1.7
 **PRD Reference:** docs/prd.md
 **Status:** Implemented (automated tests pass; manual test cases in docs/testing/)
 
