@@ -13,7 +13,7 @@ Spec: `specs/tool-narration.md`. Primary platform: Windows 11 with NVDA in Windo
 | TC-005 | `/earshot-last`, `/earshot-last 2`, `/earshot-last 9` | Full text of the last result under `Result of: <summary>`, then the one before, then `Only <k> results are kept; ask for 1 to <k>.` |
 | TC-006 | `/earshot-tools full`, run a command; `/earshot-tools auto` | Claude Code's own tool rows and ctrl+b hint; then `Override removed. Tool narration off (whole answer delivery).` and rows hidden again |
 | TC-007 | Ask something that makes Claude ask a question (`AskUserQuestion`) | The engine's question dialog, unchanged |
-| TC-008 | Send a prompt that needs a long search across a large folder | `Starting work.` right after the prompt; after 20 s with nothing new, `Still working, 20 seconds.`, then 40, until the answer; nothing after the answer |
+| TC-008 | Send a prompt that needs a long search across a large folder | `Starting work.` right after the prompt; after 10 s with nothing new, `Still working, 10 seconds.`, then 20, until the answer; nothing after the answer |
 | TC-009 | `/earshot-heartbeat 45`, repeat TC-008; `/earshot-heartbeat off`, repeat | First at 45 s; with off only `Starting work.` |
 | TC-010 | `/earshot-stream off`, send a prompt that runs a command | No `Starting work.`, no heartbeat; Claude Code's own rows and spinner |
 | TC-011 | Start `claude --debug`, work for a few turns, open `~/.claude/debug/<session>.txt` | `earshot: ui.render <Component> ...` lines naming what the terminal drew; after `/earshot-log off`, no new ones |

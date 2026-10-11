@@ -1,6 +1,6 @@
 # Spec: Whole Answer Delivery
 
-**Applies to:** earshot 0.1.5
+**Applies to:** earshot 0.1.6
 **PRD Reference:** docs/prd.md
 **Research:** docs/research/spikes-2026-10.md
 **Status:** Implemented (automated tests pass; manual test cases in docs/testing/)

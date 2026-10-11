@@ -39,7 +39,7 @@ describe('tick (AC-016)', () => {
 })
 
 describe('setting and argument (AC-017)', () => {
-  it('defaults to 20 seconds and reads a stored value', () => {
+  it('defaults to 10 seconds and reads a stored value', () => {
     expect(resolveHeartbeat(undefined)).toBe(HEARTBEAT_DEFAULT_SECONDS)
     expect(resolveHeartbeat({ seconds: 0, setAt: 'x' })).toBe(0)
     expect(resolveHeartbeat({ seconds: 45, setAt: 'x' })).toBe(45)

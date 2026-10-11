@@ -21,7 +21,7 @@ The plugin is named `earshot`. It works with NVDA and JAWS on Windows and with V
 
 **Says when work starts.** As soon as a prompt starts a turn, the mod prints and speaks `Starting work.`, so you know the prompt was taken. The animated spinner word is hidden, because the screen reader would read every change of it.
 
-**Says that work goes on.** While an answer is being prepared and nothing new has reached the transcript for 20 seconds, the mod prints and speaks `Still working, 20 seconds.`, then again at 40, 60 and so on. `/earshot-heartbeat 45` changes the interval (5 to 600 seconds), `/earshot-heartbeat off` stops it; the choice is remembered.
+**Says that work goes on.** While an answer is being prepared and nothing new has reached the transcript for 10 seconds, the mod prints and speaks `Still working, 10 seconds.`, then again at 20, 30 and so on. `/earshot-heartbeat 45` changes the interval (5 to 600 seconds), `/earshot-heartbeat off` stops it; the choice is remembered.
 
 **Keeps tools quiet.** With whole answer delivery active, tool rows are hidden: the transcript carries Claude's own words, without the commands, file dumps, line counts or the `(ctrl+b to run in background)` hint in between.
 

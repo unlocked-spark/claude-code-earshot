@@ -1,6 +1,6 @@
 # Spec: System Language
 
-**Applies to:** earshot 0.1.5
+**Applies to:** earshot 0.1.6
 **PRD Reference:** docs/prd.md
 **Status:** Implemented (automated tests pass; manual test cases in docs/testing/)
 
@@ -37,7 +37,7 @@ Full steps are in `docs/testing/system-language.md`.
 |----|----------|----------|--------------------|
 | TC-001 | Polish display language, reader running, mode off | The question is in Polish and ends with `Naciśnij t albo n.`; `t` turns the mod on with a Polish confirmation | hooks/register.test.ts → "speaks Polish when the system displays Polish, and takes t as yes (system language)" |
 | TC-002 | Same machine, the command list | The `earshot` command descriptions are Polish | tests/unit/language.spec.ts → "setLanguage" |
-| TC-003 | A prompt and a long turn | `Rozpoczynam pracę.`, then `Nadal pracuję, 20 sekund.` | tests/unit/language.spec.ts → "has a Polish line for every English one" |
+| TC-003 | A prompt and a long turn | `Rozpoczynam pracę.`, then `Nadal pracuję, 10 sekund.` | tests/unit/language.spec.ts → "has a Polish line for every English one" |
 | TC-004 | A language without a table | English lines | hooks/register.test.ts → "falls back to English for a system language without lines (system language)" |
 
 ## 4. Data Model

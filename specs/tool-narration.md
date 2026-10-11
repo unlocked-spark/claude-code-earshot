@@ -1,6 +1,6 @@
 # Spec: Tool Narration, Turn Signals and Render Log
 
-**Applies to:** earshot 0.1.5
+**Applies to:** earshot 0.1.6
 **PRD Reference:** docs/prd.md
 **Research:** docs/research/spikes-2026-10.md (spike D: render hooks on tool rows in screen reader mode)
 **Status:** Implemented (automated tests pass; manual test cases in docs/testing/)
@@ -11,7 +11,7 @@ In screen reader mode Claude Code prints every tool call as `tool: Bash (cat a &
 
 Under whole answer delivery (specs/whole-answer-delivery.md) the mod hides tool rows by default, so the transcript carries Claude's own words alone. On request it narrates instead: each call is one line built from what the model already wrote (the `description` of a Bash call, the file name of a read or edit, the pattern of a search), and each result is a count, `result: 292 lines` or `error: 3 lines`. The full text of the last results stays available through `/earshot-last`.
 
-Hiding rows leaves long silences, and the spinner's changing words are read aloud, so the mod also hides the spinner and the run-in-background hint, opens each turn with one line, `Starting work.`, and says every 20 seconds of silence that work goes on. A render log in the debug log names every component the terminal draws, so the source of any other unwanted message can be found.
+Hiding rows leaves long silences, and the spinner's changing words are read aloud, so the mod also hides the spinner and the run-in-background hint, opens each turn with one line, `Starting work.`, and says every 10 seconds of silence that work goes on. A render log in the debug log names every component the terminal draws, so the source of any other unwanted message can be found.
 
 Dialogs, `AskUserQuestion` included, are never touched.
 
@@ -39,7 +39,7 @@ As a blind developer in screen reader mode, I want to hear Claude's answers and 
 | AC-014 | A `ui.render` hook with no matcher writes one line per drawn terminal component to the debug sink (`$.ui.log(line, { to: 'debug' })`): `ui.render <Component> <requestId> [<marks>]: <text>`, text clipped to 160 characters on one line, and only when the line differs from the last one for that component instance. It always returns `next(e)` and stays in English. | Must |
 | AC-015 | `/earshot-log on|off` stores `renderLog: { on, setAt }`; the log is on until stored off; `/earshot-log` reports the state. | Must |
 | AC-016 | Heartbeat: under buffered delivery, from `turn.start` to the main loop's `turn.complete`, a tick each second counts the visible rows the mod's hooks produced (text chunks of the main loop's steps, tool call rows drawn in `brief` or `full`); after N seconds without one, the mod prints and speaks `Still working, N seconds.`, and again each further N seconds of the same silence. Outside buffered delivery, or with the interval 0, nothing. | Must |
-| AC-017 | `/earshot-heartbeat <seconds>` (5 to 600) and `/earshot-heartbeat off` store `heartbeat: { seconds, setAt }` (off is 0); the default is 20; `/earshot-heartbeat` reports the interval. | Must |
+| AC-017 | `/earshot-heartbeat <seconds>` (5 to 600) and `/earshot-heartbeat off` store `heartbeat: { seconds, setAt }` (off is 0); the default is 10; `/earshot-heartbeat` reports the interval. | Must |
 | AC-018 | On the terminal, unless tool narration is `full`, the `ToolProgress` hook rewrites `hint` to `""`, so the run-in-background pill `(ctrl+b to run in background)` draws nothing. | Must |
 | AC-019 | On the terminal, under buffered delivery, the `Spinner` hook returns an empty `Box`, so the spinner line and its changing word are not drawn. Under live delivery, `next(e)`. | Must |
 | AC-020 | Under buffered delivery, each `turn.start` prints and speaks one line, `Starting work.` in the system language (`Rozpoczynam pracę.` in Polish), because the hidden spinner leaves no sign that the prompt was taken. The line does not count as visible output for the heartbeat and is drawn with the heartbeat off. Outside buffered delivery, nothing. | Must |
@@ -59,7 +59,7 @@ Full steps for NVDA on Windows 11 and VoiceOver on macOS are in `docs/testing/to
 | TC-005 | `/earshot-last`, `/earshot-last 2`, out of range | Full text, the one before, the range sentence | hooks/narration.test.ts → "draws the result as a count and keeps the text for /earshot-last (AC-004, AC-006)" |
 | TC-006 | `/earshot-tools full`, then `auto` | The engine's rows, then hidden again | hooks/narration.test.ts → "/earshot-tools full and auto switch the rows and the store (AC-012, AC-013)" |
 | TC-007 | A question from Claude (`AskUserQuestion`) | The engine's dialog, unchanged | hooks/narration.test.ts → "leaves AskUserQuestion rows and live delivery to the engine (AC-005, AC-007)" |
-| TC-008 | A prompt, then a long silent turn | `Starting work.` at once, `Still working, 20 seconds.`, then 40, until the answer | hooks/heartbeat.test.ts → "opens the turn with a line and says every 20 seconds of silence in screen reader mode (AC-016, AC-020)" |
+| TC-008 | A prompt, then a long silent turn | `Starting work.` at once, `Still working, 10 seconds.`, then 20, until the answer | hooks/heartbeat.test.ts → "opens the turn with a line and says every 10 seconds of silence in screen reader mode (AC-016, AC-020)" |
 | TC-009 | `/earshot-heartbeat 45`, `/earshot-heartbeat off` | New interval; with off, only the start line | hooks/heartbeat.test.ts → "/earshot-heartbeat sets the interval, switches off and reports (AC-017)" |
 | TC-010 | Outside buffered delivery | Engine rows and spinner, no start line, no heartbeat | hooks/narration.test.ts → "draws the engine row outside buffered delivery (AC-007)"; hooks/heartbeat.test.ts → "stays silent outside screen reader mode, without the start line (AC-016, AC-020)" |
 | TC-011 | Render log in `claude --debug` | `earshot: ui.render <Component> ...` lines in the debug log; none after `/earshot-log off` | hooks/narration.test.ts → "writes every drawn component to the debug log until /earshot-log off (AC-014, AC-015)" |
@@ -73,7 +73,7 @@ Full steps for NVDA on Windows 11 and VoiceOver on macOS are in `docs/testing/to
 |-----|-------|---------------------|
 | `toolNarration` | `{ mode: "off" \| "brief" \| "full", setAt }` | Follow delivery (AC-007) |
 | `renderLog` | `{ on: boolean, setAt }` | On |
-| `heartbeat` | `{ seconds: number, setAt }` (0 is off) | 20 |
+| `heartbeat` | `{ seconds: number, setAt }` (0 is off) | 10 |
 
 ### Last results (in memory)
 

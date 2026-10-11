@@ -5,7 +5,7 @@ import type { HeartbeatSetting } from './types'
 // silence that work goes on. Time comes from the engine's clock; visible
 // output is counted by the hooks that produce it.
 
-export const HEARTBEAT_DEFAULT_SECONDS = 20
+export const HEARTBEAT_DEFAULT_SECONDS = 10
 export const HEARTBEAT_MIN_SECONDS = 5
 export const HEARTBEAT_MAX_SECONDS = 600
 export const HEARTBEAT_TICK_MS = 1000

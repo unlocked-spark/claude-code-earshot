@@ -1,6 +1,6 @@
 # Spec: Screen Reader Detection and Mod Activation
 
-**Applies to:** earshot 0.1.5
+**Applies to:** earshot 0.1.6
 **PRD Reference:** docs/prd.md
 **Research:** docs/research/rozpoznanie-2026-10-09.md, section 5 (Polish)
 **Status:** Implemented (automated tests pass; manual test cases in docs/testing/)

@@ -7,6 +7,11 @@ Commits are written as imperative sentences without type prefixes.
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-10-11
+
+### Changed
+- The heartbeat speaks after 10 seconds of silence instead of 20, then every 10 seconds. A value set with `/earshot-heartbeat` is kept.
+
 ## [0.1.5] - 2026-10-11
 
 ### Added
