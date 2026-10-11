@@ -1,6 +1,6 @@
 # claude-code-earshot
 
-Accessibility mod for Claude Code aimed at blind developers. It is an overlay on the built-in screen reader mode (`--ax-screen-reader`) and adds only what that mode lacks: spoken end-of-turn summaries, earcons for tool and permission events, a screen-reader-usable `AskUserQuestion` dialog, significance-filtered tool narration, speech on Windows, and automatic enabling of the mode when a screen reader is detected. Project of the Unlocked Spark Foundation.
+Accessibility mod for Claude Code aimed at blind developers. It is an overlay on the built-in screen reader mode (`--ax-screen-reader`) and adds only what that mode lacks: it enables the mode when a screen reader is detected, shows each answer whole instead of streaming it, hides or condenses tool rows, says when a turn starts and that work goes on, and speaks in the system's language. Planned: an end-of-turn summary, earcons, a screen-reader-usable `AskUserQuestion` dialog and significance-filtered tool narration. Project of the Unlocked Spark Foundation.
 
 Stage: public preview, version 0.1.8. Delivered: screen reader detection and mode enabling with `/earshot-on` and `/earshot-off`, whole answer delivery (turn.step hold), tool narration (rows, groups, the run-in-background hint and the spinner hidden by default, `/earshot-tools`, `/earshot-last`), the turn start line and heartbeat (`/earshot-heartbeat`) with context and usage limit readings, the render log (`/earshot-log`) and six languages. Used daily with NVDA on Windows; manual protocols in `docs/testing/` not yet run formally. Research (Polish): `docs/research/rozpoznanie-2026-10-09.md`; spike results and loader constraints: `docs/research/spikes-2026-10.md`.
 
@@ -66,6 +66,7 @@ hooks/lib/render-log.ts      # render log: one debug line per drawn component, c
 hooks/lib/heartbeat.ts       # heartbeat: silence reducer per tick, interval setting, /earshot-heartbeat parsing
 hooks/lib/usage-notes.ts     # heartbeat tail: context from 70%, usage limits from 80% read on change, reset time
 hooks/lib/language.ts        # system display language: PowerShell, AppleLanguages, LC_ALL/LC_MESSAGES/LANG
+hooks/lib/types.ts           # shared types of the pure modules
 hooks/lib/messages.ts        # the live table of spoken and printed lines, setLanguage
 hooks/lib/lines/*.ts         # one table per language (en, pl, de, fr, es, it) and the shared Messages type
 hooks/register.test.ts       # mod-level tests: detection and commands (claude plugin test)

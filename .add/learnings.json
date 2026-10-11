@@ -195,6 +195,134 @@
       "date": "2026-10-10",
       "classified_by": "agent",
       "checkpoint_type": "post-tdd-cycle"
+    },
+    {
+      "id": "L-013",
+      "title": "Bump version on every release or users never get the update",
+      "body": "The installed copy is keyed by the version in plugin.json: with 0.1.0 unchanged, claude plugin update reported the latest version already present and users kept the old commands. Every release bumps plugin.json and package.json together with a dated CHANGELOG entry (0.1.1 to 0.1.8 on 2026-10-11).",
+      "scope": "project",
+      "stack": [
+        "typescript",
+        "claude-code-mod-api"
+      ],
+      "category": "technical",
+      "severity": "high",
+      "source": "claude-code-earshot",
+      "date": "2026-10-11",
+      "classified_by": "agent",
+      "checkpoint_type": "reconstructed-from-commits"
+    },
+    {
+      "id": "L-014",
+      "title": "In screen reader mode, hiding beats condensing for tool activity",
+      "body": "Daily NVDA use showed that even one-line tool rows interrupt the answer. Since 0.1.1 tool rows draw nothing by default in screen reader mode, so the transcript carries Claude's words alone; /earshot-tools brief|full|off|auto chooses and is remembered. Folded ToolGroup rows (0.1.3), the ToolProgress run-in-background hint and the Spinner line (0.1.4) must be hidden too, each through its own ui.render component, or a screen reader still reads them. In brief mode a call folded into a group needs its own result line (0.1.7), because a single shell command is drawn as a group.",
+      "scope": "project",
+      "stack": [
+        "typescript",
+        "claude-code-mod-api"
+      ],
+      "category": "architecture",
+      "severity": "high",
+      "source": "claude-code-earshot",
+      "date": "2026-10-11",
+      "classified_by": "agent",
+      "checkpoint_type": "reconstructed-from-commits"
+    },
+    {
+      "id": "L-015",
+      "title": "Replace the hidden spinner with explicit signs of life",
+      "body": "With the spinner hidden and answers held, the user cannot tell that the prompt was taken. A printed and spoken 'Starting work.' opens each turn (0.1.5), and a heartbeat speaks after 10 seconds of silence, then every 10 seconds (20 s was too long, 0.1.6); since 0.1.8 it adds the context window from 70% and a usage limit from 80% read from $.session.usage(), a limit only when its percentage moved.",
+      "scope": "project",
+      "stack": [
+        "typescript",
+        "claude-code-mod-api"
+      ],
+      "category": "architecture",
+      "severity": "medium",
+      "source": "claude-code-earshot",
+      "date": "2026-10-11",
+      "classified_by": "agent",
+      "checkpoint_type": "reconstructed-from-commits"
+    },
+    {
+      "id": "L-016",
+      "title": "A render log finds the source of anything the screen reader reads",
+      "body": "A ui.render hook with no matcher writes one debug-log line per drawn component (claude --debug, /earshot-log on|off). It is how the run-in-background pill and the spinner word were identified as the unexplained text NVDA read.",
+      "scope": "project",
+      "stack": [
+        "typescript",
+        "claude-code-mod-api"
+      ],
+      "category": "technical",
+      "severity": "medium",
+      "source": "claude-code-earshot",
+      "date": "2026-10-11",
+      "classified_by": "agent",
+      "checkpoint_type": "reconstructed-from-commits"
+    },
+    {
+      "id": "L-017",
+      "title": "System display language: AppleLanguages on macOS, PowerShell on Windows, locale variables elsewhere",
+      "body": "Lines follow the system display language (en, pl, de, fr, es, it; English otherwise). macOS: `defaults read -g AppleLanguages`, first entry of the property list. Windows: PowerShell. Others: LC_ALL, LC_MESSAGES, LANG. Each language is one table in hooks/lib/lines/ typed by a shared Messages type, so a missing line is a type error.",
+      "scope": "project",
+      "stack": [
+        "typescript",
+        "claude-code-mod-api"
+      ],
+      "category": "technical",
+      "severity": "medium",
+      "source": "claude-code-earshot",
+      "date": "2026-10-11",
+      "classified_by": "agent",
+      "checkpoint_type": "reconstructed-from-commits"
+    },
+    {
+      "id": "L-018",
+      "title": "/earshot-off must restore what /earshot-on changed",
+      "body": "Turning the mod off by deleting only axScreenReader left spinnerTipsEnabled changed. Since 0.1.4 /earshot-on stores a snapshot of the keys it changes and /earshot-off restores it and keeps the mod off without asking again; the backup file is named settings.json.earshot-backup.",
+      "scope": "project",
+      "stack": [
+        "typescript",
+        "claude-code-mod-api"
+      ],
+      "category": "architecture",
+      "severity": "medium",
+      "source": "claude-code-earshot",
+      "date": "2026-10-11",
+      "classified_by": "agent",
+      "checkpoint_type": "reconstructed-from-commits"
+    },
+    {
+      "id": "L-019",
+      "title": "Settings paths differ on Windows: test with the platform's separator",
+      "body": "Consent-flow settings tests failed on Windows because the settings path uses backslashes (fixed in 0.1.3). Tests that assert a settings path must build it for the platform under test, not hard-code a slash.",
+      "scope": "project",
+      "stack": [
+        "typescript",
+        "claude-code-mod-api"
+      ],
+      "category": "technical",
+      "severity": "low",
+      "source": "claude-code-earshot",
+      "date": "2026-10-11",
+      "classified_by": "agent",
+      "checkpoint_type": "reconstructed-from-commits"
+    },
+    {
+      "id": "L-020",
+      "title": "Work done outside ADD leaves no trace in .add/",
+      "body": "0.1.1 to 0.1.8 were built on a machine without the ADD plugin: no cycle snapshots, observations, learnings or handoff were written, and handoff, config milestone and AGENTS.md went stale. Reconstruct from commits and CHANGELOG on return, or install ADD on every development machine.",
+      "scope": "project",
+      "stack": [
+        "typescript",
+        "claude-code-mod-api"
+      ],
+      "category": "process",
+      "severity": "medium",
+      "source": "claude-code-earshot",
+      "date": "2026-10-11",
+      "classified_by": "agent",
+      "checkpoint_type": "reconstructed-from-commits"
     }
   ]
 }

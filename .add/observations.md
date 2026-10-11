@@ -14,3 +14,4 @@
 2026-10-09 23:55 | add:plan | docs/plans/tool-narration-plan.md: 14 tasks, 9 h + VoiceOver session; mandatory spike on whether screen reader mode draws render-hook trees for tool rows | no questions, ~5 min
 2026-10-10 16:17 | spike | tool-row render hook confirmed in screen reader mode (Claude Code 2.1.296); probe removed; tool narration plan task 1 done | 5 min of the human's session
 2026-10-10 16:26 | add:tdd-cycle | specs/tool-narration.md: RED 27 new tests → GREEN 118/118 (103 Vitest + 15 kit); tsc, eslint, validate clean; 1 test rewrite in overrides.json; manual TCs pending | ~60 min, 3 commits
+2026-10-11 17:32 | sync | pulled 0.1.1 to 0.1.8 built without ADD (15 commits); refreshed handoff, config milestone and CI, AGENTS.md, CLAUDE.md intro; 8 learnings reconstructed from commits | ~15 min

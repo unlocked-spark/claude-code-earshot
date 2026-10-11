@@ -1,24 +1,21 @@
 # Session Handoff
-**Written:** 2026-10-10 16:27
-**Previous:** 2026-10-09 20:40
+**Written:** 2026-10-11 17:32
 
 ## In Progress
-- specs/screen-reader-detection.md: implemented, confirmed working in a VoiceOver session on 2026-10-09 (formal TC captures not saved yet).
-- specs/whole-answer-delivery.md: implemented (turn.step hold, /a11y-stream); VoiceOver session for TC-001 to TC-006 (docs/testing/whole-answer-delivery.md) not run yet.
-- specs/tool-narration.md: implemented (ui.render on ToolUse and ToolResult, /a11y-last), spike D confirmed the mechanism; VoiceOver session for TC-001 to TC-005 (docs/testing/tool-narration.md) not run yet. 103 unit and 15 mod tests green.
-- Milestone M1 (Heard turn) items left: end-of-turn signal, earcons.
+- Version 0.1.8 is released on main (public repository, own marketplace). Four specs implemented: screen reader detection, whole answer delivery, tool narration, system language. Used daily with NVDA on Windows; only tool narration TC-003 is recorded as a formal pass.
+- Development between 2026-10-10 and 2026-10-11 (0.1.1 to 0.1.8) happened on a second machine without ADD: no cycle snapshots, observations or learnings were written there; the learnings were reconstructed from the commits on 2026-10-11.
 
 ## Decisions Made
-- Plugin name a11y-companion (names starting with claude- are reserved); commands /a11y-on, /a11y-off, /a11y-status.
-- Consent: spoken y/n in the session captured by prompt.submit with { drop }; refusal stored in $.store with the mod version; 30 s timeout withdraws for the session only.
-- Settings write: strict JSON round trip, write, read back, compare; one-time backup settings.json.a11y-backup.
-- Pure modules in hooks/lib behind hooks/register.ts; every helper top-level because the loader only lets $ reach top-level functions.
-- Stay at POC until one manual session with a screen reader validates the concept (retro 2026-10-09).
+- Commands are named after the mod: /earshot-on, /earshot-off, /earshot-status, /earshot-stream, /earshot-tools, /earshot-last, /earshot-log, /earshot-heartbeat.
+- In screen reader mode tool rows, folded groups, the run-in-background hint and the spinner line are hidden by default; /earshot-tools brief|full brings them back. The turn start line and the heartbeat replace the spinner as signs of life.
+- /earshot-on saves the settings it changes and /earshot-off restores them and keeps the mod off.
+- Paragraph narration through the screen reader is out of scope for now.
+- On macOS, VoiceOver follows the terminal cursor and skips the start of a block written in one frame; whole answer delivery works as intended with NVDA, which reads new terminal text as a diff.
 
 ## Blockers
-- Manual sessions need a macOS machine with VoiceOver (available) and Windows 11 with NVDA (not yet available). Spike B ($.audio.speak on Windows) open.
+- None. VoiceOver reading of whole answers on macOS remains an open problem (CLAUDE_AX_PREPARK_MS and VoiceOver AppleScript output untested).
 
 ## Next Steps
-1. One VoiceOver session covering both pending protocols: whole answer delivery (long answer: one block, one bell) and tool narration (`tool: <description>`, `result: N lines`, `/a11y-last`).
-2. Mark the specs Complete from the results, then /add:promote for Alpha (specs, tests, TDD evidence and a validated concept are in place).
-3. Open question from the first VoiceOver session: a progress signal during long thinking in buffered mode (spec change to whole answer delivery, AC-014).
+1. Run the manual protocols in docs/testing/ formally on NVDA and record the results; then /add:promote for Alpha.
+2. M2 Heard turn: /add:spec "end of turn summary" (spoken summary and earcons; on Windows earcons need a player other than $.audio.play).
+3. Decide the VoiceOver path: test CLAUDE_AX_PREPARK_MS and `osascript ... VoiceOver output` timing.
