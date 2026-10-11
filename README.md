@@ -2,7 +2,7 @@
 
 Screen reader companion for Claude Code, built for blind developers. The mod sits on top of the built-in screen reader mode and adds what the mode lacks. First feature: it notices a running screen reader, asks by voice, and switches the next session into screen reader mode.
 
-The plugin is named `earshot` (it was `a11y-companion` until 2026-10-10, before any public install). Stage: three features implemented and tested (mode enabling confirmed with VoiceOver; whole answer delivery and tool narration awaiting their VoiceOver sessions), NVDA sessions pending.
+The plugin is named `earshot`. Stage: three features implemented and tested (mode enabling confirmed with VoiceOver; whole answer delivery and tool narration awaiting their VoiceOver sessions), NVDA sessions pending.
 
 ## What it does today
 
@@ -16,40 +16,20 @@ The plugin is named `earshot` (it was `a11y-companion` until 2026-10-10, before 
 
 ## Install
 
-Everything below is typed in a shell, not inside a Claude Code session: the in-session plugin picker is the dialog that does not work with NVDA.
-
-Requirements: Claude Code 2.1.287 or later as a native build (mods do not run under WSL, `claude -p`, the SDK, the VS Code panel or the cloud), Git, and the GitHub CLI logged in to an account that can read the repository while it is private.
-
-### Install from the marketplace (no clone)
-
-The repository is its own marketplace. One command fetches and installs the plugin (Claude Code 2.1.292 or later); while the repository is private, log in to GitHub first and let git use that credential:
+From a shell, with Git installed (Claude Code clones the repository itself) and Claude Code 2.1.292 or later as a native build (mods do not run under WSL, `claude -p`, the SDK, the VS Code panel or the cloud):
 
 ```
-gh auth login
-gh auth setup-git
-claude plugin install earshot --marketplace unlocked-spark/claude-code-earshot --scope user
+claude plugin install earshot --marketplace unlocked-spark/claude-code-earshot
 claude
 ```
 
-On a machine without a GitHub SSH key, set `CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1` before the install command. Updates: `claude plugin update earshot@unlocked-spark` after a new version is pushed.
+Or inside a session: `/plugin install earshot --marketplace unlocked-spark/claude-code-earshot`. Updates: `claude plugin update earshot@unlocked-spark`.
 
-### Install from a clone (Windows PowerShell shown; same on macOS)
+On first start with a screen reader running and screen reader mode off, the mod asks whether to enable the mode; answer `y`, then restart `claude`. To skip the question, set `CLAUDE_AX_SCREEN_READER=1` in your shell profile (PowerShell: `$env:CLAUDE_AX_SCREEN_READER = "1"`).
 
-```
-gh auth login
-gh repo clone unlocked-spark/claude-code-earshot $HOME\claude-code-earshot
-claude plugin marketplace add $HOME\claude-code-earshot
-claude plugin install earshot@unlocked-spark --scope user
-claude
-```
-
-The marketplace points at the cloned folder, so an update is `git pull` in that folder followed by `/reload-plugins` in a session. To try the mod without installing it: `claude --plugin-dir $HOME\claude-code-earshot`.
-
-On first start with NVDA or JAWS running and screen reader mode off, the mod asks by voice whether to enable the mode; answer `y`, then restart `claude`. To skip the question, set the variable once in your profile: `$env:CLAUDE_AX_SCREEN_READER = "1"`.
+To try the mod from a clone without installing it: `claude --plugin-dir ./claude-code-earshot`.
 
 Known gaps on Windows: `$.audio.play` has no player there, so the ready earcon is silent, and whether `$.audio.speak` reaches NVDA is still untested.
-
-Once the repository is public, no login is needed, and one line inside a session does the same: `/plugin install earshot --marketplace unlocked-spark/claude-code-earshot`.
 
 ## Develop
 
@@ -71,3 +51,7 @@ The engine writes its type declarations into `.claude-plugin/types/` the first t
 - `docs/testing/`: manual test protocols for VoiceOver and NVDA.
 - `docs/research/rozpoznanie-2026-10-09.md` (Polish): what Claude Code offers today, open issues, the mod API, existing projects.
 - `docs/research/spikes-2026-10.md`: answers to the spec's open questions and loader constraints.
+
+## License
+
+Apache License 2.0. The tool-call significance classification planned for a later version draws on claude-sonar (MIT), which will be credited where it is used.
