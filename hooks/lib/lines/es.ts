@@ -29,17 +29,16 @@ function detected(reader: Parameters<Messages['question']>[0]): string {
 export const es: Messages = {
   readerFallback: FALLBACK,
   question: (reader) => `${detected(reader)} ¿Activar el modo lector de pantalla de Claude Code desde el próximo inicio? Pulsa s o n.`,
-  enabled: () => 'Modo lector de pantalla activado desde el próximo inicio. Reinicia Claude Code ahora.',
+  enabled: () => 'Earshot activado. Tu configuración anterior está guardada. Desde el próximo inicio, el modo lector de pantalla está activado y los consejos ocultos. Reinicia Claude Code ahora.',
   declined: () => 'Entendido. El modo lector de pantalla sigue desactivado. Ejecuta /earshot-on cuando quieras activarlo.',
   withdrawn: () => 'Sin respuesta. El modo lector de pantalla sigue desactivado en esta sesión.',
   answered: () => 'Respondido.',
   answerReady: () => 'Respuesta lista.',
-  offDone: () => 'Modo lector de pantalla desactivado desde el próximo inicio.',
-  offNothing: () => 'El modo lector de pantalla no estaba en tu archivo de configuración. No ha cambiado nada.',
-  offElsewhere: () =>
-    'El modo lector de pantalla está en la configuración del proyecto o administrada, no en tu archivo de configuración. No ha cambiado nada.',
-  status({ detection, mode, consent }) {
-    const parts: string[] = []
+  offDone: () => 'Earshot desactivado. La configuración modificada se restaura desde el próximo inicio.',
+  offAlready: () => 'Earshot ya está desactivado. No ha cambiado nada.',
+  offElsewhere: () => 'El modo lector de pantalla sigue activado: está en la configuración del proyecto o administrada, o en la variable CLAUDE_AX_SCREEN_READER.',
+  status({ active, detection, mode, consent }) {
+    const parts: string[] = [active ? 'Earshot activado.' : 'Earshot desactivado.']
     if (detection === undefined) parts.push('La detección aún no se ha ejecutado.')
     else if (detection.reader !== null) parts.push(detected(detection.reader))
     else if (detection.error !== undefined) parts.push(`La detección ha fallado: ${detection.error}.`)
@@ -116,8 +115,8 @@ export const es: Messages = {
     }
   },
   commandDescriptions: {
-    'earshot-on': 'Activar el modo lector de pantalla de Claude Code desde el próximo inicio',
-    'earshot-off': 'Desactivar el modo lector de pantalla de Claude Code desde el próximo inicio',
+    'earshot-on': 'Activar Earshot: guardar tu configuración, activar el modo lector de pantalla y ocultar los consejos desde el próximo inicio',
+    'earshot-off': 'Desactivar Earshot y restaurar la configuración modificada',
     'earshot-status': 'Indicar el lector de pantalla detectado y el estado del modo lector de pantalla',
     'earshot-stream': 'Respuestas completas: mostrar cada respuesta de una vez en lugar de sobre la marcha',
     'earshot-tools': 'Narración de herramientas: ocultar las filas, una línea por llamada o dejarlas a Claude Code',

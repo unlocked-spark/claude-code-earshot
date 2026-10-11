@@ -5,14 +5,13 @@ import { detect, platformFromEnv } from './lib/detect'
 import { createSilence, HEARTBEAT_TICK_MS, parseHeartbeatArg, resolveHeartbeat, tick } from './lib/heartbeat'
 import { resolveLanguage } from './lib/language'
 import { messages, setLanguage } from './lib/messages'
-import { decide, isStoredConsent, resolveModeState } from './lib/mode-state'
+import { decide, isActivation, isStoredConsent, resolveActive, resolveModeState } from './lib/mode-state'
 import { describeRender, parseLogArg, resolveRenderLog } from './lib/render-log'
-import { applyAxSetting, settingsPath } from './lib/settings-file'
-import type { ApplyResult } from './lib/settings-file'
+import { applySettings, LEGACY_SAVED, MOD_SETTINGS, settingsPath, snapshot } from './lib/settings-file'
 import { coalesceText, createHold, parseStreamArg, resolveDelivery } from './lib/stream-delivery'
 import { countLines, describeToolUse, parseLastArg, parseToolsArg, resolveToolNarration, resultLine, summaryLine, textOfResult } from './lib/tool-narration'
-import type { DeliveryMode, HeartbeatSetting, ModeState, Platform, RenderLogSetting, SettingsLike, StoredConsent, ToolNarrationMode, ToolsOverride } from './lib/types'
-import { cancelTimer, COMMANDS, endTurn, markVisible, session, step, toolNarration } from './state'
+import type { Activation, DeliveryMode, HeartbeatSetting, ModeState, Platform, RenderLogSetting, SavedSettings, SettingsLike, StoredConsent, ToolNarrationMode, ToolsOverride } from './lib/types'
+import { cancelTimer, COMMANDS, deliveryMode, endTurn, markVisible, session, step, toolNarration } from './state'
 
 // The only module that touches the mod API. Decisions live in ./lib and take
 // plain values, so Vitest covers them; this file turns them into $ calls.
@@ -25,8 +24,9 @@ const STREAM_KEY = 'streamDelivery'
 const TOOLS_KEY = 'toolNarration'
 const LOG_KEY = 'renderLog'
 const HEARTBEAT_KEY = 'heartbeat'
+const ACTIVATION_KEY = 'activation'
 
-type ChangeOutcome = { ok: true; applied: Extract<ApplyResult, { ok: true }> } | { ok: false; text: string }
+type SettingsFile = { ok: true; path: string; before: string | undefined } | { ok: false; text: string }
 
 // Speech and transcript always carry the same line (AC-012). Speech is not
 // awaited: it resolves only once the utterance ends.
@@ -83,49 +83,92 @@ async function storedConsent($: EngineInterface): Promise<StoredConsent | undefi
   return isStoredConsent(value) ? value : undefined
 }
 
-async function changeSetting($: EngineInterface, value: true | 'remove'): Promise<ChangeOutcome> {
+async function readSettingsFile($: EngineInterface): Promise<SettingsFile> {
   const path = session.facts.settingsPath
   if (path === undefined) return { ok: false, text: messages.error('no-home', undefined) }
-  let before: string | undefined
   try {
-    before = (await $.fs.exists(path)) ? await $.fs.read(path) : undefined
+    return { ok: true, path, before: (await $.fs.exists(path)) ? await $.fs.read(path) : undefined }
   } catch {
     return { ok: false, text: messages.error('write-failed', path) }
   }
-  const applied = applyAxSetting(before, value)
-  if (!applied.ok) return { ok: false, text: messages.error(applied.reason, path) }
-  if (!applied.changed) return { ok: true, applied }
+}
+
+// Writes the given values over the file's own and reads it back; returns the
+// error line, or nothing once written (or when nothing had to change).
+async function writeSettings($: EngineInterface, path: string, before: string | undefined, values: SavedSettings): Promise<string | undefined> {
+  const applied = applySettings(before, values)
+  if (!applied.ok) return messages.error(applied.reason, path)
+  if (!applied.changed) return undefined
   try {
     if (before !== undefined && !session.facts.backedUp) {
       await $.fs.write(`${path}.a11y-backup`, before)
       session.facts.backedUp = true
     }
     await $.fs.write(path, applied.text)
-    if ((await $.fs.read(path)) !== applied.text) return { ok: false, text: messages.error('verify-mismatch', path) }
+    if ((await $.fs.read(path)) !== applied.text) return messages.error('verify-mismatch', path)
   } catch {
-    return { ok: false, text: messages.error('write-failed', path) }
+    return messages.error('write-failed', path)
   }
-  return { ok: true, applied }
+  return undefined
 }
 
+function setActive(on: boolean): void {
+  session.facts.active = on
+  if (!on) endTurn()
+}
+
+// Turns the mod on: the settings it is about to change are stored first, as
+// the file holds them, so /earshot-off can put them back. A second
+// /earshot-on keeps the first snapshot. Without a stored activation, an
+// axScreenReader already true was written by an older version, which saved
+// nothing; it is restored as absent, as that version's off did.
 async function enable($: EngineInterface): Promise<string> {
-  const outcome = await changeSetting($, true)
-  if (!outcome.ok) return outcome.text
+  const file = await readSettingsFile($)
+  if (!file.ok) return file.text
+  const stored = await $.store.get(ACTIVATION_KEY)
+  let saved: SavedSettings
+  if (isActivation(stored) && stored.on && stored.saved !== undefined) saved = stored.saved
+  else {
+    const taken = snapshot(file.before, Object.keys(MOD_SETTINGS))
+    if (!taken.ok) return messages.error(taken.reason, file.path)
+    const legacy = !isActivation(stored) && session.facts.mode?.userSetting === true
+    saved = legacy ? { ...taken.saved, ...LEGACY_SAVED } : taken.saved
+  }
+  const setAt = new Date(await $.clock.now()).toISOString()
+  await $.store.set(ACTIVATION_KEY, { on: true, setAt, saved } satisfies Activation)
   await $.store.delete(CONSENT_KEY)
+  setActive(true)
+  const failed = await writeSettings($, file.path, file.before, MOD_SETTINGS)
+  if (failed !== undefined) return failed
   const mode = session.facts.mode
   if (mode !== undefined) session.facts.mode = { ...mode, userSetting: true }
   return messages.enabled()
 }
 
+// Turns the mod off at once and puts back the settings /earshot-on stored. A
+// failed write leaves the mod on, so the command can be run again.
 async function disable($: EngineInterface): Promise<string> {
-  const outcome = await changeSetting($, 'remove')
-  if (!outcome.ok) return outcome.text
-  const mode = session.facts.mode
-  if (!outcome.applied.hadKey) {
-    return mode?.on === true && mode.source === 'settings-other' ? messages.offElsewhere() : messages.offNothing()
+  const stored = await $.store.get(ACTIVATION_KEY)
+  if (isActivation(stored) && !stored.on) {
+    setActive(false)
+    return messages.offAlready()
   }
-  if (mode !== undefined) session.facts.mode = { ...mode, userSetting: undefined }
-  return messages.offDone()
+  const mode = session.facts.mode
+  const saved = isActivation(stored) && stored.saved !== undefined ? stored.saved : mode?.userSetting === true ? LEGACY_SAVED : {}
+  if (Object.keys(saved).length > 0) {
+    const file = await readSettingsFile($)
+    if (!file.ok) return file.text
+    const failed = await writeSettings($, file.path, file.before, saved)
+    if (failed !== undefined) return failed
+  }
+  const setAt = new Date(await $.clock.now()).toISOString()
+  await $.store.set(ACTIVATION_KEY, { on: false, setAt } satisfies Activation)
+  setActive(false)
+  if (mode === undefined) return messages.offDone()
+  const ax = saved['axScreenReader']
+  if (ax !== undefined) session.facts.mode = { ...mode, userSetting: ax.present && typeof ax.value === 'boolean' ? ax.value : undefined }
+  const stillOn = mode.on && (mode.source === 'env' || mode.source === 'settings-other')
+  return stillOn ? `${messages.offDone()} ${messages.offElsewhere()}` : messages.offDone()
 }
 
 async function decline($: EngineInterface): Promise<string> {
@@ -170,12 +213,14 @@ async function startSession($: EngineInterface): Promise<void> {
   facts.platform ??= await platformOf($)
   facts.settingsPath = settingsPath(facts.platform, { HOME: await $.env.get('HOME'), USERPROFILE: await $.env.get('USERPROFILE') })
   facts.mode = await loadMode($)
+  const activation = await $.store.get(ACTIVATION_KEY)
+  facts.active = resolveActive(activation)
   facts.delivery = resolveDelivery({ modeOn: facts.mode.on, override: await $.store.get(STREAM_KEY) })
   await refreshTools($)
   facts.renderLog = resolveRenderLog(await $.store.get(LOG_KEY))
   facts.heartbeatSeconds = resolveHeartbeat(await $.store.get(HEARTBEAT_KEY))
   facts.detection = await detect({ platform: facts.platform, run: (argv, init) => $.process.run(argv, init), now: () => Date.now() })
-  const decision = decide({ mode: facts.mode, detection: facts.detection, consent: await $.store.get(CONSENT_KEY), modVersion: facts.modVersion })
+  const decision = decide({ mode: facts.mode, detection: facts.detection, consent: await $.store.get(CONSENT_KEY), activation, modVersion: facts.modVersion })
   if (decision.action !== 'ask') return
   step({ type: 'ask', reader: decision.reader, at: Date.now() })
   const question = messages.question(decision.reader)
@@ -244,7 +289,7 @@ async function toolsCommand($: EngineInterface, args: string): Promise<{ text: s
 async function startTurn($: EngineInterface): Promise<void> {
   endTurn()
   session.turn = { active: true, silence: createSilence(await $.clock.now()), timer: undefined }
-  if (session.facts.heartbeatSeconds === 0 || session.facts.delivery.mode !== 'buffered') return
+  if (session.facts.heartbeatSeconds === 0 || deliveryMode() !== 'buffered') return
   session.turn.timer = $.clock.every(HEARTBEAT_TICK_MS, () => {
     void beat($)
   })
@@ -309,7 +354,7 @@ function lastCommand($: EngineInterface, args: string): { text: string } {
 
 async function statusCommand($: EngineInterface): Promise<{ text: string }> {
   const { detection, mode } = session.facts
-  return speak($, messages.status({ detection, mode, consent: await storedConsent($) }))
+  return speak($, messages.status({ active: session.facts.active, detection, mode, consent: await storedConsent($) }))
 }
 
 export const register: Register = (on) => {
@@ -356,7 +401,7 @@ export const register: Register = (on) => {
   // changed, so `claude --debug` shows what the screen reader was given.
   // Registered first, so it sees every row before the hooks below answer.
   on('ui.render', ($, e, next) => {
-    if (session.facts.renderLog && e.surface === 'terminal') {
+    if (session.facts.active && session.facts.renderLog && e.surface === 'terminal') {
       const line = describeRender(e)
       if (session.renderMemo.changed(`${e.component}:${e.requestId}`, line)) $.ui.log(line, { to: 'debug' })
     }
@@ -416,7 +461,7 @@ export const register: Register = (on) => {
   // reader reads each one. Under buffered delivery it draws nothing; the
   // heartbeat says that work goes on.
   on('ui.render', { component: 'Spinner' }, ($, e, next) => {
-    if (e.surface !== 'terminal' || session.facts.delivery.mode !== 'buffered') return next(e)
+    if (e.surface !== 'terminal' || deliveryMode() !== 'buffered') return next(e)
     const { Box } = $.ui.resolve(e)
     return h(Box, null) as RenderElement
   })
@@ -429,7 +474,7 @@ export const register: Register = (on) => {
     // Iterated by hand: the stream's return value is the step's result, which
     // a for-await loop would discard.
     const iterator = next(e)[Symbol.asyncIterator]()
-    if (session.facts.delivery.mode !== 'buffered' || e.agentId !== undefined) {
+    if (deliveryMode() !== 'buffered' || e.agentId !== undefined) {
       // Live: every chunk passes as it comes; the main loop's text counts as
       // visible output for the heartbeat.
       for (;;) {

@@ -59,7 +59,7 @@ hooks/register.ts            # the only module that calls the mod API: adapter a
 hooks/state.ts               # shared session state and $-free transitions (command list, facts, consent steps)
 hooks/lib/detect.ts          # platform and screen reader detection (pgrep, PowerShell)
 hooks/lib/mode-state.ts      # mode resolution (variable over settings) and the ask/silent decision
-hooks/lib/settings-file.ts   # settings path and strict JSON editing of axScreenReader
+hooks/lib/settings-file.ts   # settings path, strict JSON editing, the snapshot /earshot-on stores and /earshot-off restores
 hooks/lib/consent.ts         # consent state machine, y/n parsing, 30 s timeout constant
 hooks/lib/stream-delivery.ts # whole answer delivery: mode resolution, /earshot-stream parsing, the chunk hold
 hooks/lib/tool-narration.ts  # tool narration: mode (off/brief/full), summaries per tool, labels, result counts, ring buffer of results

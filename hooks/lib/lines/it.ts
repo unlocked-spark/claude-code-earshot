@@ -29,17 +29,16 @@ function detected(reader: Parameters<Messages['question']>[0]): string {
 export const it: Messages = {
   readerFallback: FALLBACK,
   question: (reader) => `${detected(reader)} Attivare la modalità lettore di schermo di Claude Code dal prossimo avvio? Premi s o n.`,
-  enabled: () => 'Modalità lettore di schermo attivata dal prossimo avvio. Riavvia Claude Code ora.',
+  enabled: () => 'Earshot attivo. Le impostazioni precedenti sono salvate. Dal prossimo avvio la modalità lettore di schermo è attiva e i suggerimenti sono nascosti. Riavvia Claude Code ora.',
   declined: () => 'Capito. La modalità lettore di schermo resta disattivata. Esegui /earshot-on in qualsiasi momento per attivarla.',
   withdrawn: () => 'Nessuna risposta. La modalità lettore di schermo resta disattivata in questa sessione.',
   answered: () => 'Risposto.',
   answerReady: () => 'Risposta pronta.',
-  offDone: () => 'Modalità lettore di schermo disattivata dal prossimo avvio.',
-  offNothing: () => 'La modalità lettore di schermo non era impostata nel tuo file di impostazioni. Nulla è cambiato.',
-  offElsewhere: () =>
-    'La modalità lettore di schermo è impostata nelle impostazioni del progetto o gestite, non nel tuo file di impostazioni. Nulla è cambiato.',
-  status({ detection, mode, consent }) {
-    const parts: string[] = []
+  offDone: () => 'Earshot disattivato. Le impostazioni modificate vengono ripristinate dal prossimo avvio.',
+  offAlready: () => 'Earshot è già disattivato. Nulla è cambiato.',
+  offElsewhere: () => 'La modalità lettore di schermo resta attiva: è impostata nelle impostazioni del progetto o gestite, o dalla variabile CLAUDE_AX_SCREEN_READER.',
+  status({ active, detection, mode, consent }) {
+    const parts: string[] = [active ? 'Earshot attivo.' : 'Earshot disattivato.']
     if (detection === undefined) parts.push('Il rilevamento non è ancora stato eseguito.')
     else if (detection.reader !== null) parts.push(detected(detection.reader))
     else if (detection.error !== undefined) parts.push(`Rilevamento non riuscito: ${detection.error}.`)
@@ -118,8 +117,8 @@ export const it: Messages = {
     }
   },
   commandDescriptions: {
-    'earshot-on': 'Attivare la modalità lettore di schermo di Claude Code dal prossimo avvio',
-    'earshot-off': 'Disattivare la modalità lettore di schermo di Claude Code dal prossimo avvio',
+    'earshot-on': 'Attivare Earshot: salvare le impostazioni, attivare la modalità lettore di schermo e nascondere i suggerimenti dal prossimo avvio',
+    'earshot-off': 'Disattivare Earshot e ripristinare le impostazioni modificate',
     'earshot-status': 'Indicare il lettore di schermo rilevato e lo stato della modalità lettore di schermo',
     'earshot-stream': 'Risposte intere: mostrare ogni risposta tutta insieme invece che man mano',
     'earshot-tools': 'Narrazione degli strumenti: nascondere le righe, una riga per chiamata o lasciarle a Claude Code',

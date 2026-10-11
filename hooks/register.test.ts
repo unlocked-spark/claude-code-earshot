@@ -78,8 +78,8 @@ test('writes axScreenReader on y, keeps other keys, and consumes the answer (AC-
   expect(result.drop).toBeDefined()
   const settingsWrite = log.written.find((w) => isSettingsPath.test(w.path))
   expect(settingsWrite).toBeDefined()
-  expect(JSON.parse(settingsWrite?.text ?? '{}')).toEqual({ model: 'opus', axScreenReader: true })
-  expect(log.spoken.at(-1)).toBe('Screen reader mode enabled from the next start. Restart Claude Code now.')
+  expect(JSON.parse(settingsWrite?.text ?? '{}')).toEqual({ model: 'opus', axScreenReader: true, spinnerTipsEnabled: false })
+  expect(log.spoken.at(-1)).toBe('Earshot on. Your previous settings are saved; from the next start screen reader mode is on and tips are off. Restart Claude Code now.')
   expect(log.logged.at(-1)).toBe(log.spoken.at(-1))
 })
 
@@ -93,14 +93,41 @@ test('stays silent when CLAUDE_AX_SCREEN_READER is 0 and lets prompts through (A
   expect(log.written).toHaveLength(0)
 })
 
-test('registers the commands and /earshot-off removes the key (AC-009, AC-010)', async ($, on) => {
+test('registers the commands; /earshot-off after an older version removes the key it wrote (AC-009, AC-010)', async ($, on) => {
   const log = host(on, { voiceover: false, env: { HOME: '/Users/t' }, settings: '{"axScreenReader": true, "model": "opus"}' })
   await $.session.start(start)
   expect(log.commands).toEqual(expect.arrayContaining(['earshot-on', 'earshot-off', 'earshot-status']))
   const result = await $.command.run(command('earshot-off'))
-  expect(result.text).toBe('Screen reader mode disabled from the next start.')
+  expect(result.text).toBe('Earshot off. The settings it changed are restored from the next start.')
   const settingsWrite = log.written.find((w) => isSettingsPath.test(w.path))
   expect(JSON.parse(settingsWrite?.text ?? '{}')).toEqual({ model: 'opus' })
+})
+
+const settingsOf = (log: Log) => JSON.parse(log.written.filter((w) => isSettingsPath.test(w.path)).at(-1)?.text ?? '{}') as unknown
+
+test('/earshot-on saves the settings it changes and /earshot-off puts them back (AC-017)', async ($, on) => {
+  const before = '{\n  "model": "opus",\n  "spinnerTipsEnabled": true\n}\n'
+  const log = host(on, { voiceover: false, env: { HOME: '/Users/t' }, settings: before })
+  await $.session.start(start)
+  expect((await $.command.run(command('earshot-on'))).text).toBe('Earshot on. Your previous settings are saved; from the next start screen reader mode is on and tips are off. Restart Claude Code now.')
+  expect(settingsOf(log)).toEqual({ model: 'opus', spinnerTipsEnabled: false, axScreenReader: true })
+  // A second /earshot-on keeps the first snapshot.
+  await $.command.run(command('earshot-on'))
+  expect((await $.command.run(command('earshot-off'))).text).toBe('Earshot off. The settings it changed are restored from the next start.')
+  expect(settingsOf(log)).toEqual({ model: 'opus', spinnerTipsEnabled: true })
+  expect((await $.command.run(command('earshot-status'))).text).toMatch(/^Earshot off\. /)
+  expect((await $.command.run(command('earshot-off'))).text).toBe('Earshot is already off; nothing changed.')
+})
+
+test('after /earshot-off the mod stays off in the next session and asks nothing (AC-018)', async ($, on) => {
+  const log = host(on, { voiceover: true, env: { HOME: '/Users/t' }, settings: '{}' })
+  await $.session.start(start)
+  await $.prompt.submit(typed('y'))
+  await $.command.run(command('earshot-off'))
+  const spoken = log.spoken.length
+  await $.session.start(start)
+  expect(log.spoken).toHaveLength(spoken)
+  expect((await $.command.run(command('earshot-status'))).text).toMatch(/^Earshot off\. VoiceOver detected\./)
 })
 
 const polishMac = '(\n    "pl-PL",\n    "en-PL"\n)\n'
@@ -111,7 +138,7 @@ test('speaks Polish when the system displays Polish, and takes t as yes (system 
   expect(log.spoken[0]).toBe('Wykryto VoiceOver. Włączyć tryb czytnika ekranu w Claude Code od następnego uruchomienia? Naciśnij t albo n.')
   expect(log.logged).toContain(log.spoken[0])
   await $.prompt.submit(typed('t'))
-  expect(log.spoken.at(-1)).toBe('Tryb czytnika ekranu włączony od następnego uruchomienia. Uruchom teraz Claude Code ponownie.')
+  expect(log.spoken.at(-1)).toBe('Earshot włączony. Poprzednie ustawienia są zapisane. Od następnego uruchomienia tryb czytnika ekranu jest włączony, a porady wyłączone. Uruchom teraz Claude Code ponownie.')
 })
 
 test('speaks German for a German system and takes j as yes (system language)', async ($, on) => {
@@ -119,7 +146,7 @@ test('speaks German for a German system and takes j as yes (system language)', a
   await $.session.start(start)
   expect(log.spoken[0]).toBe('VoiceOver erkannt. Den Screenreader-Modus von Claude Code ab dem nächsten Start einschalten? Drücke j oder n.')
   await $.prompt.submit(typed('j'))
-  expect(log.spoken.at(-1)).toBe('Screenreader-Modus ab dem nächsten Start eingeschaltet. Starte Claude Code jetzt neu.')
+  expect(log.spoken.at(-1)).toBe('Earshot an. Deine bisherigen Einstellungen sind gespeichert. Ab dem nächsten Start ist der Screenreader-Modus an und die Tipps sind aus. Starte Claude Code jetzt neu.')
 })
 
 test('falls back to English for a system language without lines (system language)', async ($, on) => {

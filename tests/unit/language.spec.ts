@@ -132,7 +132,7 @@ describe('setLanguage', () => {
     expect(messages.heartbeat(20)).toBe('Nadal pracuję, 20 sekund.')
     expect(messages.heartbeat(22)).toBe('Nadal pracuję, 22 sekundy.')
     expect(messages.heartbeatSet(1)).toBe('Sygnał pracy ustawiony co 1 sekundę ciszy.')
-    expect(messages.commandDescriptions['earshot-on']).toBe('Włącz tryb czytnika ekranu w Claude Code od następnego uruchomienia')
+    expect(messages.commandDescriptions['earshot-on']).toBe('Włącz Earshot: zapisz Twoje ustawienia, włącz tryb czytnika ekranu i wyłącz porady od następnego uruchomienia')
     expect(readerName('unknown')).toBe('czytnik ekranu')
     setLanguage('en')
     expect(messages.heartbeat(20)).toBe('Still working, 20 seconds.')

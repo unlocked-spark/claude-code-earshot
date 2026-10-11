@@ -1,7 +1,7 @@
-import type { DetectionResult, ModeState, Reader, SettingsLike, StoredConsent } from './types'
+import type { Activation, DetectionResult, ModeState, Reader, SettingsLike, StoredConsent } from './types'
 
 export type Decision =
-  | { action: 'silent'; reason: 'no-reader' | 'mode-on' | 'env-set' | 'explicit-false' | 'declined' }
+  | { action: 'silent'; reason: 'no-reader' | 'mod-off' | 'mode-on' | 'env-set' | 'explicit-false' | 'declined' }
   | { action: 'ask'; reader: Reader }
 
 const ENV_OFF_VALUES = new Set(['', '0', 'false', 'no', 'off'])
@@ -38,9 +38,22 @@ export function isStoredConsent(value: unknown): value is StoredConsent {
   return record['declined'] === true && typeof record['declinedAt'] === 'string' && typeof record['modVersion'] === 'string'
 }
 
-export function decide(args: { mode: ModeState; detection: DetectionResult; consent: unknown; modVersion: string }): Decision {
+export function isActivation(value: unknown): value is Activation {
+  if (typeof value !== 'object' || value === null) return false
+  const record = value as Record<string, unknown>
+  return typeof record['on'] === 'boolean' && typeof record['setAt'] === 'string'
+}
+
+// The mod stops once /earshot-off turned it off and runs otherwise; its
+// features follow screen reader mode on their own (delivery, narration).
+export function resolveActive(activation: unknown): boolean {
+  return isActivation(activation) ? activation.on : true
+}
+
+export function decide(args: { mode: ModeState; detection: DetectionResult; consent: unknown; activation?: unknown; modVersion: string }): Decision {
   const reader = args.detection.reader
   if (reader === null) return { action: 'silent', reason: 'no-reader' }
+  if (isActivation(args.activation) && !args.activation.on) return { action: 'silent', reason: 'mod-off' }
   if (args.mode.on) return { action: 'silent', reason: 'mode-on' }
   if (args.mode.envValue !== undefined) return { action: 'silent', reason: 'env-set' }
   if (args.mode.userSetting === false) return { action: 'silent', reason: 'explicit-false' }

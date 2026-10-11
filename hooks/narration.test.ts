@@ -249,6 +249,20 @@ test('empties the run-in-background pill unless tool rows are full (AC-018)', as
   await full.unmount()
 })
 
+test('passes every row to the engine once /earshot-off turned the mod off', async ($, on) => {
+  host(on, { modeOn: true })
+  await $.session.start(start)
+  await $.command.run(command('earshot-off'))
+  for (const row of [bashUse('o1'), bashResult('o1', 'a\n'), group(), spinner]) {
+    const ui = await $.ui.mount(row)
+    expect((await ui.find({ type: 'Text' }))?.text).toBe('engine row')
+    await ui.unmount()
+  }
+  const pill = await $.ui.mount(progress('o2'))
+  expect((await pill.find({ type: 'Text' }))?.text).toBe('(ctrl+b to run in background)')
+  await pill.unmount()
+})
+
 test('hides the spinner line under buffered delivery only (AC-019)', async ($, on) => {
   host(on, { modeOn: true })
   await $.session.start(start)

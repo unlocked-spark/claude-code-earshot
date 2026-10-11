@@ -29,16 +29,16 @@ function detected(reader: Parameters<Messages['question']>[0]): string {
 export const de: Messages = {
   readerFallback: FALLBACK,
   question: (reader) => `${detected(reader)} Den Screenreader-Modus von Claude Code ab dem nächsten Start einschalten? Drücke j oder n.`,
-  enabled: () => 'Screenreader-Modus ab dem nächsten Start eingeschaltet. Starte Claude Code jetzt neu.',
+  enabled: () => 'Earshot an. Deine bisherigen Einstellungen sind gespeichert. Ab dem nächsten Start ist der Screenreader-Modus an und die Tipps sind aus. Starte Claude Code jetzt neu.',
   declined: () => 'Verstanden. Der Screenreader-Modus bleibt aus. Mit /earshot-on kannst du ihn jederzeit einschalten.',
   withdrawn: () => 'Keine Antwort. Der Screenreader-Modus bleibt in dieser Sitzung aus.',
   answered: () => 'Beantwortet.',
   answerReady: () => 'Antwort fertig.',
-  offDone: () => 'Screenreader-Modus ab dem nächsten Start ausgeschaltet.',
-  offNothing: () => 'Der Screenreader-Modus war in deiner Einstellungsdatei nicht gesetzt. Nichts geändert.',
-  offElsewhere: () => 'Der Screenreader-Modus ist in Projekt- oder verwalteten Einstellungen gesetzt, nicht in deiner Einstellungsdatei. Nichts geändert.',
-  status({ detection, mode, consent }) {
-    const parts: string[] = []
+  offDone: () => 'Earshot aus. Die geänderten Einstellungen sind ab dem nächsten Start wiederhergestellt.',
+  offAlready: () => 'Earshot ist bereits aus. Nichts geändert.',
+  offElsewhere: () => 'Der Screenreader-Modus bleibt an: Er ist in Projekt- oder verwalteten Einstellungen oder durch die Variable CLAUDE_AX_SCREEN_READER gesetzt.',
+  status({ active, detection, mode, consent }) {
+    const parts: string[] = [active ? 'Earshot an.' : 'Earshot aus.']
     if (detection === undefined) parts.push('Die Erkennung ist noch nicht gelaufen.')
     else if (detection.reader !== null) parts.push(detected(detection.reader))
     else if (detection.error !== undefined) parts.push(`Erkennung fehlgeschlagen: ${detection.error}.`)
@@ -113,8 +113,8 @@ export const de: Messages = {
     }
   },
   commandDescriptions: {
-    'earshot-on': 'Screenreader-Modus von Claude Code ab dem nächsten Start einschalten',
-    'earshot-off': 'Screenreader-Modus von Claude Code ab dem nächsten Start ausschalten',
+    'earshot-on': 'Earshot einschalten: Einstellungen sichern, Screenreader-Modus an und Tipps aus ab dem nächsten Start',
+    'earshot-off': 'Earshot ausschalten und die geänderten Einstellungen wiederherstellen',
     'earshot-status': 'Erkannten Screenreader und Zustand des Screenreader-Modus melden',
     'earshot-stream': 'Ganze Antworten: jede Antwort auf einmal zeigen statt laufend',
     'earshot-tools': 'Werkzeugansage: Werkzeugzeilen verbergen, eine Zeile pro Aufruf zeigen oder Claude Code überlassen',

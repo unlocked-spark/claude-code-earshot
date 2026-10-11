@@ -31,16 +31,16 @@ function detected(reader: Parameters<Messages['question']>[0]): string {
 export const fr: Messages = {
   readerFallback: FALLBACK,
   question: (reader) => `${detected(reader)} Activer le mode lecteur d’écran de Claude Code au prochain démarrage ? Appuyez sur o ou n.`,
-  enabled: () => 'Mode lecteur d’écran activé à partir du prochain démarrage. Redémarrez Claude Code maintenant.',
+  enabled: () => 'Earshot activé. Vos réglages précédents sont enregistrés. À partir du prochain démarrage, le mode lecteur d’écran est activé et les astuces sont masquées. Redémarrez Claude Code maintenant.',
   declined: () => 'Entendu. Le mode lecteur d’écran reste désactivé. Lancez /earshot-on à tout moment pour l’activer.',
   withdrawn: () => 'Pas de réponse. Le mode lecteur d’écran reste désactivé pour cette session.',
   answered: () => 'Répondu.',
   answerReady: () => 'Réponse prête.',
-  offDone: () => 'Mode lecteur d’écran désactivé à partir du prochain démarrage.',
-  offNothing: () => 'Le mode lecteur d’écran n’était pas défini dans votre fichier de réglages. Rien n’a changé.',
-  offElsewhere: () => 'Le mode lecteur d’écran est défini dans les réglages du projet ou gérés, pas dans votre fichier de réglages. Rien n’a changé.',
-  status({ detection, mode, consent }) {
-    const parts: string[] = []
+  offDone: () => 'Earshot désactivé. Les réglages modifiés sont rétablis à partir du prochain démarrage.',
+  offAlready: () => 'Earshot est déjà désactivé. Rien n’a changé.',
+  offElsewhere: () => 'Le mode lecteur d’écran reste activé : il est défini dans les réglages du projet ou gérés, ou par la variable CLAUDE_AX_SCREEN_READER.',
+  status({ active, detection, mode, consent }) {
+    const parts: string[] = [active ? 'Earshot activé.' : 'Earshot désactivé.']
     if (detection === undefined) parts.push('La détection n’a pas encore eu lieu.')
     else if (detection.reader !== null) parts.push(detected(detection.reader))
     else if (detection.error !== undefined) parts.push(`La détection a échoué : ${detection.error}.`)
@@ -117,8 +117,8 @@ export const fr: Messages = {
     }
   },
   commandDescriptions: {
-    'earshot-on': 'Activer le mode lecteur d’écran de Claude Code au prochain démarrage',
-    'earshot-off': 'Désactiver le mode lecteur d’écran de Claude Code au prochain démarrage',
+    'earshot-on': 'Activer Earshot : enregistrer vos réglages, activer le mode lecteur d’écran et masquer les astuces au prochain démarrage',
+    'earshot-off': 'Désactiver Earshot et rétablir les réglages modifiés',
     'earshot-status': 'Indiquer le lecteur d’écran détecté et l’état du mode lecteur d’écran',
     'earshot-stream': 'Réponses entières : afficher chaque réponse d’un bloc au lieu du fil de l’eau',
     'earshot-tools': 'Narration des outils : masquer les lignes, une ligne par appel, ou les laisser à Claude Code',

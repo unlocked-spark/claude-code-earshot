@@ -28,13 +28,15 @@ As a blind developer who has just installed the mod from the shell, I want Claud
 | AC-006 | A `y` answer writes `"axScreenReader": true` to `~/.claude/settings.json` (Windows: `%USERPROFILE%\.claude\settings.json`), preserving every other key and 2-space indentation. The file is written atomically (temp file, then rename). The mod then speaks and prints: mode enabled from the next start, restart Claude Code now. | Must |
 | AC-007 | An `n` answer stores `{ declined: true, declinedAt, modVersion }` under the `screenReaderConsent` key in `$.store`. Later sessions with the same mod version do not ask again. | Must |
 | AC-008 | No answer within 30 s counts as a refusal for this session only. Nothing is stored; the next session asks again. | Should |
-| AC-009 | `/earshot-on` writes `axScreenReader: true` without asking, clears the stored refusal, and gives the restart message. | Must |
-| AC-010 | `/earshot-off` removes the `axScreenReader` key from the user settings file (restoring the default), speaks and prints confirmation. If the key was not there, it says so. | Must |
-| AC-011 | `/earshot-status` speaks and prints: detected reader (or none), mode state and its source (flag, env, settings, off), whether a refusal is stored. | Should |
+| AC-009 | `/earshot-on` turns the mod on without asking (AC-017), clears the stored refusal, and gives the restart message. A `y` answer does the same. | Must |
+| AC-010 | `/earshot-off` turns the mod off (AC-018), speaks and prints confirmation, and adds that screen reader mode stays on when project or managed settings or the variable set it. When the mod is already off, it says so and writes nothing. | Must |
+| AC-011 | `/earshot-status` speaks and prints: whether the mod is on, detected reader (or none), mode state and its source (flag, env, settings, off), whether a refusal is stored. | Should |
 | AC-012 | Every spoken message has an identical text line in the transcript. Nothing is conveyed by sound or speech alone. | Must |
 | AC-013 | When the settings file cannot be written (missing directory, permission error) or cannot be parsed, the mod leaves the file untouched, speaks and prints the error and the manual fallback: add `"axScreenReader": true` to the settings file, or set `CLAUDE_AX_SCREEN_READER=1` in the shell profile. The session continues. | Must |
 | AC-014 | A new mod version re-asks once after a stored refusal from an older version (the `modVersion` in the stored refusal differs). | Should |
 | AC-015 | `claude plugin validate .` passes and lists only the events and APIs this spec names: `session.start`, `prompt.submit`, `command.run`, `$.process.run`, `$.fs`, `$.env.get`, `$.store`, `$.audio.speak`, `$.ui.notify`. | Must |
+| AC-017 | Before `/earshot-on` changes the user settings, it stores under `activation` in `$.store` `{ on: true, setAt, saved }`, where `saved` holds each key it changes (`axScreenReader`, `spinnerTipsEnabled`) as the file had it: its value, or absent. Then it writes `axScreenReader: true` and `spinnerTipsEnabled: false`. A second `/earshot-on` keeps the first snapshot. Without a stored activation, an `axScreenReader: true` already in the file is saved as absent, since an older version wrote it and saved nothing. | Must |
+| AC-018 | `/earshot-off` writes each saved key back (a value is set, an absent key removed) and stores `{ on: false, setAt }`. From then on, in this session and the next, every hook passes the engine's own behaviour and the start question is not asked, until `/earshot-on` or a `y`. Without a stored activation the mod is on. A failed write leaves the mod on. | Must |
 | AC-016 | README documents installation from the shell (`claude plugin install ... --scope user`) and the restart step, because the in-session plugin picker does not work with NVDA. | Should |
 
 ## 3. User Test Cases
@@ -251,4 +253,5 @@ Transcript captures listed per test case in section 3.
 | Date | Version | Author | Changes |
 |------|---------|--------|---------|
 | 2026-10-09 | 0.1.0 | Łukasz Majewski | Initial spec from /add:spec interview: spoken y/n consent, remembered refusal, macOS and Windows only |
-| 2026-10-09 | 0.1.1 | Łukasz Majewski | After the TDD cycle: commands renamed to /earshot-on, /earshot-off, /earshot-status (colons are not allowed in command names); plugin named earshot; the transcript line carries the plugin name as its prefix; the bell goes through the user's notification channel; an ordinary prompt while the question is pending withdraws it and goes through; "Maps to" fields filled |
+| 2026-10-09 | 0.1.1 | Łukasz Majewski | After the TDD cycle: commands renamed to /a11y-on, /a11y-off, /a11y-status (colons are not allowed in command names); plugin named earshot; the transcript line carries the plugin name as its prefix; the bell goes through the user's notification channel; an ordinary prompt while the question is pending withdraws it and goes through; "Maps to" fields filled |
+| 2026-10-11 | 0.1.2 | Łukasz Majewski | /earshot-on and /earshot-off turn the whole mod on and off; the settings it changes are saved before and restored after (AC-017, AC-018); tips are turned off with the mode |

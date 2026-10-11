@@ -10,6 +10,8 @@ Commits are written as imperative sentences without type prefixes.
 ## [0.1.4] - 2026-10-11
 
 ### Changed
+- `/earshot-on` turns the whole mod on: it saves the user settings it changes, then turns on screen reader mode and turns off the tips under the spinner from the next start. A `y` to the start question does the same.
+- `/earshot-off` turns the whole mod off at once, restores the saved settings, and keeps the mod off in later sessions without asking.
 - The commands are named after the mod: `/earshot-on`, `/earshot-off`, `/earshot-status`, `/earshot-stream`, `/earshot-tools`, `/earshot-last`, `/earshot-heartbeat` and `/earshot-log` replace the `/a11y-` names.
 
 ### Fixed

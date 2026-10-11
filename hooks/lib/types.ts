@@ -32,6 +32,15 @@ export type StoredConsent = { declined: true; declinedAt: string; modVersion: st
 
 export type SettingsLike = Readonly<Record<string, unknown>>
 
+// A user setting as it was before the mod changed it: absent, or its value.
+export type SavedValue = { present: false } | { present: true; value: unknown }
+
+export type SavedSettings = Readonly<Record<string, SavedValue>>
+
+// Whether the mod is on, stored by /earshot-on and /earshot-off; `saved`
+// holds the user settings as they were before /earshot-on changed them.
+export type Activation = { on: boolean; setAt: string; saved?: SavedSettings }
+
 // Whole answer delivery
 
 export type DeliveryMode = 'buffered' | 'live'

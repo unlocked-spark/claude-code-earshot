@@ -29,16 +29,16 @@ export const pl: Messages = {
   readerFallback: FALLBACK,
   question: (reader) =>
     `Wykryto ${nameOf(reader, FALLBACK)}. Włączyć tryb czytnika ekranu w Claude Code od następnego uruchomienia? Naciśnij t albo n.`,
-  enabled: () => 'Tryb czytnika ekranu włączony od następnego uruchomienia. Uruchom teraz Claude Code ponownie.',
+  enabled: () => 'Earshot włączony. Poprzednie ustawienia są zapisane. Od następnego uruchomienia tryb czytnika ekranu jest włączony, a porady wyłączone. Uruchom teraz Claude Code ponownie.',
   declined: () => 'Rozumiem. Tryb czytnika ekranu pozostaje wyłączony. Możesz go włączyć w każdej chwili poleceniem /earshot-on.',
   withdrawn: () => 'Brak odpowiedzi. Tryb czytnika ekranu pozostaje wyłączony w tej sesji.',
   answered: () => 'Odpowiedziano.',
   answerReady: () => 'Odpowiedź gotowa.',
-  offDone: () => 'Tryb czytnika ekranu wyłączony od następnego uruchomienia.',
-  offNothing: () => 'Tryb czytnika ekranu nie był ustawiony w Twoim pliku ustawień. Nic nie zmieniono.',
-  offElsewhere: () => 'Tryb czytnika ekranu jest ustawiony w ustawieniach projektu lub organizacji, nie w Twoim pliku ustawień. Nic nie zmieniono.',
-  status({ detection, mode, consent }) {
-    const parts: string[] = []
+  offDone: () => 'Earshot wyłączony. Ustawienia zmienione przez mod wracają do poprzednich wartości od następnego uruchomienia.',
+  offAlready: () => 'Earshot jest już wyłączony. Nic nie zmieniono.',
+  offElsewhere: () => 'Tryb czytnika ekranu pozostaje włączony: ustawiają go ustawienia projektu lub organizacji albo zmienna CLAUDE_AX_SCREEN_READER.',
+  status({ active, detection, mode, consent }) {
+    const parts: string[] = [active ? 'Earshot włączony.' : 'Earshot wyłączony.']
     if (detection === undefined) parts.push('Wykrywanie jeszcze się nie odbyło.')
     else if (detection.reader !== null) parts.push(`Wykryto ${nameOf(detection.reader, FALLBACK)}.`)
     else if (detection.error !== undefined) parts.push(`Wykrywanie nie powiodło się: ${detection.error}.`)
@@ -113,8 +113,8 @@ export const pl: Messages = {
     }
   },
   commandDescriptions: {
-    'earshot-on': 'Włącz tryb czytnika ekranu w Claude Code od następnego uruchomienia',
-    'earshot-off': 'Wyłącz tryb czytnika ekranu w Claude Code od następnego uruchomienia',
+    'earshot-on': 'Włącz Earshot: zapisz Twoje ustawienia, włącz tryb czytnika ekranu i wyłącz porady od następnego uruchomienia',
+    'earshot-off': 'Wyłącz Earshot i przywróć ustawienia, które zmienił',
     'earshot-status': 'Podaj wykryty czytnik ekranu i stan trybu czytnika ekranu',
     'earshot-stream': 'Odpowiedzi w całości: pokazuj każdą odpowiedź naraz zamiast na bieżąco',
     'earshot-tools': 'Narracja narzędzi: ukryj wiersze narzędzi, pokaż jeden wiersz na wywołanie albo zostaw je Claude Code',

@@ -60,7 +60,7 @@ describe('messages (AC-005, AC-012, AC-013)', () => {
     expect(messages.question('unknown')).toMatch(/^A screen reader was detected\./)
   })
   it('tells the user to restart after enabling', () => {
-    expect(messages.enabled()).toBe('Screen reader mode enabled from the next start. Restart Claude Code now.')
+    expect(messages.enabled()).toBe('Earshot on. Your previous settings are saved; from the next start screen reader mode is on and tips are off. Restart Claude Code now.')
   })
   it('gives the manual fallback on errors', () => {
     const text = messages.error('invalid-json', '/u/.claude/settings.json')
@@ -71,11 +71,12 @@ describe('messages (AC-005, AC-012, AC-013)', () => {
   })
   it('reports status in one sentence per item', () => {
     const text = messages.status({
+      active: true,
       detection: { platform: 'darwin', reader: 'voiceover', method: 'pgrep', durationMs: 3 },
       mode: { on: false, source: 'env', envValue: '0', userSetting: undefined },
       consent: { declined: true, declinedAt: '2026-10-09T10:00:00.000Z', modVersion: '0.1.0' },
     })
-    expect(text).toContain('VoiceOver detected.')
+    expect(text.startsWith('Earshot on. VoiceOver detected.')).toBe(true)
     expect(text).toContain('Screen reader mode off, set by the CLAUDE_AX_SCREEN_READER variable.')
     expect(text).toContain('Refusal stored on 2026-10-09, mod version 0.1.0.')
   })

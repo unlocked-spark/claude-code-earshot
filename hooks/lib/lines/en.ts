@@ -18,16 +18,16 @@ const SOURCE: Record<ModeSource, string> = {
 export const en: Messages = {
   readerFallback: FALLBACK,
   question: (reader) => `${detected(reader)} Enable Claude Code screen reader mode from the next start? Press y or n.`,
-  enabled: () => 'Screen reader mode enabled from the next start. Restart Claude Code now.',
+  enabled: () => 'Earshot on. Your previous settings are saved; from the next start screen reader mode is on and tips are off. Restart Claude Code now.',
   declined: () => 'Understood. Screen reader mode stays off. Run /earshot-on at any time to enable it.',
   withdrawn: () => 'No answer, leaving screen reader mode off for this session.',
   answered: () => 'Answered.',
   answerReady: () => 'Answer ready.',
-  offDone: () => 'Screen reader mode disabled from the next start.',
-  offNothing: () => 'Screen reader mode was not set in your settings file; nothing changed.',
-  offElsewhere: () => 'Screen reader mode is set in project or managed settings, not in your settings file; nothing changed.',
-  status({ detection, mode, consent }) {
-    const parts: string[] = []
+  offDone: () => 'Earshot off. The settings it changed are restored from the next start.',
+  offAlready: () => 'Earshot is already off; nothing changed.',
+  offElsewhere: () => 'Screen reader mode stays on: it is set in project or managed settings, or by the CLAUDE_AX_SCREEN_READER variable.',
+  status({ active, detection, mode, consent }) {
+    const parts: string[] = [active ? 'Earshot on.' : 'Earshot off.']
     if (detection === undefined) parts.push('Detection has not run.')
     else if (detection.reader !== null) parts.push(detected(detection.reader))
     else if (detection.error !== undefined) parts.push(`Detection failed: ${detection.error}.`)
@@ -99,8 +99,8 @@ export const en: Messages = {
     }
   },
   commandDescriptions: {
-    'earshot-on': 'Enable Claude Code screen reader mode from the next start',
-    'earshot-off': 'Disable Claude Code screen reader mode from the next start',
+    'earshot-on': 'Turn Earshot on: save your settings, then screen reader mode on and tips off from the next start',
+    'earshot-off': 'Turn Earshot off and restore the settings it changed',
     'earshot-status': 'Report the detected screen reader and the screen reader mode state',
     'earshot-stream': 'Whole answer delivery: show each answer at once instead of streaming it',
     'earshot-tools': 'Tool narration: hide tool rows, show one line per call, or leave them to Claude Code',

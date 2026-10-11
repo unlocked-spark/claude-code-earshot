@@ -8,7 +8,7 @@ import type { RenderMemo } from './lib/render-log'
 import { createLastResults } from './lib/tool-narration'
 import type { LastResults, ToolNarration } from './lib/tool-narration'
 import type { Delivery } from './lib/stream-delivery'
-import type { DetectionResult, ModeState, Platform, ToolNarrationMode } from './lib/types'
+import type { DeliveryMode, DetectionResult, ModeState, Platform, ToolNarrationMode } from './lib/types'
 
 // Everything the hooks share that never touches `$`: the command list, the
 // session's facts and consent state, and the small state transitions. The
@@ -16,8 +16,8 @@ import type { DetectionResult, ModeState, Platform, ToolNarrationMode } from './
 // so the functions that take `$` stay in register.ts.
 
 export const COMMANDS: readonly CommandSpec[] = [
-  { name: 'earshot-on', description: 'Enable Claude Code screen reader mode from the next start' },
-  { name: 'earshot-off', description: 'Disable Claude Code screen reader mode from the next start' },
+  { name: 'earshot-on', description: 'Turn Earshot on: save your settings, then screen reader mode on and tips off from the next start' },
+  { name: 'earshot-off', description: 'Turn Earshot off and restore the settings it changed' },
   { name: 'earshot-status', description: 'Report the detected screen reader and the screen reader mode state' },
   { name: 'earshot-stream', description: 'Whole answer delivery: show each answer at once instead of streaming it', argumentHint: '[on|off|auto]' },
   { name: 'earshot-tools', description: 'Tool narration: hide tool rows, show one line per call, or leave them to Claude Code', argumentHint: '[off|brief|full|auto]' },
@@ -35,6 +35,8 @@ export type Facts = {
   detection?: DetectionResult
   mode?: ModeState
   modVersion: string
+  // Whether the mod's features run; off, every hook passes the engine's own.
+  active: boolean
   settingsPath?: string
   backedUp: boolean
   delivery: Delivery
@@ -53,6 +55,7 @@ export const session: { consent: ConsentState; timer: Timer | undefined; facts: 
   turn: { active: false, silence: createSilence(0), timer: undefined },
   facts: {
     modVersion: '0.0.0',
+    active: false,
     backedUp: false,
     delivery: { mode: 'live', source: 'mode' },
     tools: { mode: 'full', source: 'mode' },
@@ -73,7 +76,11 @@ export function step(event: ConsentEvent): ConsentEffect {
 }
 
 export function toolNarration(): ToolNarrationMode {
-  return session.facts.tools.mode
+  return session.facts.active ? session.facts.tools.mode : 'full'
+}
+
+export function deliveryMode(): DeliveryMode {
+  return session.facts.active ? session.facts.delivery.mode : 'live'
 }
 
 // A row the screen reader can read appeared on the main transcript.

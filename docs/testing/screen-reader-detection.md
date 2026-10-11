@@ -18,7 +18,7 @@ Spec: `specs/screen-reader-detection.md`. Run with the screen reader on and a te
 | TC-003 | either | Settings already true, start | No bell, no speech, no line; file unchanged | tc-003-silent.txt | |
 | TC-004 | either | `CLAUDE_AX_SCREEN_READER=0`, start, `/earshot-status` | Silent start; status names the variable | tc-004-status.txt | |
 | TC-005 | either | Answer `n`, restart, `/earshot-status` | Declined line; silent second start; status reports the stored refusal with date and version | tc-005-declined.txt | |
-| TC-006 | either | `/earshot-on`, restart, `/earshot-off`, restart | Restart line; mode on; disabled line and key removed; graphical session asks again | tc-006-on.txt, tc-006-off.txt | |
+| TC-006 | either | `/earshot-on`, restart, `/earshot-off`, restart | Restart line; mode on, no tips; off line, `axScreenReader` and `spinnerTipsEnabled` back as before `/earshot-on`; tool rows and spinner drawn by Claude Code; no question at the next start | tc-006-on.txt, tc-006-off.txt | |
 | TC-007 | either | Trailing comma in settings, answer `y` | Error line with the manual fallback; file byte-identical; session continues | tc-007-error.txt | |
 | TC-008 | either | Start, wait 30 s, send a prompt, restart | "No answer" line after 30 s; prompt handled normally; question asked again | tc-008-timeout.txt | |
 

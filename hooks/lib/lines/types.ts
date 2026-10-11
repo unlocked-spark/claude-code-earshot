@@ -6,7 +6,7 @@ import type { DeliveryMode, DeliverySource, DetectionResult, ModeState, Reader, 
 
 export type ErrorKind = 'no-home' | 'invalid-json' | 'not-an-object' | 'write-failed' | 'verify-mismatch'
 
-export type StatusArgs = { detection: DetectionResult | undefined; mode: ModeState | undefined; consent: StoredConsent | undefined }
+export type StatusArgs = { active: boolean; detection: DetectionResult | undefined; mode: ModeState | undefined; consent: StoredConsent | undefined }
 
 export type Messages = {
   // How a reader the mod cannot name is called inside a sentence.
@@ -18,7 +18,7 @@ export type Messages = {
   answered(): string
   answerReady(): string
   offDone(): string
-  offNothing(): string
+  offAlready(): string
   offElsewhere(): string
   status(args: StatusArgs): string
   streamReport(args: { mode: DeliveryMode; source: DeliverySource }): string
