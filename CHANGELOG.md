@@ -7,6 +7,12 @@ Commits are written as imperative sentences without type prefixes.
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-10-11
+
+### Added
+- The heartbeat adds the context window from 70% full and a usage limit from 80% used, with its reset time; a limit is read again only when its percentage moved.
+- A Feedback issue form and a Feedback section in the README, with the Unlocked Spark Discord.
+
 ## [0.1.7] - 2026-10-11
 
 ### Fixed

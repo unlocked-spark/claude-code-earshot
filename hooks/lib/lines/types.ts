@@ -1,3 +1,4 @@
+import type { LimitKind } from '../usage-notes'
 import type { DeliveryMode, DeliverySource, DetectionResult, ModeState, Reader, StoredConsent, ToolLabel, ToolNarrationMode } from '../types'
 
 // The shape every language's table fills. The compiler checks that each
@@ -34,6 +35,8 @@ export type Messages = {
   welcome(): string
   working(): string
   heartbeat(seconds: number): string
+  usageContext(percent: number): string
+  usageLimit(window: LimitKind, percent: number, reset: string | undefined): string
   heartbeatReport(seconds: number): string
   heartbeatSet(seconds: number): string
   heartbeatInvalid(): string

@@ -4,12 +4,14 @@ import type { ConsentEffect } from './lib/consent'
 import { detect, platformFromEnv } from './lib/detect'
 import { createSilence, HEARTBEAT_TICK_MS, parseHeartbeatArg, resolveHeartbeat, tick } from './lib/heartbeat'
 import { resolveLanguage } from './lib/language'
-import { messages, setLanguage } from './lib/messages'
+import { currentLanguage, messages, setLanguage } from './lib/messages'
 import { decide, isActivation, isStoredConsent, resolveActive, resolveModeState } from './lib/mode-state'
 import { describeRender, parseLogArg, resolveRenderLog } from './lib/render-log'
 import { applySettings, LEGACY_SAVED, MOD_SETTINGS, settingsPath, snapshot } from './lib/settings-file'
 import { coalesceText, createHold, parseStreamArg, resolveDelivery } from './lib/stream-delivery'
 import { countLines, describeToolUse, parseLastArg, parseToolsArg, resolveToolNarration, resultLine, summaryLine, textOfResult } from './lib/tool-narration'
+import { formatReset, usageNotes } from './lib/usage-notes'
+import type { LimitMemory } from './lib/usage-notes'
 import type { Activation, DeliveryMode, HeartbeatSetting, ModeState, Platform, RenderLogSetting, SavedSettings, SettingsLike, StoredConsent, ToolNarrationMode, ToolsOverride } from './lib/types'
 import { cancelTimer, COMMANDS, deliveryMode, endTurn, markVisible, session, step, toolNarration } from './state'
 
@@ -308,7 +310,28 @@ async function beat($: EngineInterface): Promise<void> {
   if (!session.turn.active) return
   const { state, announce } = tick(session.turn.silence, now, session.facts.heartbeatSeconds)
   session.turn.silence = state
-  if (announce !== undefined) say($, messages.heartbeat(announce))
+  if (announce === undefined) return
+  const tail = await usageLines($, now)
+  if (!session.turn.active) return
+  session.limits = tail.memory
+  say($, [messages.heartbeat(announce), ...tail.lines].join(' '))
+}
+
+// The heartbeat's tail: the context window from 70%, a rate-limit window from
+// 80% and only when its percentage moved since it was last read. A failed
+// reading leaves the heartbeat line alone.
+async function usageLines($: EngineInterface, now: number): Promise<{ lines: string[]; memory: LimitMemory }> {
+  let usage
+  try {
+    usage = await $.session.usage()
+  } catch {
+    return { lines: [], memory: session.limits }
+  }
+  const { notes, memory } = usageNotes(usage, session.limits)
+  const lines = notes.map((note) =>
+    note.kind === 'context' ? messages.usageContext(note.percent) : messages.usageLimit(note.window, note.percent, formatReset(note.resetsAt, now, currentLanguage())),
+  )
+  return { lines, memory }
 }
 
 async function heartbeatCommand($: EngineInterface, args: string): Promise<{ text: string }> {

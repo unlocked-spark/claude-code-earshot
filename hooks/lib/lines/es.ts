@@ -1,6 +1,7 @@
 import type { ModeSource, ToolLabel, ToolNarrationMode } from '../types'
 import { nameOf, SETTINGS_FILE } from './types'
 import type { Messages } from './types'
+import type { LimitKind } from '../usage-notes'
 
 const FALLBACK = 'un lector de pantalla'
 
@@ -25,6 +26,8 @@ const LABELS: Record<ToolLabel, string> = {
 function detected(reader: Parameters<Messages['question']>[0]): string {
   return reader === 'unknown' ? 'Se ha detectado un lector de pantalla.' : `${nameOf(reader, FALLBACK)} detectado.`
 }
+
+const LIMITS: Record<LimitKind, string> = { five_hour: 'Límite de 5 horas', seven_day: 'Límite semanal', spend_limit: 'Límite de gasto' }
 
 export const es: Messages = {
   readerFallback: FALLBACK,
@@ -85,6 +88,8 @@ export const es: Messages = {
   welcome: () => 'Te damos la bienvenida a Earshot para Claude Code. Para desactivarlo, escribe /earshot-off.',
   working: () => 'Empiezo a trabajar.',
   heartbeat: (n) => `Sigo trabajando, ${segundos(n)}.`,
+  usageContext: (p) => `Contexto ${p} %.`,
+  usageLimit: (w, p, r) => `${LIMITS[w]} ${p} %${r === undefined ? '' : `, se restablece: ${r}`}.`,
   heartbeatReport: (n) =>
     n === 0
       ? 'Señal de trabajo desactivada.'

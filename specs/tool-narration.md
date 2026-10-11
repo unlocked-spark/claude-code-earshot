@@ -45,6 +45,7 @@ As a blind developer in screen reader mode, I want to hear Claude's answers and 
 | AC-020 | Under buffered delivery, each `turn.start` prints and speaks one line, `Starting work.` in the system language (`Rozpoczynam pracę.` in Polish), because the hidden spinner leaves no sign that the prompt was taken. The line does not count as visible output for the heartbeat and is drawn with the heartbeat off. Outside buffered delivery, nothing. | Must |
 | AC-021 | A folded `ToolGroup` row (reads and searches the engine collapses into one count line, with the running call's command under it) follows the same modes: `off` draws an empty `Box`, `brief` one `<label>: <summary>` line per call and, under each finished call, its `result: <N> lines` count line (a single Bash call is folded into a group too), `full` and an expanded group return `next(e)`. Every call's result is kept for `/earshot-last`. | Must |
 | AC-022 | With the mod turned off (`/earshot-off`), every hook in this spec returns `next(e)` and the heartbeat and start line stay silent. | Must |
+| AC-023 | Each heartbeat line reads `$.session.usage()` and appends, after `Still working, N seconds.`: the context window as `Context <P>%.` when it is 70% full or more, at every heartbeat; and each rate-limit window (`five_hour`, `seven_day`, `spend_limit`) at 80% used or more as `<window> <P>%, resets <time>.` (local time, the weekday added when not today), only when its whole percentage differs from the one last read in the session. A window read below 80% is forgotten, so crossing 80% again is read again. A failed reading leaves the line alone. | Must |
 
 ## 3. User Test Cases
 
@@ -63,6 +64,7 @@ Full steps for NVDA on Windows 11 and VoiceOver on macOS are in `docs/testing/to
 | TC-009 | `/earshot-heartbeat 45`, `/earshot-heartbeat off` | New interval; with off, only the start line | hooks/heartbeat.test.ts → "/earshot-heartbeat sets the interval, switches off and reports (AC-017)" |
 | TC-010 | Outside buffered delivery | Engine rows and spinner, no start line, no heartbeat | hooks/narration.test.ts → "draws the engine row outside buffered delivery (AC-007)"; hooks/heartbeat.test.ts → "stays silent outside screen reader mode, without the start line (AC-016, AC-020)" |
 | TC-011 | Render log in `claude --debug` | `earshot: ui.render <Component> ...` lines in the debug log; none after `/earshot-log off` | hooks/narration.test.ts → "writes every drawn component to the debug log until /earshot-log off (AC-014, AC-015)" |
+| TC-012 | A long turn at 72% context and 84% of the 5-hour limit | `Still working, 10 seconds. Context 72%. 5-hour limit 84%, resets <time>.`, then `Still working, 20 seconds. Context 72%.` until the limit moves | hooks/heartbeat.test.ts → "adds the context from 70% and a limit from 80% only when it moved (AC-023)" |
 | TC-012 | Mod off | Every row drawn by the engine | hooks/narration.test.ts → "passes every row to the engine once /earshot-off turned the mod off" |
 
 ## 4. Data Model

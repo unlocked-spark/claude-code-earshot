@@ -1,6 +1,6 @@
 {
   "name": "earshot",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Screen reader companion for Claude Code: detects VoiceOver, NVDA or JAWS, enables screen reader mode from the next start, delivers whole answers, narrates tool activity, and adds the /earshot-on, /earshot-off, /earshot-status, /earshot-stream, /earshot-last, /earshot-tools, /earshot-heartbeat and /earshot-log commands.",
   "author": {
     "name": "Unlocked Spark Foundation"

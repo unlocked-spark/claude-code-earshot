@@ -1,6 +1,6 @@
 {
   "name": "claude-code-earshot",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "private": true,
   "description": "Screen reader companion mod for Claude Code",
   "type": "module",

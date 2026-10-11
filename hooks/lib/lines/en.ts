@@ -1,6 +1,7 @@
 import type { ModeSource } from '../types'
 import { nameOf, SETTINGS_FILE } from './types'
 import type { Messages } from './types'
+import type { LimitKind } from '../usage-notes'
 
 const FALLBACK = 'a screen reader'
 
@@ -14,6 +15,8 @@ const SOURCE: Record<ModeSource, string> = {
   'settings-other': 'project or managed settings',
   off: 'nothing',
 }
+
+const LIMITS: Record<LimitKind, string> = { five_hour: '5-hour limit', seven_day: 'Weekly limit', spend_limit: 'Spend limit' }
 
 export const en: Messages = {
   readerFallback: FALLBACK,
@@ -74,6 +77,8 @@ export const en: Messages = {
   welcome: () => 'Welcome to Earshot for Claude Code. To turn it off, type /earshot-off.',
   working: () => 'Starting work.',
   heartbeat: (seconds) => `Still working, ${seconds} seconds.`,
+  usageContext: (p) => `Context ${p}%.`,
+  usageLimit: (w, p, r) => `${LIMITS[w]} ${p}%${r === undefined ? '' : `, resets ${r}`}.`,
   heartbeatReport: (seconds) =>
     seconds === 0 ? 'Heartbeat off.' : `Heartbeat every ${seconds} seconds of silence while an answer is being prepared, in screen reader mode.`,
   heartbeatSet: (seconds) => (seconds === 0 ? 'Heartbeat off.' : `Heartbeat set to every ${seconds} seconds of silence.`),

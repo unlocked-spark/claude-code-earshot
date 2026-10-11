@@ -6,7 +6,7 @@ type Log = { spoken: string[]; logged: string[]; stored: { key: string; value: u
 
 // A host with no screen reader running, in or out of screen reader mode, a
 // mocked clock the test moves by hand, and a scripted model step.
-function host(on: On, world: { modeOn: boolean; script: TurnStepChunk[] }): { log: Log; clock: MockClock } {
+function host(on: On, world: { modeOn: boolean; script: TurnStepChunk[]; usage?: { percent?: number; limits: { kind: string; percentUsed: number; resetsAt?: string }[] } }): { log: Log; clock: MockClock } {
   const log: Log = { spoken: [], logged: [], stored: [] }
   mock.env(on, { HOME: '/Users/t' })
   on('store.set', { key: 'heartbeat' }, (_$, e, next) => {
@@ -40,6 +40,10 @@ function host(on: On, world: { modeOn: boolean; script: TurnStepChunk[] }): { lo
   on('command.register', (_$, e) => ({ value: { command: e.name } }))
   on('session.start', (_$, e) => ({ cwd: e.cwd }))
   on('prompt.submit', (_$, e) => ({ text: e.text }))
+  on('session.usage', () => {
+    const usage = world.usage ?? { limits: [] }
+    return { value: { startedAt: 0, context: { window: 200_000, percent: usage.percent }, rateLimits: usage.limits } }
+  })
   on('turn.start', (_$: EngineInterface, e: TurnStartInput) => ({ turnId: e.turnId }))
   on('turn.complete', (_$: EngineInterface, e: TurnCompleteInput) => ({ text: e.answer }))
   on('turn.step', async function* (_$, e) {
@@ -128,4 +132,21 @@ test('/earshot-heartbeat sets the interval, switches off and reports (AC-017)', 
   await $.turn.complete({ ...complete(), turnId: 't2' })
   expect((await $.command.run(command('3'))).text).toBe('Usage: /earshot-heartbeat, /earshot-heartbeat <seconds> (5 to 600), or /earshot-heartbeat off.')
   expect((await $.command.run(command(''))).text).toBe('Heartbeat off.')
+})
+
+test('adds the context from 70% and a limit from 80% only when it moved (AC-023)', async ($, on) => {
+  const usage: { percent?: number; limits: { kind: string; percentUsed: number }[] } = { percent: 72, limits: [{ kind: 'five_hour', percentUsed: 84 }] }
+  const { log, clock } = host(on, { modeOn: true, script: SCRIPT, usage })
+  await $.session.start(start)
+  log.logged.length = 0
+  await $.turn.start({ text: 'hi', turnId: 't1' })
+  await clock.advance(10_500)
+  expect(log.logged.at(-1)).toBe('Still working, 10 seconds. Context 72%. 5-hour limit 84%.')
+  await clock.advance(10_000)
+  expect(log.logged.at(-1)).toBe('Still working, 20 seconds. Context 72%.')
+  usage.limits = [{ kind: 'five_hour', percentUsed: 86 }]
+  usage.percent = 60
+  await clock.advance(10_000)
+  expect(log.logged.at(-1)).toBe('Still working, 30 seconds. 5-hour limit 86%.')
+  await $.turn.complete(complete())
 })

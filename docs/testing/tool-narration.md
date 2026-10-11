@@ -17,6 +17,7 @@ Spec: `specs/tool-narration.md`. Primary platform: Windows 11 with NVDA in Windo
 | TC-009 | `/earshot-heartbeat 45`, repeat TC-008; `/earshot-heartbeat off`, repeat | First at 45 s; with off only `Starting work.` |
 | TC-010 | `/earshot-stream off`, send a prompt that runs a command | No `Starting work.`, no heartbeat; Claude Code's own rows and spinner |
 | TC-011 | Start `claude --debug`, work for a few turns, open `~/.claude/debug/<session>.txt` | `earshot: ui.render <Component> ...` lines naming what the terminal drew; after `/earshot-log off`, no new ones |
+| TC-012 | Work a long turn once the context is past 70% (or a usage limit past 80%) | The heartbeat line adds `Context <P>%.`; a limit with its reset time is read once and again only when its percentage moves |
 | TC-012 | `/earshot-off`, send a prompt that runs a command | Everything drawn by Claude Code; no line from the mod |
 
 ## Extra checks

@@ -1,6 +1,7 @@
 import type { ModeSource, ToolLabel, ToolNarrationMode } from '../types'
 import { nameOf, polishPlural, SETTINGS_FILE } from './types'
 import type { Messages } from './types'
+import type { LimitKind } from '../usage-notes'
 
 const FALLBACK = 'czytnik ekranu'
 
@@ -24,6 +25,8 @@ const LABELS: Record<ToolLabel, string> = {
   'tool running': 'narzędzie działa',
   'tool interrupted': 'narzędzie przerwane',
 }
+
+const LIMITS: Record<LimitKind, string> = { five_hour: 'Limit 5-godzinny', seven_day: 'Limit tygodniowy', spend_limit: 'Limit wydatków' }
 
 export const pl: Messages = {
   readerFallback: FALLBACK,
@@ -85,6 +88,8 @@ export const pl: Messages = {
   welcome: () => 'Witaj w Earshot dla Claude Code. Aby go wyłączyć, wpisz /earshot-off.',
   working: () => 'Rozpoczynam pracę.',
   heartbeat: (n) => `Nadal pracuję, ${sekundy(n)}.`,
+  usageContext: (p) => `Kontekst ${p}%.`,
+  usageLimit: (w, p, r) => `${LIMITS[w]} ${p}%${r === undefined ? '' : `, reset: ${r}`}.`,
   heartbeatReport: (n) =>
     n === 0 ? 'Sygnał pracy wyłączony.' : `Sygnał pracy co ${coSekund(n)} ciszy podczas przygotowywania odpowiedzi, w trybie czytnika ekranu.`,
   heartbeatSet: (n) => (n === 0 ? 'Sygnał pracy wyłączony.' : `Sygnał pracy ustawiony co ${coSekund(n)} ciszy.`),

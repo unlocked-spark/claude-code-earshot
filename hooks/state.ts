@@ -8,6 +8,7 @@ import type { RenderMemo } from './lib/render-log'
 import { createLastResults } from './lib/tool-narration'
 import type { LastResults, ToolNarration } from './lib/tool-narration'
 import type { Delivery } from './lib/stream-delivery'
+import type { LimitMemory } from './lib/usage-notes'
 import type { DeliveryMode, DetectionResult, ModeState, Platform, ToolNarrationMode } from './lib/types'
 
 // Everything the hooks share that never touches `$`: the command list, the
@@ -47,12 +48,14 @@ export type Facts = {
 
 export type Turn = { active: boolean; silence: Silence; timer: Timer | undefined }
 
-export const session: { consent: ConsentState; timer: Timer | undefined; facts: Facts; lastResults: LastResults; renderMemo: RenderMemo; turn: Turn } = {
+export const session: { consent: ConsentState; timer: Timer | undefined; facts: Facts; lastResults: LastResults; renderMemo: RenderMemo; turn: Turn; limits: LimitMemory } = {
   consent: IDLE,
   timer: undefined,
   lastResults: createLastResults(LAST_RESULTS_KEPT),
   renderMemo: createRenderMemo(RENDER_MEMO_KEPT),
   turn: { active: false, silence: createSilence(0), timer: undefined },
+  // Rate-limit percentages the heartbeat last read, kept across turns.
+  limits: {},
   facts: {
     modVersion: '0.0.0',
     active: false,
