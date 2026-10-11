@@ -68,31 +68,31 @@ async function drain(stream: AsyncIterable<TurnStepChunk>): Promise<void> {
   }
 }
 
-test('says every 20 seconds of silence while a turn runs in screen reader mode (AC-016)', async ($, on) => {
+test('opens the turn with a line and says every 20 seconds of silence in screen reader mode (AC-016, AC-020)', async ($, on) => {
   const { log, clock } = host(on, { modeOn: true, script: SCRIPT })
   await $.session.start(start)
   await $.turn.start({ text: 'hi', turnId: 't1' })
   await clock.advance(19_000)
-  expect(log.logged).toEqual([])
+  expect(log.logged).toEqual(['Starting work.'])
   await clock.advance(1_500)
-  expect(log.logged).toEqual(['Still working, 20 seconds.'])
-  expect(log.spoken).toEqual(['Still working, 20 seconds.'])
+  expect(log.logged).toEqual(['Starting work.', 'Still working, 20 seconds.'])
+  expect(log.spoken).toEqual(['Starting work.', 'Still working, 20 seconds.'])
   await clock.advance(20_000)
-  expect(log.logged).toEqual(['Still working, 20 seconds.', 'Still working, 40 seconds.'])
+  expect(log.logged).toEqual(['Starting work.', 'Still working, 20 seconds.', 'Still working, 40 seconds.'])
   // A step with text is visible output: the silence restarts at the next tick.
   await drain($.turn.step(step()))
   await clock.advance(19_500)
-  expect(log.logged).toHaveLength(2)
-  await clock.advance(2_000)
   expect(log.logged).toHaveLength(3)
-  expect(log.logged[2]).toBe('Still working, 20 seconds.')
+  await clock.advance(2_000)
+  expect(log.logged).toHaveLength(4)
+  expect(log.logged[3]).toBe('Still working, 20 seconds.')
   // The end of the turn stops the ticks.
   await $.turn.complete(complete())
   await clock.advance(120_000)
-  expect(log.logged).toHaveLength(3)
+  expect(log.logged).toHaveLength(4)
 })
 
-test('stays silent outside screen reader mode and when switched off (AC-016, AC-017)', async ($, on) => {
+test('stays silent outside screen reader mode, without the start line (AC-016, AC-020)', async ($, on) => {
   const { log, clock } = host(on, { modeOn: false, script: SCRIPT })
   await $.session.start(start)
   await $.turn.start({ text: 'hi', turnId: 't1' })
@@ -109,13 +109,14 @@ test('/earshot-heartbeat sets the interval, switches off and reports (AC-017)', 
   expect(log.stored.at(-1)).toMatchObject({ key: 'heartbeat', value: { seconds: 5 } })
   await $.turn.start({ text: 'hi', turnId: 't1' })
   await clock.advance(5_500)
-  expect(log.logged).toEqual(['Still working, 5 seconds.'])
+  expect(log.logged).toEqual(['Starting work.', 'Still working, 5 seconds.'])
   await $.turn.complete(complete())
   expect((await $.command.run(command('off'))).text).toBe('Heartbeat off.')
   expect(log.stored.at(-1)).toMatchObject({ key: 'heartbeat', value: { seconds: 0 } })
+  // With the heartbeat off the turn still opens with its line (AC-020).
   await $.turn.start({ text: 'again', turnId: 't2' })
   await clock.advance(60_000)
-  expect(log.logged).toEqual(['Still working, 5 seconds.'])
+  expect(log.logged).toEqual(['Starting work.', 'Still working, 5 seconds.', 'Starting work.'])
   await $.turn.complete({ ...complete(), turnId: 't2' })
   expect((await $.command.run(command('3'))).text).toBe('Usage: /earshot-heartbeat, /earshot-heartbeat <seconds> (5 to 600), or /earshot-heartbeat off.')
   expect((await $.command.run(command(''))).text).toBe('Heartbeat off.')

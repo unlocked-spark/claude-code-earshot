@@ -71,6 +71,7 @@ export const en: Messages = {
   toolsInvalid: () => 'Usage: /earshot-tools, /earshot-tools off, /earshot-tools brief, /earshot-tools full, or /earshot-tools auto.',
   toolLabel: (label) => label,
   resultLine: (isErrored, lines) => `${isErrored ? 'error' : 'result'}: ${lines} ${lines === 1 ? 'line' : 'lines'}`,
+  working: () => 'Starting work.',
   heartbeat: (seconds) => `Still working, ${seconds} seconds.`,
   heartbeatReport: (seconds) =>
     seconds === 0 ? 'Heartbeat off.' : `Heartbeat every ${seconds} seconds of silence while an answer is being prepared, in screen reader mode.`,

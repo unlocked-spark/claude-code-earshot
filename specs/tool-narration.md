@@ -41,6 +41,7 @@ As a blind developer in screen reader mode, I want tool activity read as short s
 | AC-017 | `/earshot-heartbeat <seconds>` (5 to 600) and `/earshot-heartbeat off` store `heartbeat: { seconds, setAt }` (off is 0); the default is 20; `/earshot-heartbeat` reports the interval. | Must |
 | AC-018 | On the terminal, unless tool narration is `full`, the `ToolProgress` hook rewrites `hint` to `""`, so the run-in-background pill draws nothing. | Must |
 | AC-019 | On the terminal, under buffered delivery, the `Spinner` hook returns an empty `Box`, so the animated word is not drawn; the heartbeat (AC-016) says that the turn goes on. Under live delivery, `next(e)`. | Must |
+| AC-020 | Under buffered delivery, each `turn.start` prints and speaks one line, `Starting work.` in the system's language (`Rozpoczynam pracę.` in Polish), because the hidden spinner leaves no sign that the prompt was taken. It does not count as visible output for the heartbeat and is drawn with the heartbeat off. Outside buffered delivery, nothing. | Must |
 
 ## 3. User Test Cases
 

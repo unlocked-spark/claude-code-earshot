@@ -286,10 +286,14 @@ async function toolsCommand($: EngineInterface, args: string): Promise<{ text: s
 // compares the rows the hooks counted with the clock, and says every N
 // seconds of silence that work goes on. The line is printed and spoken like
 // every other line of the mod; it does not count as output of its own.
+// Under buffered delivery the spinner draws nothing, so the turn opens with
+// one line that says work has begun.
 async function startTurn($: EngineInterface): Promise<void> {
   endTurn()
   session.turn = { active: true, silence: createSilence(await $.clock.now()), timer: undefined }
-  if (session.facts.heartbeatSeconds === 0 || deliveryMode() !== 'buffered') return
+  if (deliveryMode() !== 'buffered') return
+  say($, messages.working())
+  if (session.facts.heartbeatSeconds === 0) return
   session.turn.timer = $.clock.every(HEARTBEAT_TICK_MS, () => {
     void beat($)
   })

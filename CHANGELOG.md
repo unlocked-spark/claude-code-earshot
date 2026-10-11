@@ -7,6 +7,11 @@ Commits are written as imperative sentences without type prefixes.
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-10-11
+
+### Added
+- Under whole answer delivery each turn opens with one printed and spoken line, `Starting work.` in the system's language, since the hidden spinner gave no sign that the prompt was taken.
+
 ## [0.1.4] - 2026-10-11
 
 ### Changed

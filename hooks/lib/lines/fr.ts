@@ -84,6 +84,7 @@ export const fr: Messages = {
   toolsInvalid: () => 'Utilisation : /earshot-tools, /earshot-tools off, /earshot-tools brief, /earshot-tools full ou /earshot-tools auto.',
   toolLabel: (label) => LABELS[label],
   resultLine: (isErrored, lines) => `${isErrored ? 'erreur' : 'résultat'} : ${lignes(lines)}`,
+  working: () => 'Je commence le travail.',
   heartbeat: (n) => `Toujours au travail, ${secondes(n)}.`,
   heartbeatReport: (n) =>
     n === 0

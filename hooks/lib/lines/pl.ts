@@ -82,6 +82,7 @@ export const pl: Messages = {
   toolsInvalid: () => 'Użycie: /earshot-tools, /earshot-tools off, /earshot-tools brief, /earshot-tools full albo /earshot-tools auto.',
   toolLabel: (label) => LABELS[label],
   resultLine: (isErrored, lines) => `${isErrored ? 'błąd' : 'wynik'}: ${lines} ${polishPlural(lines, 'wiersz', 'wiersze', 'wierszy')}`,
+  working: () => 'Rozpoczynam pracę.',
   heartbeat: (n) => `Nadal pracuję, ${sekundy(n)}.`,
   heartbeatReport: (n) =>
     n === 0 ? 'Sygnał pracy wyłączony.' : `Sygnał pracy co ${coSekund(n)} ciszy podczas przygotowywania odpowiedzi, w trybie czytnika ekranu.`,
