@@ -1,7 +1,7 @@
 {
   "name": "earshot",
-  "version": "0.1.0",
-  "description": "Screen reader companion for Claude Code: detects VoiceOver, NVDA or JAWS, enables screen reader mode from the next start, delivers whole answers, narrates tool activity, and adds the /a11y-on, /a11y-off, /a11y-status, /a11y-stream and /a11y-last commands.",
+  "version": "0.1.1",
+  "description": "Screen reader companion for Claude Code: detects VoiceOver, NVDA or JAWS, enables screen reader mode from the next start, delivers whole answers, narrates tool activity, and adds the /a11y-on, /a11y-off, /a11y-status, /a11y-stream, /a11y-last, /a11y-tools, /a11y-heartbeat and /a11y-log commands.",
   "author": {
     "name": "Unlocked Spark Foundation"
   },

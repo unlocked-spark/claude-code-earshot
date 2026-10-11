@@ -7,6 +7,8 @@ Commits are written as imperative sentences without type prefixes.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-11
+
 ### Added
 - Tool narration modes: in screen reader mode tool rows are hidden by default, so the transcript carries Claude's answers alone; `/a11y-tools off|brief|full|auto` chooses between hidden rows, one line per call with a count per result, and the engine's own rows, remembered across sessions.
 - Heartbeat: in screen reader mode, every 20 seconds of silence while a turn runs the mod prints and speaks `Still working, N seconds.`; `/a11y-heartbeat <seconds>|off` adjusts it, remembered across sessions.
