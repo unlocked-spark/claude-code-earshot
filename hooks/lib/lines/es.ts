@@ -82,6 +82,7 @@ export const es: Messages = {
   toolsInvalid: () => 'Uso: /earshot-tools, /earshot-tools off, /earshot-tools brief, /earshot-tools full o /earshot-tools auto.',
   toolLabel: (label) => LABELS[label],
   resultLine: (isErrored, lines) => `${isErrored ? 'error' : 'resultado'}: ${lines} ${lines === 1 ? 'línea' : 'líneas'}`,
+  welcome: () => 'Te damos la bienvenida a Earshot para Claude Code. Para desactivarlo, escribe /earshot-off.',
   working: () => 'Empiezo a trabajar.',
   heartbeat: (n) => `Sigo trabajando, ${segundos(n)}.`,
   heartbeatReport: (n) =>

@@ -71,6 +71,10 @@ async function drain(stream: AsyncIterable<TurnStepChunk>): Promise<void> {
 test('opens the turn with a line and says every 20 seconds of silence in screen reader mode (AC-016, AC-020)', async ($, on) => {
   const { log, clock } = host(on, { modeOn: true, script: SCRIPT })
   await $.session.start(start)
+  // The session opens with the welcome line (AC-019 of screen reader detection).
+  expect(log.logged).toEqual(['Welcome to Earshot for Claude Code. To turn it off, type /earshot-off.'])
+  log.logged.length = 0
+  log.spoken.length = 0
   await $.turn.start({ text: 'hi', turnId: 't1' })
   await clock.advance(19_000)
   expect(log.logged).toEqual(['Starting work.'])
@@ -104,6 +108,10 @@ test('stays silent outside screen reader mode, without the start line (AC-016, A
 test('/earshot-heartbeat sets the interval, switches off and reports (AC-017)', async ($, on) => {
   const { log, clock } = host(on, { modeOn: true, script: SCRIPT })
   await $.session.start(start)
+  // The session opens with the welcome line (AC-019 of screen reader detection).
+  expect(log.logged).toEqual(['Welcome to Earshot for Claude Code. To turn it off, type /earshot-off.'])
+  log.logged.length = 0
+  log.spoken.length = 0
   expect((await $.command.run(command(''))).text).toBe('Heartbeat every 20 seconds of silence while an answer is being prepared, in screen reader mode.')
   expect((await $.command.run(command('5'))).text).toBe('Heartbeat set to every 5 seconds of silence.')
   expect(log.stored.at(-1)).toMatchObject({ key: 'heartbeat', value: { seconds: 5 } })

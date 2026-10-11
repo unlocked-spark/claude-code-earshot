@@ -13,6 +13,8 @@ The plugin is named `earshot`. It works with NVDA and JAWS on Windows and with V
 - No answer within 30 seconds leaves the mode off for this session only.
 - The mod never asks while `CLAUDE_AX_SCREEN_READER` is set, and never when your settings already say `false`.
 
+**Greets you.** In screen reader mode each session opens with one line under Claude Code's header: `Welcome to Earshot for Claude Code. To turn it off, type /earshot-off.`
+
 **Turns itself off.** `/earshot-off` turns the whole mod off and puts back the settings `/earshot-on` changed, as they were. It stays off in later sessions and asks nothing until `/earshot-on`.
 
 **Delivers whole answers.** In screen reader mode each answer appears at once, so the screen reader reads it in one go. The model's thinking is not shown, and a bell marks the moment the answer appears. `/earshot-stream on`, `/earshot-stream off` and `/earshot-stream auto` force or release this; the choice is remembered.

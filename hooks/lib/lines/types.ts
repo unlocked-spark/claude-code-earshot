@@ -31,6 +31,7 @@ export type Messages = {
   toolsInvalid(): string
   toolLabel(label: ToolLabel): string
   resultLine(isErrored: boolean, lines: number): string
+  welcome(): string
   working(): string
   heartbeat(seconds: number): string
   heartbeatReport(seconds: number): string

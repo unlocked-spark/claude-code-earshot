@@ -39,6 +39,7 @@ As a blind developer who has just installed the mod from the shell, I want Claud
 | AC-016 | README documents installation from the shell and the restart step, because the in-session plugin picker is hard to use with a screen reader. | Should |
 | AC-017 | Before `/earshot-on` changes the user settings, it stores under `activation` in `$.store` `{ on: true, setAt, saved }`, where `saved` holds each key it changes (`axScreenReader`, `spinnerTipsEnabled`) as the file had it: its value, or absent. Then it writes `axScreenReader: true` and `spinnerTipsEnabled: false`. A second `/earshot-on` keeps the first snapshot. With no stored activation, an `axScreenReader: true` already in the file is saved as absent. | Must |
 | AC-018 | `/earshot-off` writes each saved key back (a value is set, an absent key removed) and stores `{ on: false, setAt }`. From then on, in this session and later ones, every hook passes the engine's own behaviour and the start question is not asked, until `/earshot-on` or a yes answer. With no stored activation the mod is on. A failed write leaves the mod on, so the command can be run again. | Must |
+| AC-019 | When the mod is on and screen reader mode is on, every interactive session start prints and speaks one line under the engine's header: `Welcome to Earshot for Claude Code. To turn it off, type /earshot-off.`, in the system's language. Nothing while the mod is off or the mode is off (the start question speaks instead). | Must |
 
 ## 3. User Test Cases
 

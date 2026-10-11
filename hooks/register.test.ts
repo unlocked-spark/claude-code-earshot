@@ -154,3 +154,26 @@ test('falls back to English for a system language without lines (system language
   await $.session.start(start)
   expect(log.spoken[0]).toBe('VoiceOver detected. Enable Claude Code screen reader mode from the next start? Press y or n.')
 })
+
+test('opens a session in screen reader mode with the welcome line, and not once the mod is off (AC-019)', async ($, on) => {
+  const log = host(on, { voiceover: true, env: { HOME: '/Users/t' }, settings: '{ "axScreenReader": true }' })
+  await $.session.start(start)
+  expect(log.logged).toEqual(['Welcome to Earshot for Claude Code. To turn it off, type /earshot-off.'])
+  expect(log.spoken).toEqual(log.logged)
+  await $.command.run(command('earshot-off'))
+  const logged = log.logged.length
+  await $.session.start(start)
+  expect(log.logged).toHaveLength(logged)
+})
+
+test('says nothing of the welcome while screen reader mode is off (AC-019)', async ($, on) => {
+  const log = host(on, { voiceover: true, env: { HOME: '/Users/t' }, settings: undefined })
+  await $.session.start(start)
+  expect(log.logged.some((line) => line.startsWith('Welcome'))).toBe(false)
+})
+
+test('welcomes in the system language (AC-019)', async ($, on) => {
+  const log = host(on, { voiceover: false, env: { HOME: '/Users/t' }, settings: '{ "axScreenReader": true }', appleLanguages: polishMac })
+  await $.session.start(start)
+  expect(log.logged).toEqual(['Witaj w Earshot dla Claude Code. Aby go wyłączyć, wpisz /earshot-off.'])
+})

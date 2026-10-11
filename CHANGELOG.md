@@ -11,6 +11,7 @@ Commits are written as imperative sentences without type prefixes.
 
 ### Added
 - Under whole answer delivery each turn opens with one printed and spoken line, `Starting work.` in the system's language, since the hidden spinner gave no sign that the prompt was taken.
+- In screen reader mode each session opens with one line that names the mod and says how to turn it off: `Welcome to Earshot for Claude Code. To turn it off, type /earshot-off.`
 
 ### Changed
 - The one-time copy of the user settings is named `settings.json.earshot-backup`.

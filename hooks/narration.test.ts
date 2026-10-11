@@ -222,7 +222,7 @@ test('writes every drawn component to the debug log until /earshot-log off (AC-0
   expect((await shown.find({ type: 'Text' }))?.text).toBe('engine row')
   await shown.unmount()
   expect(log.debug.some((line) => /^ui\.render InfoNotice \S+: Context left until auto-compact: 12% \/compact$/.test(line))).toBe(true)
-  expect(log.logged).toHaveLength(0)
+  expect(log.logged).toEqual(['Welcome to Earshot for Claude Code. To turn it off, type /earshot-off.'])
   // Off: nothing more is written, and the choice is stored.
   expect((await $.command.run(command('earshot-log', 'off'))).text).toBe('Render log off.')
   const before = log.debug.length

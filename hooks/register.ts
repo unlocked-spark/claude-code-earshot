@@ -215,6 +215,9 @@ async function startSession($: EngineInterface): Promise<void> {
   facts.mode = await loadMode($)
   const activation = await $.store.get(ACTIVATION_KEY)
   facts.active = resolveActive(activation)
+  // In screen reader mode the session opens with one line under the engine's
+  // header that names the mod and how to turn it off.
+  if (facts.active && facts.mode.on) say($, messages.welcome())
   facts.delivery = resolveDelivery({ modeOn: facts.mode.on, override: await $.store.get(STREAM_KEY) })
   await refreshTools($)
   facts.renderLog = resolveRenderLog(await $.store.get(LOG_KEY))
