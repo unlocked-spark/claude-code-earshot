@@ -54,6 +54,10 @@ function host(on: On, world: { voiceover: boolean; env: Record<string, string>; 
   return log
 }
 
+// The settings file under HOME, written with either separator: the mod builds
+// the Windows path when the tests run on Windows.
+const isSettingsPath = /[\\/]\.claude[\\/]settings\.json$/
+
 const start = { cwd: '/work', surface: 'terminal' as const, isInteractive: true }
 const typed = (text: string) => ({ text, wait: false, origin: { kind: 'composer' as const } })
 const command = (name: string) => ({ command: name, args: '', origin: { kind: 'composer' as const }, presentation: { isFullscreen: false, columns: 80 } })
@@ -72,7 +76,7 @@ test('writes axScreenReader on y, keeps other keys, and consumes the answer (AC-
   await $.session.start(start)
   const result = await $.prompt.submit(typed('y'))
   expect(result.drop).toBeDefined()
-  const settingsWrite = log.written.find((w) => w.path === '/Users/t/.claude/settings.json')
+  const settingsWrite = log.written.find((w) => isSettingsPath.test(w.path))
   expect(settingsWrite).toBeDefined()
   expect(JSON.parse(settingsWrite?.text ?? '{}')).toEqual({ model: 'opus', axScreenReader: true })
   expect(log.spoken.at(-1)).toBe('Screen reader mode enabled from the next start. Restart Claude Code now.')
@@ -95,7 +99,7 @@ test('registers the commands and /a11y-off removes the key (AC-009, AC-010)', as
   expect(log.commands).toEqual(expect.arrayContaining(['a11y-on', 'a11y-off', 'a11y-status']))
   const result = await $.command.run(command('a11y-off'))
   expect(result.text).toBe('Screen reader mode disabled from the next start.')
-  const settingsWrite = log.written.find((w) => w.path === '/Users/t/.claude/settings.json')
+  const settingsWrite = log.written.find((w) => isSettingsPath.test(w.path))
   expect(JSON.parse(settingsWrite?.text ?? '{}')).toEqual({ model: 'opus' })
 })
 

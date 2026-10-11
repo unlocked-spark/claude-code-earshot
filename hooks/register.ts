@@ -388,6 +388,22 @@ export const register: Register = (on) => {
     return h(Text, null, resultLine(e.props.isErrored, countLines(text))) as RenderElement
   })
 
+  // A folded run of reads and searches draws one count line and, while a call
+  // runs, that call's command under it. The same modes apply as to ToolUse;
+  // an expanded group draws as ToolUse rows, which the hook above handles.
+  on('ui.render', { component: 'ToolGroup' }, ($, e, next) => {
+    const mode = toolNarration()
+    if (e.surface !== 'terminal' || mode === 'full' || e.props.isExpanded) return next(e)
+    for (const call of e.props.calls) {
+      if (call.tool_use_id === undefined) continue
+      session.lastResults.note(call.tool_use_id, describeToolUse(call.tool, call.input))
+      if (call.output !== undefined) session.lastResults.put({ id: call.tool_use_id, text: textOfResult(call.tool, call.output), fallbackSummary: call.tool })
+    }
+    const { Box, Text } = $.ui.resolve(e)
+    if (mode === 'off') return h(Box, null) as RenderElement
+    return h(Box, { flexDirection: 'column' }, ...e.props.calls.map((call) => h(Text, null, summaryLine(call, call.tool, call.input)))) as RenderElement
+  })
+
   // Whole answer delivery: in buffered mode the step's chunks are held until
   // the stream beneath ends, then yielded at once, so the screen reader reads
   // the answer as one block. Thinking is dropped from the display; the engine

@@ -56,6 +56,19 @@ const bashResult = (id: string, stdout: string, isErrored = false) => ({
   component: 'ToolResult' as const,
   props: { tool_use_id: id, tool: 'Bash', output: { stdout, stderr: '', interrupted: false }, isErrored },
 })
+const group = (isExpanded = false) => ({
+  plugin: 'earshot',
+  surface: 'terminal' as const,
+  component: 'ToolGroup' as const,
+  props: {
+    calls: [
+      { tool_use_id: 'g1', tool: 'Read', input: { file_path: '/work/notes.md' }, ...flags, output: { file: { content: 'one\ntwo\n' } } },
+      { tool_use_id: 'g2', tool: 'Bash', input: { command: 'cat /work/memory/*.md', description: 'Read memory files' }, ...flags, isRunning: true },
+    ],
+    isActive: true,
+    isExpanded,
+  },
+})
 const notice = (text: string, command: string | null) => ({
   plugin: 'earshot',
   surface: 'terminal' as const,
@@ -76,6 +89,27 @@ test('draws nothing for tool rows by default in screen reader mode (AC-012)', as
   await result.unmount()
   // The result is still kept for /a11y-last.
   expect((await $.command.run(command('a11y-last'))).text).toBe('Result of: List files and search for x\na\nb\n')
+})
+
+test('treats a folded tool group like its calls: nothing by default, one line per call in brief', async ($, on) => {
+  host(on, { modeOn: true })
+  await $.session.start(start)
+  const off = await $.ui.mount(group())
+  expect(await off.findAll({ type: 'Text' })).toHaveLength(0)
+  await off.unmount()
+  expect((await $.command.run(command('a11y-last'))).text).toBe('Result of: Read notes.md\none\ntwo\n')
+  await $.command.run(command('a11y-tools', 'brief'))
+  const brief = await $.ui.mount(group())
+  expect((await brief.findAll({ type: 'Text' })).map((t) => t.text)).toEqual(['tool: Read notes.md', 'tool running: Read memory files'])
+  await brief.unmount()
+  // Expanded, the group draws as ToolUse rows, so it is left to the engine.
+  const expanded = await $.ui.mount(group(true))
+  expect((await expanded.find({ type: 'Text' }))?.text).toBe('engine row')
+  await expanded.unmount()
+  await $.command.run(command('a11y-tools', 'full'))
+  const full = await $.ui.mount(group())
+  expect((await full.find({ type: 'Text' }))?.text).toBe('engine row')
+  await full.unmount()
 })
 
 test('draws the call row from the Bash description in brief narration (AC-001, AC-002)', async ($, on) => {

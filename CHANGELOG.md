@@ -7,6 +7,17 @@ Commits are written as imperative sentences without type prefixes.
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-10-11
+
+### Fixed
+- Folded tool groups (`Reading 1 file…` and the running command under it) follow the tool narration mode: hidden by default in screen reader mode, one line per call in brief, the engine's own row in full. Their results are kept for `/a11y-last`.
+- The settings tests of the consent flow pass on Windows, where the settings path uses backslashes.
+
+## [0.1.2] - 2026-10-11
+
+### Added
+- The mod's lines follow the system display language: English, Polish, German, French, Spanish or Italian, English otherwise.
+
 ## [0.1.1] - 2026-10-11
 
 ### Added

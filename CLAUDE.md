@@ -70,7 +70,7 @@ hooks/lib/messages.ts        # the live table of spoken and printed lines, setLa
 hooks/lib/lines/*.ts         # one table per language (en, pl, de, fr, es, it) and the shared Messages type
 hooks/register.test.ts       # mod-level tests: detection and commands (claude plugin test)
 hooks/stream.test.ts         # mod-level tests: turn.step hold and /a11y-stream
-hooks/narration.test.ts      # mod-level tests: ToolUse and ToolResult rows mounted on the terminal surface, the render log
+hooks/narration.test.ts      # mod-level tests: ToolUse, ToolResult and ToolGroup rows mounted on the terminal surface, the render log
 hooks/heartbeat.test.ts      # mod-level tests: turn.start/turn.complete ticks on the mocked clock
 tests/unit/*.spec.ts         # Vitest tests of hooks/lib
 docs/research/               # research notes (Polish) and spike results
