@@ -1,18 +1,16 @@
 # Spec: System Language
 
-**Version:** 0.1.0
-**Created:** 2026-10-11
-**PRD Reference:** docs/prd.md (design rule: speech is short and understood on first hearing)
-**Research:** NVDA session of 2026-10-11: a Polish-speaking user hears the mod's English lines read by a Polish voice
-**Status:** Implementing (code and automated tests done; manual test cases pending)
+**Applies to:** earshot 0.1.5
+**PRD Reference:** docs/prd.md
+**Status:** Implemented (automated tests pass; manual test cases in docs/testing/)
 
 ## 1. Overview
 
 Every line the mod speaks or prints, and the descriptions of its slash commands, follow the operating system's display language. The mod ships full tables for English, Polish, German, French, Spanish and Italian. Any other language, or a system the mod cannot ask, gets English.
 
-The language is settled once per session, before the commands are registered. Command names and their arguments (`/earshot-tools brief`) stay in English in every language, so documentation and muscle memory carry over.
+The language is settled once per session, before the commands are registered. Command names and their arguments (`/earshot-tools brief`) stay in English in every language, so documentation and habits carry over.
 
-The consent question names the answer letters of its language (`y`/`n`, `t`/`n`, `j`/`n`, `o`/`n`, `s`/`n`). The answer parser takes the yes and no words of every supported language, whatever language asked.
+The start question names the answer letters of its language (`y`/`n`, `t`/`n`, `j`/`n`, `o`/`n`, `s`/`n`). The answer parser takes the yes and no words of every supported language, whatever language asked.
 
 ### User Story
 
@@ -27,14 +25,25 @@ As a blind developer whose system speaks Polish, I want the mod's lines in Polis
 | AC-003 | The first source that names a language decides. A supported language selects its table; any other selects English, even when a later source names a supported one. | Must |
 | AC-004 | Every table has every line of the English one; the compiler enforces it through one shared type. | Must |
 | AC-005 | Command descriptions registered with `$.command.register` come from the selected table. | Must |
-| AC-006 | `parseAnswer` takes `y yes t tak j ja o oui s si sí sì` as yes and `n no nie nein non` as no, case and surrounding spaces ignored. | Must |
+| AC-006 | The answer parser takes `y yes t tak j ja o oui s si sí sì` as yes and `n no nie nein non` as no, case and surrounding spaces ignored. | Must |
 | AC-007 | Counts use the grammar of the language: Polish takes three forms (1 sekunda, 2 to 4 and 22 to 24 sekundy, otherwise sekund), French takes the singular for 0 and 1, the others for 1 alone. | Must |
 | AC-008 | The render log written to the debug sink stays in English. | Should |
 
-## 3. Manual Test Cases
+## 3. User Test Cases
 
-| ID | Steps | Expected |
-|----|-------|----------|
-| TC-001 | Windows with a Polish display language, NVDA running, screen reader mode off; start `claude`. | The question is spoken and printed in Polish and ends with `Naciśnij t albo n.`; answering `t` enables the mode with a Polish confirmation. |
-| TC-002 | Same machine; type `/` and move through the `earshot` commands. | The descriptions are Polish. |
-| TC-003 | Screen reader mode on, a turn longer than 20 s. | The heartbeat says `Nadal pracuję, 20 sekund.` |
+Full steps are in `docs/testing/system-language.md`.
+
+| ID | Scenario | Expected | Automated coverage |
+|----|----------|----------|--------------------|
+| TC-001 | Polish display language, reader running, mode off | The question is in Polish and ends with `Naciśnij t albo n.`; `t` turns the mod on with a Polish confirmation | hooks/register.test.ts → "speaks Polish when the system displays Polish, and takes t as yes (system language)" |
+| TC-002 | Same machine, the command list | The `earshot` command descriptions are Polish | tests/unit/language.spec.ts → "setLanguage" |
+| TC-003 | A prompt and a long turn | `Rozpoczynam pracę.`, then `Nadal pracuję, 20 sekund.` | tests/unit/language.spec.ts → "has a Polish line for every English one" |
+| TC-004 | A language without a table | English lines | hooks/register.test.ts → "falls back to English for a system language without lines (system language)" |
+
+## 4. Data Model
+
+`Language`: `"en" | "pl" | "de" | "fr" | "es" | "it"`. One table per language in `hooks/lib/lines/`, all of the shared `Messages` type. Nothing is stored; the language is read again each session.
+
+## 5. Dependencies
+
+- `$.process.run` for the two probes, `$.env.get` for `LC_ALL`, `LC_MESSAGES` and `LANG`.

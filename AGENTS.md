@@ -17,7 +17,7 @@ Accessibility mod for Claude Code aimed at blind developers. An overlay on the b
 - PRD: `docs/prd.md`
 - Research: `docs/research/rozpoznanie-2026-10-09.md`
 - Specs: `specs/screen-reader-detection.md` (under work)
-- Plans: `docs/plans/`
+- Plans: written per feature in `docs/plans/` while it is built, removed once finished
 - Configuration: `.add/config.json`
 - Knowledge base: `.add/learnings.json`, view in `.add/learnings-active.md`
 - Agent context: `CLAUDE.md`

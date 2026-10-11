@@ -1,30 +1,30 @@
-# Manual test protocol: screen reader detection and mode enabling
+# Manual test protocol: screen reader detection and mod activation
 
-Spec: `specs/screen-reader-detection.md`. Run with the screen reader on and a terminal the reader supports. Save each transcript capture as plain text under `tests/screenshots/screen-reader-detection/`. Note in the Audio column what was heard, by whom (screen reader, system voice, bell) and whether speech collided with the reader.
+Spec: `specs/screen-reader-detection.md`. Primary platform: Windows 11 with NVDA in Windows Terminal. Second platform: macOS with VoiceOver in Terminal or iTerm2. Record each case as pass or fail per platform, with a note of what was heard: the screen reader, a separate system voice, the bell.
 
 ## Setup
 
-1. `claude --version` prints 2.1.287 or later.
-2. Clone the repository and run `npm install`, `npm test`, `claude plugin test .`, `claude plugin validate .`.
-3. Start sessions with `claude --plugin-dir <repository>` from a shell. Do not use `/plugin install` from inside a session: that picker is the one that does not work with NVDA.
-4. For a clean state before each case: remove `axScreenReader` from `~/.claude/settings.json` (Windows: `%USERPROFILE%\.claude\settings.json`), unset `CLAUDE_AX_SCREEN_READER`, and delete the mod's store entry (`/earshot-status` reports "No refusal stored." when it is clear; `/earshot-on` followed by `/earshot-off` clears it).
+1. `claude --version` prints 2.1.292 or later.
+2. Install from a shell: `claude plugin install earshot --marketplace unlocked-spark/claude-code-earshot`, or update with `claude plugin update earshot@unlocked-spark`.
+3. Settings file: Windows `%USERPROFILE%\.claude\settings.json`, macOS `~/.claude/settings.json`.
+4. Clean state for a case that needs the start question: run `/earshot-on` (clears a stored refusal or a stored off), quit, remove `axScreenReader` from the settings file by hand, make sure `CLAUDE_AX_SCREEN_READER` is not set, start `claude`.
 
 ## Cases
 
-| Case | Platform | Steps | Expected | Capture | Audio |
-|------|----------|-------|----------|---------|-------|
-| TC-001 | macOS, VoiceOver | Start, wait, type `y`, restart | Question spoken and printed; restart line; settings has `"axScreenReader": true`; second session starts with `[Screen Reader Mode: on via settings]` and the mod is silent | tc-001-question.txt, tc-001-restart.txt | |
-| TC-002 | Windows 11, NVDA | As TC-001 | As TC-001 with "NVDA detected" | tc-002-question.txt | Which voice spoke? |
-| TC-003 | either | Settings already true, start | No bell, no speech, no line; file unchanged | tc-003-silent.txt | |
-| TC-004 | either | `CLAUDE_AX_SCREEN_READER=0`, start, `/earshot-status` | Silent start; status names the variable | tc-004-status.txt | |
-| TC-005 | either | Answer `n`, restart, `/earshot-status` | Declined line; silent second start; status reports the stored refusal with date and version | tc-005-declined.txt | |
-| TC-006 | either | `/earshot-on`, restart, `/earshot-off`, restart | Restart line; mode on, no tips; off line, `axScreenReader` and `spinnerTipsEnabled` back as before `/earshot-on`; tool rows and spinner drawn by Claude Code; no question at the next start | tc-006-on.txt, tc-006-off.txt | |
-| TC-007 | either | Trailing comma in settings, answer `y` | Error line with the manual fallback; file byte-identical; session continues | tc-007-error.txt | |
-| TC-008 | either | Start, wait 30 s, send a prompt, restart | "No answer" line after 30 s; prompt handled normally; question asked again | tc-008-timeout.txt | |
+| Case | Steps | Expected |
+|------|-------|----------|
+| TC-001 | Clean state, reader running; start `claude`, answer `y` (`t` on a Polish system), quit, start again | Bell, question spoken and printed naming the reader; `earshot: Answered.` replaces the prompt; restart line; settings hold `"axScreenReader": true` and `"spinnerTipsEnabled": false`, other keys and indentation unchanged; `settings.json.earshot-backup` holds the previous content; second start opens in screen reader mode and the mod asks nothing |
+| TC-002 | Settings already have `axScreenReader: true`; start | No bell, no speech, no line; file unchanged |
+| TC-003 | `CLAUDE_AX_SCREEN_READER=0` (PowerShell: `$env:CLAUDE_AX_SCREEN_READER = "0"`); start; `/earshot-status` | Silent start; status says the variable keeps the mode off and the mod will not change settings while it is set |
+| TC-004 | Clean state; answer `n`; quit and start; `/earshot-status` | Declined line with the `/earshot-on` hint; silent second start; status reports the refusal with date and mod version |
+| TC-005 | Note `axScreenReader` and `spinnerTipsEnabled` in the settings file; `/earshot-on`; restart; `/earshot-off`; restart | On: restart line, both keys set. After restart: screen reader mode on, no tips under the spinner. Off: `Earshot off. ...`; both keys back exactly as noted (absent keys absent). Next start: tool rows, spinner and streaming drawn by Claude Code; no question |
+| TC-006 | Mod off; `/earshot-off` again | `Earshot is already off; nothing changed.` |
+| TC-007 | Add a trailing comma to the settings file; clean state; answer `y` | Error line with the manual fallback; file byte-identical; session continues |
+| TC-008 | Clean state; wait 30 s without answering; send a prompt; restart | Withdrawal line after 30 s; prompt answered normally; question asked again at the next start |
+| TC-009 | Clean state; type an ordinary prompt instead of an answer | Question withdrawn with one line; the prompt goes to Claude |
+| TC-010 | `/earshot-status` with the reader running and the mode on | Mod on, reader named, mode on with its source, no refusal stored |
 
 ## Extra checks
 
-- The drop reason shown after `y` or `n`: is it read by the screen reader?
-- Does `$.audio.speak` collide with the screen reader reading the transcript line?
-- Does the native notification ring the terminal bell with `preferredNotifChannel` unset?
-- A prompt typed while the question is pending that is not `y` or `n`: the question is withdrawn with a dim line and the prompt goes through.
+- Is each mod line read once, or twice (screen reader plus a separate system voice)?
+- Is the bell heard on the start question and after `y`?

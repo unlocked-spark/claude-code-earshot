@@ -2,7 +2,7 @@
 
 Accessibility mod for Claude Code aimed at blind developers. It is an overlay on the built-in screen reader mode (`--ax-screen-reader`) and adds only what that mode lacks: spoken end-of-turn summaries, earcons for tool and permission events, a screen-reader-usable `AskUserQuestion` dialog, significance-filtered tool narration, speech on Windows, and automatic enabling of the mode when a screen reader is detected. Project of the Unlocked Spark Foundation.
 
-Stage: screen reader detection (confirmed with VoiceOver), whole answer delivery (turn.step hold) and tool narration (ui.render on tool rows, mechanism confirmed by a spike in screen reader mode; hidden by default since 2026-10-11, `/earshot-tools` chooses) implemented with unit and mod tests, plus a heartbeat every 20 s of silence during a turn (`/earshot-heartbeat`) and a render log of every drawn component in the debug log (`/earshot-log`) for hunting the messages a screen reader reads; VoiceOver sessions for the last two and all NVDA sessions pending. Research (Polish): `docs/research/rozpoznanie-2026-10-09.md`; spike results and loader constraints: `docs/research/spikes-2026-10.md`.
+Stage: public preview, version 0.1.5. Delivered: screen reader detection and mode enabling with `/earshot-on` and `/earshot-off`, whole answer delivery (turn.step hold), tool narration (rows, groups, the run-in-background hint and the spinner hidden by default, `/earshot-tools`, `/earshot-last`), the turn start line and heartbeat (`/earshot-heartbeat`), the render log (`/earshot-log`) and six languages. Used daily with NVDA on Windows; manual protocols in `docs/testing/` not yet run formally. Research (Polish): `docs/research/rozpoznanie-2026-10-09.md`; spike results and loader constraints: `docs/research/spikes-2026-10.md`.
 
 The plugin is named `earshot` (names starting with `claude-` are reserved by the validator); the repository keeps its name.
 
@@ -12,11 +12,10 @@ This project follows Agent Driven Development (ADD): specs drive agents, humans 
 
 - **PRD:** `docs/prd.md`
 - **Specs:** `specs/`
-- **Plans:** `docs/plans/`
 - **Config:** `.add/config.json`
 - **Knowledge base:** `.add/learnings.json` (canonical) and the generated `.add/learnings-active.md`
 
-Document hierarchy: PRD → Spec → Plan → Tests → Implementation.
+Document hierarchy: PRD → Spec → Plan → Tests → Implementation. Finished plans are removed; docs describe the current version only, history lives in git and CHANGELOG.md.
 
 ## Tech Stack
 
@@ -76,7 +75,7 @@ tests/unit/*.spec.ts         # Vitest tests of hooks/lib
 docs/research/               # research notes (Polish) and spike results
 docs/testing/                # manual test protocols
 ```
-Planned next: `hooks/lib/classify/` (tool call significance), speech backends for Windows, earcon assets, surface renderers.
+Planned next: end-of-turn summary, earcon assets, an `AskUserQuestion` renderer if the built-in dialog stays unusable, `hooks/lib/classify/` (tool call significance).
 
 ### Mod loader rules (learned the hard way)
 - `$` may only be passed to functions declared at the top of the same file; the validator refuses `$` passed to an imported function (`$ is followed only into a function declared in this same file`). So every function that takes `$` lives in `hooks/register.ts`, and only `$`-free state and transitions are split out (`hooks/state.ts`).
@@ -94,13 +93,13 @@ Planned next: `hooks/lib/classify/` (tool call significance), speech backends fo
 - The mod complements `--ax-screen-reader`; it never re-implements what the mode already does (static spinner, flat transcript, numbered menus). Check the mode first, then add.
 - Speech is short. The screen reader reads the transcript; the mod speaks only what the transcript cannot convey (turn boundaries, event class, counts).
 - Nothing is conveyed by sound alone. Every earcon and spoken message has a text equivalent in the transcript.
-- Writes outside the plugin are limited to `~/.claude/settings.json` and its one-time backup, with consent, reversible (`/earshot-off`), never when `CLAUDE_AX_SCREEN_READER` is set.
+- Writes outside the plugin are limited to `~/.claude/settings.json` and its one-time backup, with consent, reversible (`/earshot-off`); the start question is never asked while `CLAUDE_AX_SCREEN_READER` is set.
 - The mod API cannot reach the permission prompt, the input field, the slash menu, the desktop app or the VS Code panel. Gaps there become reproducible bug reports to Anthropic, not workarounds.
 - Mods do not run in `claude -p`, the SDK, the cloud or WSL.
 
 ### Environments
-- **Local:** `claude --plugin-dir .` on macOS with VoiceOver; Windows 11 with NVDA for Windows work.
-- **Production:** a plugin marketplace listing. Manual, approval required.
+- **Local:** the installed marketplace copy (push to `main`, then `claude plugin update earshot@unlocked-spark`) on Windows 11 with NVDA; `claude --plugin-dir .` on macOS with VoiceOver.
+- **Production:** the repository is its own marketplace; a release is a version bump pushed to `main`. Approval required.
 
 ## Quality Gates
 

@@ -101,7 +101,7 @@ async function writeSettings($: EngineInterface, path: string, before: string | 
   if (!applied.changed) return undefined
   try {
     if (before !== undefined && !session.facts.backedUp) {
-      await $.fs.write(`${path}.a11y-backup`, before)
+      await $.fs.write(`${path}.earshot-backup`, before)
       session.facts.backedUp = true
     }
     await $.fs.write(path, applied.text)

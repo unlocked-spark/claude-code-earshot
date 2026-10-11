@@ -1,40 +1,67 @@
 # claude-code-earshot
 
-Screen reader companion for Claude Code, built for blind developers. The mod sits on top of the built-in screen reader mode and adds what the mode lacks. First feature: it notices a running screen reader, asks by voice, and switches the next session into screen reader mode.
+Screen reader companion for Claude Code, built for blind developers. The mod sits on top of the built-in screen reader mode and adds what the mode lacks: it switches the mode on when it finds a screen reader, shows each answer whole instead of streaming it line by line, keeps tool noise out of the transcript, and says when work starts and that it goes on.
 
-The plugin is named `earshot`. Stage: three features implemented and tested (mode enabling confirmed with VoiceOver; whole answer delivery and tool narration awaiting their VoiceOver sessions), NVDA sessions pending.
+The plugin is named `earshot`. It works with NVDA and JAWS on Windows and with VoiceOver on macOS.
 
-## What it does today
+## What it does
 
-- At session start it detects VoiceOver on macOS and NVDA or JAWS on Windows.
-- If the screen reader mode is off and nothing says otherwise, it rings, speaks and prints one question: enable screen reader mode from the next start? You answer `y` or `n`.
-- `y` turns the mod on, like `/earshot-on`: it first saves the settings it is about to change, then writes `"axScreenReader": true` and `"spinnerTipsEnabled": false` (no tips under the spinner) to your user settings file (a copy of the previous content is also kept beside it as `settings.json.a11y-backup`), and tells you to restart. `n` is remembered and not asked again until you run `/earshot-on` or the mod is updated. No answer within 30 seconds leaves the mode off for this session only.
-- It never asks while `CLAUDE_AX_SCREEN_READER` is set, and never when your settings already say `false`.
-- `/earshot-off` turns the whole mod off at once and puts back the settings `/earshot-on` changed, as they were before. It stays off in later sessions and asks nothing until `/earshot-on`.
-- In screen reader mode each answer appears whole instead of streaming line by line, so the screen reader reads it in one go. The model's thinking is not shown in this mode, and a bell marks the moment the answer appears. `/earshot-stream on`, `/earshot-stream off` and `/earshot-stream auto` force or release this behaviour; the choice is remembered across sessions.
-- With whole answer delivery active, tool rows are hidden by default: the transcript carries Claude's own words and nothing of the commands, file dumps or line counts in between. `/earshot-tools brief` narrates instead: each tool call is one line built from Claude's own description of it (`tool: List files and search for x`), and each result is a count (`result: 292 lines`, `error: 3 lines`). `/earshot-tools full` leaves the rows to Claude Code, `/earshot-tools auto` returns to the default. The choice is remembered across sessions. In every mode but full, `/earshot-last` prints the full text of the last result, `/earshot-last 2` the one before, up to five back. Dialogs and the engine's folded groups are untouched.
-- A start line: in screen reader mode, as soon as a prompt starts a turn, the mod prints and speaks `Starting work.` (`Rozpoczynam pracę.` in Polish), so you know the prompt was taken even though the spinner is hidden.
-- A heartbeat for long silences: in screen reader mode, while an answer is being prepared and nothing new has reached the transcript for 20 seconds, the mod prints and speaks `Still working, 20 seconds.`, then again at 40, 60 and so on until the next visible row. `/earshot-heartbeat 45` changes the interval (5 to 600 seconds), `/earshot-heartbeat off` stops it; the choice is remembered.
-- A render log for finding noise: every component the terminal draws (notices, hints, spinner words, mode labels, transcript rows) is written as one line to the debug log of a session started with `claude --debug` (`~/.claude/debug/<session>.txt`, lines led by `earshot:` and `ui.render`). Nothing of it reaches the screen. `/earshot-log off` stops it, `/earshot-log on` resumes it; the choice is remembered.
-- The mod speaks the language of your system: English, Polish, German, French, Spanish or Italian, with English for any other. Its lines and the descriptions of its commands follow the system's display language; command names and arguments stay in English.
-- Commands: `/earshot-on`, `/earshot-off`, `/earshot-status`, `/earshot-stream`, `/earshot-tools`, `/earshot-last`, `/earshot-heartbeat`, `/earshot-log`.
+**Turns screen reader mode on.** At session start the mod looks for VoiceOver on macOS and NVDA or JAWS on Windows. If one is running and screen reader mode is off, it rings, speaks and prints one question: enable screen reader mode from the next start? Answer `y` or `n`.
+
+- `y` does the same as `/earshot-on`: the mod saves the settings it is about to change, writes `"axScreenReader": true` and `"spinnerTipsEnabled": false` (no tips under the spinner) to your user settings, keeps a copy of the previous file beside it as `settings.json.earshot-backup`, and asks you to restart.
+- `n` is remembered and not asked again until you run `/earshot-on` or update the mod.
+- No answer within 30 seconds leaves the mode off for this session only.
+- The mod never asks while `CLAUDE_AX_SCREEN_READER` is set, and never when your settings already say `false`.
+
+**Turns itself off.** `/earshot-off` turns the whole mod off and puts back the settings `/earshot-on` changed, as they were. It stays off in later sessions and asks nothing until `/earshot-on`.
+
+**Delivers whole answers.** In screen reader mode each answer appears at once, so the screen reader reads it in one go. The model's thinking is not shown, and a bell marks the moment the answer appears. `/earshot-stream on`, `/earshot-stream off` and `/earshot-stream auto` force or release this; the choice is remembered.
+
+**Says when work starts.** As soon as a prompt starts a turn, the mod prints and speaks `Starting work.`, so you know the prompt was taken. The animated spinner word is hidden, because the screen reader would read every change of it.
+
+**Says that work goes on.** While an answer is being prepared and nothing new has reached the transcript for 20 seconds, the mod prints and speaks `Still working, 20 seconds.`, then again at 40, 60 and so on. `/earshot-heartbeat 45` changes the interval (5 to 600 seconds), `/earshot-heartbeat off` stops it; the choice is remembered.
+
+**Keeps tools quiet.** With whole answer delivery active, tool rows are hidden: the transcript carries Claude's own words, without the commands, file dumps, line counts or the `(ctrl+b to run in background)` hint in between.
+
+- `/earshot-tools brief` narrates instead: one line per call from Claude's own description of it (`tool: List files and search for x`) and a count per result (`result: 292 lines`, `error: 3 lines`).
+- `/earshot-tools full` leaves the rows to Claude Code, `/earshot-tools auto` returns to the default. The choice is remembered.
+- In every mode but `full`, `/earshot-last` prints the full text of the last result, `/earshot-last 2` the one before, up to five back.
+- Dialogs, including `AskUserQuestion`, are left as Claude Code draws them.
+
+**Speaks your language.** Lines and command descriptions follow the system's display language: English, Polish, German, French, Spanish or Italian, English for any other. Command names and arguments stay in English.
+
+**Helps find noise.** In a session started with `claude --debug`, every component the terminal draws is written as one line to the debug log (`~/.claude/debug/<session>.txt`, lines led by `earshot:` and `ui.render`). Nothing of it reaches the screen. `/earshot-log off` and `/earshot-log on` switch it; the choice is remembered.
+
+## Commands
+
+- `/earshot-on`, `/earshot-off`: turn the mod on or off.
+- `/earshot-status`: whether the mod is on, which screen reader was detected, whether screen reader mode is on and what set it, and any stored refusal.
+- `/earshot-stream [on|off|auto]`: whole answer delivery.
+- `/earshot-tools [off|brief|full|auto]`: tool narration.
+- `/earshot-last [n]`: the full text of a recent tool result.
+- `/earshot-heartbeat [seconds|off]`: the interval of the progress line.
+- `/earshot-log [on|off]`: the render log.
+
+Each command without an argument reports the current state.
 
 ## Install
 
-From a shell, with Git installed (Claude Code clones the repository itself) and Claude Code 2.1.292 or later as a native build (mods do not run under WSL, `claude -p`, the SDK, the VS Code panel or the cloud):
+Requirements: Claude Code 2.1.292 or later as a native build, and Git (Claude Code clones the repository itself). Mods do not run under WSL, `claude -p`, the SDK, the VS Code panel or the cloud.
+
+Install from a shell, because the in-session plugin picker is hard to use with a screen reader:
 
 ```
 claude plugin install earshot --marketplace unlocked-spark/claude-code-earshot
 claude
 ```
 
-Or inside a session: `/plugin install earshot --marketplace unlocked-spark/claude-code-earshot`. Updates: `claude plugin update earshot@unlocked-spark`.
+Inside a session the same works as `/plugin install earshot --marketplace unlocked-spark/claude-code-earshot`. Update with `claude plugin update earshot@unlocked-spark`.
 
-On first start with a screen reader running and screen reader mode off, the mod asks whether to enable the mode; answer `y`, then restart `claude`. To skip the question, set `CLAUDE_AX_SCREEN_READER=1` in your shell profile (PowerShell: `$env:CLAUDE_AX_SCREEN_READER = "1"`).
+On the first start with a screen reader running, answer `y` to the question and restart `claude`. To skip the question, set `CLAUDE_AX_SCREEN_READER=1` in your shell profile (PowerShell: `$env:CLAUDE_AX_SCREEN_READER = "1"`).
 
 To try the mod from a clone without installing it: `claude --plugin-dir ./claude-code-earshot`.
 
-Known gaps on Windows: `$.audio.play` has no player there, so the ready earcon is silent, and whether `$.audio.speak` reaches NVDA is still untested.
+On Windows `$.audio.play` has no player, so the bell's fallback sound is silent there; the bell itself and every line of the mod still reach the screen reader through the transcript.
 
 ## Develop
 
@@ -51,12 +78,13 @@ The engine writes its type declarations into `.claude-plugin/types/` the first t
 
 ## Documents
 
-- `docs/prd.md`: product requirements, scope, milestones.
-- `specs/`: one file per feature with acceptance criteria and manual test cases.
-- `docs/testing/`: manual test protocols for VoiceOver and NVDA.
-- `docs/research/rozpoznanie-2026-10-09.md` (Polish): what Claude Code offers today, open issues, the mod API, existing projects.
-- `docs/research/spikes-2026-10.md`: answers to the spec's open questions and loader constraints.
+- `docs/prd.md`: product requirements, scope and roadmap.
+- `specs/`: one file per feature with acceptance criteria.
+- `docs/testing/`: manual test protocols for NVDA and VoiceOver.
+- `docs/research/rozpoznanie-2026-10-09.md` (Polish): what Claude Code offers screen reader users, open issues, the mod API, existing projects.
+- `docs/research/spikes-2026-10.md`: answers to the mod API questions and loader constraints.
+- `CHANGELOG.md`: what each release changed.
 
 ## License
 
-Apache License 2.0. The tool-call significance classification planned for a later version draws on claude-sonar (MIT), which will be credited where it is used.
+Apache License 2.0.
